@@ -249,16 +249,14 @@ export async function fetchProducts(filters?: {
       const local = getLocalProducts();
       const dbMap = new Map<string, Product>();
       
-      // Seed with FALLBACK first
+      // 1. Seed with FALLBACK first
       FALLBACK_PRODUCTS.forEach(p => dbMap.set(p.id, p));
 
-      // Layer database products
+      // 2. Layer local cache
+      local.forEach(p => dbMap.set(p.id, p));
+
+      // 3. Layer live database products ON TOP (Live DB is authoritative)
       dbList.forEach(p => dbMap.set(p.id, p));
-      
-      // Override or merge local edits into remote dataset
-      local.forEach(p => {
-        dbMap.set(p.id, p);
-      });
 
       allProducts = Array.from(dbMap.values());
       saveLocalProducts(allProducts);
