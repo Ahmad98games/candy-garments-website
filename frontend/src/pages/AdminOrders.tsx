@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { fetchOrders, updateOrderStatus, Order } from '../lib/supabase';
 import { useToast } from '../context/ToastContext';
-import { Package, Truck, CheckCircle, XCircle, Clock, RefreshCw, Smartphone, MapPin } from 'lucide-react';
+import { Package, Truck, CheckCircle, XCircle, Clock, RefreshCw, Smartphone, MapPin, ShoppingBag, MessageSquare } from 'lucide-react';
 import './AdminOrders.css';
 
 const STATUS_CONFIG: Record<Order['status'], { label: string; colorClass: string; icon: any }> = {
@@ -52,120 +52,176 @@ export default function AdminOrders() {
   };
 
   return (
-    <div style={{ padding: '24px' }}>
+    <div style={{ padding: '24px', color: '#F9FAFB', minHeight: '100%' }}>
       
       {/* HEADER */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
-            Customer Orders Dashboard
+          <h1 style={{ fontSize: '22px', fontWeight: 800, color: '#FFFFFF', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <ShoppingBag size={24} style={{ color: '#F59E0B' }} /> Purchased Articles & Customer Orders
           </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginTop: '2px' }}>
-            Live record of customer purchases from Supabase <code className="font-mono" style={{ background: 'var(--bg-surface)', padding: '2px 6px', borderRadius: '4px' }}>orders</code> table.
+          <p style={{ color: '#9CA3AF', fontSize: '13px', marginTop: '4px', margin: 0 }}>
+            Live record of exact articles, quantities, and customer shipping details from Supabase.
           </p>
         </div>
 
         <button
           onClick={loadOrders}
           className="btn btn-outline"
-          style={{ height: '34px', fontSize: '12px' }}
+          style={{ height: '36px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#1F2937', color: '#F9FAFB', borderColor: '#4B5563' }}
         >
-          <RefreshCw size={13} /> Refresh List
+          <RefreshCw size={14} className={loading ? 'spin' : ''} /> Refresh List
         </button>
       </div>
 
       {/* ORDERS LIST */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
-          <RefreshCw size={20} className="spin" />
-          <p style={{ fontSize: '13px', marginTop: '8px' }}>Fetching orders from Supabase...</p>
+        <div style={{ textAlign: 'center', padding: '60px', color: '#9CA3AF' }}>
+          <RefreshCw size={24} className="spin" style={{ color: '#F59E0B' }} />
+          <p style={{ fontSize: '13px', marginTop: '12px', fontWeight: 600 }}>Fetching live orders from Supabase...</p>
         </div>
       ) : orders.length === 0 ? (
-        <div className="industrial-card" style={{ textAlign: 'center', padding: '48px', background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)' }}>
-          <Package size={36} style={{ color: 'var(--text-muted)', marginBottom: '8px' }} />
-          <h3 style={{ fontSize: '16px', color: 'var(--text-primary)', margin: '0 0 4px 0' }}>No Customer Orders Yet</h3>
-          <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Orders submitted via Advance Bank Transfer / WhatsApp will appear here in real-time.</p>
+        <div style={{ textAlign: 'center', padding: '48px', backgroundColor: '#111827', borderRadius: '12px', border: '1px solid #374151' }}>
+          <Package size={40} style={{ color: '#9CA3AF', marginBottom: '12px' }} />
+          <h3 style={{ fontSize: '18px', color: '#F9FAFB', margin: '0 0 6px 0', fontWeight: 700 }}>No Customer Orders Found</h3>
+          <p style={{ fontSize: '13px', color: '#9CA3AF', margin: 0 }}>Customer purchases from Checkout and WhatsApp will automatically appear here with full article details.</p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gap: '12px' }}>
+        <div style={{ display: 'grid', gap: '16px' }}>
           {orders.map((order) => {
             const statusConfig = STATUS_CONFIG[order.status] || STATUS_CONFIG.Pending;
             const StatusIcon = statusConfig.icon;
+            const whatsappPhone = order.customer_phone.replace(/[^0-9]/g, '');
+            const firstArticleNo = order.items?.[0]?.article_no || 'N/A';
+            const firstTitle = order.items?.[0]?.title || 'Articles';
+            const customerMsg = `Assalamu Alaikum ${order.customer_name}! Regarding your Candy Garments order #${order.id} for Article ${firstArticleNo} (${firstTitle}) - Total PKR ${order.total_amount.toLocaleString()}. We are processing your dispatch!`;
+            const waChatUrl = `https://wa.me/${whatsappPhone.startsWith('92') ? whatsappPhone : '92' + whatsappPhone.replace(/^0/, '')}?text=${encodeURIComponent(customerMsg)}`;
 
             return (
-              <div key={order.id} className="industrial-card" style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)', padding: '16px' }}>
+              <div key={order.id} style={{ backgroundColor: '#111827', borderRadius: '12px', border: '1px solid #374151', padding: '18px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.4)' }}>
                 
                 {/* TOP BAR */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', paddingBottom: '10px', borderBottom: '1px solid var(--border-subtle)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', paddingBottom: '12px', borderBottom: '1px solid #1F2937', flexWrap: 'wrap', gap: '8px' }}>
                   <div>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block' }}>Order Reference</span>
-                    <span className="font-mono" style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>#{order.id}</span>
+                    <span style={{ fontSize: '11px', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, display: 'block' }}>Order Reference</span>
+                    <span className="font-mono" style={{ fontSize: '15px', fontWeight: 800, color: '#F59E0B' }}>#{order.id}</span>
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ background: order.payment_method === 'WhatsApp' ? 'rgba(37, 211, 102, 0.15)' : 'rgba(245, 158, 11, 0.15)', color: order.payment_method === 'WhatsApp' ? '#25D366' : 'var(--accent-amber)', fontSize: '11px', fontWeight: 700, padding: '3px 8px', borderRadius: 'var(--radius-sm)', border: `1px solid ${order.payment_method === 'WhatsApp' ? 'rgba(37, 211, 102, 0.3)' : 'rgba(245, 158, 11, 0.3)'}` }}>
-                      {order.payment_method}
+                    <span style={{ background: 'rgba(37, 211, 102, 0.15)', color: '#25D366', fontSize: '11px', fontWeight: 700, padding: '4px 10px', borderRadius: '6px', border: '1px solid rgba(37, 211, 102, 0.3)' }}>
+                      {order.payment_method || 'WhatsApp / Bank Transfer'}
                     </span>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 700, color: statusConfig.colorClass === 'status-green' ? '#10B981' : statusConfig.colorClass === 'status-purple' ? '#A78BFA' : '#F59E0B', backgroundColor: '#1F2937', padding: '4px 10px', borderRadius: '6px', border: '1px solid #374151' }}>
                       <StatusIcon size={14} /> {statusConfig.label}
                     </div>
                   </div>
                 </div>
 
                 {/* CUSTOMER & SHIPPING DETAILS */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', marginBottom: '16px', backgroundColor: '#1F2937', padding: '14px', borderRadius: '8px', border: '1px solid #374151' }}>
                   <div>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block' }}>Customer Name</span>
-                    <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{order.customer_name}</span>
+                    <span style={{ fontSize: '11px', color: '#9CA3AF', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: '2px' }}>Customer Name</span>
+                    <span style={{ fontSize: '14px', fontWeight: 800, color: '#FFFFFF' }}>{order.customer_name}</span>
                   </div>
 
                   <div>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block' }}>Phone / WhatsApp</span>
-                    <a href={`https://wa.me/${order.customer_phone.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="font-mono" style={{ fontSize: '13px', fontWeight: 600, color: '#25D366', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                      <Smartphone size={13} /> {order.customer_phone}
+                    <span style={{ fontSize: '11px', color: '#9CA3AF', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: '2px' }}>Phone / WhatsApp</span>
+                    <a href={waChatUrl} target="_blank" rel="noopener noreferrer" className="font-mono" style={{ fontSize: '13px', fontWeight: 700, color: '#25D366', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: 'rgba(37, 211, 102, 0.1)', padding: '3px 8px', borderRadius: '4px', border: '1px solid rgba(37, 211, 102, 0.3)' }}>
+                      <Smartphone size={13} /> {order.customer_phone} <MessageSquare size={12} />
                     </a>
                   </div>
 
                   <div>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block' }}>City & Delivery Address</span>
-                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                      <MapPin size={13} /> {order.city} — {order.shipping_address}
+                    <span style={{ fontSize: '11px', color: '#9CA3AF', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: '2px' }}>City & Delivery Address</span>
+                    <span style={{ fontSize: '12px', color: '#E5E7EB', display: 'inline-flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
+                      <MapPin size={13} style={{ color: '#F59E0B' }} /> {order.city} — {order.shipping_address}
                     </span>
                   </div>
 
                   <div>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block' }}>Total Amount</span>
-                    <span className="font-mono" style={{ fontSize: '15px', fontWeight: 700, color: 'var(--accent-emerald)' }}>
+                    <span style={{ fontSize: '11px', color: '#9CA3AF', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: '2px' }}>Total Amount</span>
+                    <span className="font-mono" style={{ fontSize: '16px', fontWeight: 900, color: '#10B981' }}>
                       PKR {order.total_amount.toLocaleString()}
                     </span>
                   </div>
                 </div>
 
-                {/* ORDER ITEMS */}
-                {order.items && order.items.length > 0 && (
-                  <div style={{ background: 'var(--bg-surface)', padding: '10px', borderRadius: 'var(--radius-md)', marginBottom: '12px', border: '1px solid var(--border-subtle)' }}>
-                    <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Purchased Items:</span>
-                    <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                {/* PURCHASED ARTICLES TABLE BREAKDOWN */}
+                <div style={{ backgroundColor: '#1F2937', borderRadius: '8px', border: '1px solid #374151', padding: '14px', marginBottom: '14px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: 800, color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <ShoppingBag size={14} /> Purchased Articles Breakdown ({order.items?.length || 0} Items)
+                  </div>
+
+                  {order.items && order.items.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                       {order.items.map((item, idx) => (
-                        <div key={item.id || item.article_no || idx} style={{ fontSize: '12px', color: 'var(--text-primary)' }}>
-                          • <strong>{item.title}</strong> <span className="font-mono" style={{ color: 'var(--text-muted)' }}>(Art: {item.article_no || 'N/A'})</span> x {item.quantity} — <span className="font-mono" style={{ color: 'var(--accent-emerald)' }}>PKR {(item.price * item.quantity).toLocaleString()}</span>
+                        <div key={item.id || idx} style={{ display: 'flex', alignItems: 'center', gap: '12px', backgroundColor: '#111827', padding: '10px 12px', borderRadius: '8px', border: '1px solid #374151', flexWrap: 'wrap' }}>
+                          
+                          {/* Image Thumbnail */}
+                          <div style={{ width: '42px', height: '56px', borderRadius: '6px', overflow: 'hidden', backgroundColor: '#374151', flexShrink: 0, border: '1px solid #4B5563' }}>
+                            <img
+                              src={item.image || 'https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=800&q=80'}
+                              alt={item.title}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                          </div>
+
+                          {/* Article Info */}
+                          <div style={{ flex: 1, minWidth: '180px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
+                              <span className="font-mono" style={{ backgroundColor: '#374151', color: '#F9FAFB', fontSize: '11px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px', border: '1px solid #4B5563' }}>
+                                Article: {item.article_no || 'N/A'}
+                              </span>
+                              {item.size && (
+                                <span style={{ backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#F59E0B', fontSize: '11px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+                                  Size: {item.size}
+                                </span>
+                              )}
+                            </div>
+                            <span style={{ fontSize: '13px', fontWeight: 700, color: '#FFFFFF', display: 'block' }}>
+                              {item.title}
+                            </span>
+                          </div>
+
+                          {/* Quantity & Line Total */}
+                          <div style={{ textAlign: 'right', minWidth: '100px' }}>
+                            <span style={{ fontSize: '12px', color: '#9CA3AF', display: 'block' }}>
+                              Qty: <strong style={{ color: '#FFFFFF' }}>{item.quantity}</strong> × PKR {item.price.toLocaleString()}
+                            </span>
+                            <span className="font-mono" style={{ fontSize: '13px', fontWeight: 800, color: '#10B981' }}>
+                              PKR {(item.price * item.quantity).toLocaleString()}
+                            </span>
+                          </div>
+
                         </div>
                       ))}
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <span style={{ fontSize: '12px', color: '#9CA3AF' }}>No detailed article breakdown available.</span>
+                  )}
+                </div>
 
                 {/* STATUS ACTIONS */}
-                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', borderTop: '1px solid var(--border-subtle)', paddingTop: '10px' }}>
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', borderTop: '1px solid #1F2937', paddingTop: '12px', flexWrap: 'wrap' }}>
+                  <a
+                    href={waChatUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn"
+                    style={{ height: '32px', fontSize: '12px', backgroundColor: '#0F9D58', color: '#FFFFFF', border: 'none', padding: '0 12px', borderRadius: '6px', fontWeight: 700, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <MessageSquare size={14} /> Message Customer on WhatsApp
+                  </a>
+
                   {order.status !== 'Dispatched' && order.status !== 'Delivered' && (
                     <button
                       onClick={() => handleStatusChange(order.id!, 'Dispatched')}
                       disabled={processingId === order.id}
                       className="btn btn-outline"
-                      style={{ height: '30px', fontSize: '11px', color: 'var(--accent-cyan)', borderColor: 'var(--accent-cyan)' }}
+                      style={{ height: '32px', fontSize: '12px', color: '#38BDF8', borderColor: 'rgba(56, 189, 248, 0.4)', backgroundColor: '#1F2937' }}
                     >
-                      <Truck size={13} /> Mark Dispatched
+                      <Truck size={14} /> Mark Dispatched
                     </button>
                   )}
 
@@ -173,10 +229,10 @@ export default function AdminOrders() {
                     <button
                       onClick={() => handleStatusChange(order.id!, 'Delivered')}
                       disabled={processingId === order.id}
-                      className="btn btn-emerald"
-                      style={{ height: '30px', fontSize: '11px' }}
+                      className="btn"
+                      style={{ height: '32px', fontSize: '12px', backgroundColor: '#10B981', color: '#FFFFFF', border: 'none', padding: '0 12px', borderRadius: '6px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
                     >
-                      <CheckCircle size={13} /> Mark Delivered
+                      <CheckCircle size={14} /> Mark Delivered
                     </button>
                   )}
 
@@ -184,9 +240,9 @@ export default function AdminOrders() {
                     <button
                       onClick={() => handleStatusChange(order.id!, 'Cancelled')}
                       disabled={processingId === order.id}
-                      style={{ height: '30px', fontSize: '11px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-crimson)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: 'var(--radius-md)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '0 10px', fontWeight: 600 }}
+                      style={{ height: '32px', fontSize: '12px', background: 'rgba(239, 68, 68, 0.15)', color: '#EF4444', border: '1px solid rgba(239, 68, 68, 0.4)', borderRadius: '6px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '0 12px', fontWeight: 700 }}
                     >
-                      <XCircle size={13} /> Cancel
+                      <XCircle size={14} /> Cancel
                     </button>
                   )}
                 </div>
