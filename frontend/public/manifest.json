@@ -1,12 +1,15 @@
 {
+  "id": "/",
   "name": "Candy Kids | Luxury Kids Fashion & Garments",
   "short_name": "Candy Kids",
   "description": "Premium luxury fashion for Girls, Boys & Infants. Change Your LifeStyle with Candy Kids. High-end retail apparel with nationwide delivery.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#FAFAFA",
   "theme_color": "#111827",
   "orientation": "portrait-primary",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/images/candy.jpg",

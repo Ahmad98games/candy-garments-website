@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Download, X, Smartphone, Sparkles, CheckCircle2, Monitor } from 'lucide-react';
+import { Download, X, Smartphone, Sparkles, Monitor, ArrowRight } from 'lucide-react';
 import './PWAInstallPrompt.css';
 
 interface BeforeInstallPromptEvent extends Event {
@@ -12,7 +12,7 @@ export const PWAInstallPrompt: React.FC = () => {
   const [showPrompt, setShowPrompt] = useState<boolean>(true);
   const [installed, setInstalled] = useState<boolean>(false);
   const [isIOS, setIsIOS] = useState<boolean>(false);
-  const [showGuide, setShowGuide] = useState<boolean>(false);
+  const [showModal, setShowModal] = useState<boolean>(false);
 
   useEffect(() => {
     // Check if running as standalone PWA
@@ -36,7 +36,7 @@ export const PWAInstallPrompt: React.FC = () => {
     const isIosDevice = /iphone|ipad|ipod/.test(userAgent);
     setIsIOS(isIosDevice);
 
-    // Listen for install prompt event
+    // Listen for install prompt event from Chrome/Edge
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
@@ -51,6 +51,7 @@ export const PWAInstallPrompt: React.FC = () => {
     window.addEventListener('appinstalled', () => {
       setInstalled(true);
       setShowPrompt(false);
+      setShowModal(false);
       setDeferredPrompt(null);
     });
 
@@ -59,18 +60,26 @@ export const PWAInstallPrompt: React.FC = () => {
     };
   }, []);
 
-  const handleInstallClick = async () => {
+  const handleInstallClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
     if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const choiceResult = await deferredPrompt.userChoice;
-      if (choiceResult.outcome === 'accepted') {
-        setInstalled(true);
-        setShowPrompt(false);
+      try {
+        await deferredPrompt.prompt();
+        const choiceResult = await deferredPrompt.userChoice;
+        if (choiceResult.outcome === 'accepted') {
+          setInstalled(true);
+          setShowPrompt(false);
+        }
+        setDeferredPrompt(null);
+      } catch (err) {
+        console.warn('Install prompt trigger:', err);
+        setShowModal(true);
       }
-      setDeferredPrompt(null);
     } else {
-      // Toggle guide if native prompt event not captured yet
-      setShowGuide((prev) => !prev);
+      // If native event is pending browser audit, display modal guide
+      setShowModal(true);
     }
   };
 
@@ -82,55 +91,102 @@ export const PWAInstallPrompt: React.FC = () => {
   if (installed || !showPrompt) return null;
 
   return (
-    <div className="pwa-install-banner animate-fade-in" role="banner" aria-label="Install Candy Kids App">
-      <div className="pwa-install-card">
-        <button 
-          className="pwa-close-btn" 
-          onClick={handleDismiss} 
-          aria-label="Dismiss App Install Banner"
-        >
-          <X size={16} />
-        </button>
-
-        <div className="pwa-content">
-          <div className="pwa-logo-wrapper">
-            <img 
-              src="/images/candy.jpg" 
-              alt="Candy Kids Logo" 
-              className="pwa-app-logo" 
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = '/candy.jpg';
-              }}
-            />
-            <span className="pwa-badge"><Sparkles size={10} /> App</span>
-          </div>
-
-          <div className="pwa-text">
-            <h4 className="pwa-title">Install Candy Kids App</h4>
-            <p className="pwa-desc">
-              Fast, offline luxury kids apparel shopping experience on your device!
-            </p>
-          </div>
-        </div>
-
-        {showGuide && (
-          <div className="pwa-guide-box">
-            {isIOS ? (
-              <p><Smartphone size={14} className="inline-icon" /> Tap the <strong>Share button</strong> in Safari, then select <strong>"Add to Home Screen"</strong>.</p>
-            ) : (
-              <p><Monitor size={14} className="inline-icon" /> Click the <strong>Install icon</strong> in your browser address bar (top right) or open menu and select <strong>"Install Candy Kids App"</strong>.</p>
-            )}
-          </div>
-        )}
-
-        <div className="pwa-actions">
-          <button className="pwa-install-btn" onClick={handleInstallClick}>
-            <Download size={16} />
-            <span>{deferredPrompt ? 'Install App' : 'How to Install'}</span>
+    <>
+      {/* FLOATING INSTALL BANNER */}
+      <div className="pwa-install-banner animate-fade-in" role="banner" aria-label="Install Candy Kids App">
+        <div className="pwa-install-card">
+          <button 
+            className="pwa-close-btn" 
+            onClick={handleDismiss} 
+            aria-label="Dismiss App Install Banner"
+          >
+            <X size={16} />
           </button>
+
+          <div className="pwa-content">
+            <div className="pwa-logo-wrapper">
+              <img 
+                src="/images/candy.jpg" 
+                alt="Candy Kids Logo" 
+                className="pwa-app-logo" 
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/candy.jpg';
+                }}
+              />
+              <span className="pwa-badge"><Sparkles size={10} /> App</span>
+            </div>
+
+            <div className="pwa-text">
+              <h4 className="pwa-title">Install Candy Kids App</h4>
+              <p className="pwa-desc">
+                Fast, offline luxury kids apparel shopping experience on your home screen!
+              </p>
+            </div>
+          </div>
+
+          <div className="pwa-actions">
+            <button className="pwa-install-btn" onClick={handleInstallClick} type="button">
+              <Download size={16} />
+              <span>Install App</span>
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* DETAILED INSTALLATION MODAL GUIDANCE */}
+      {showModal && (
+        <div className="pwa-modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="pwa-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="pwa-modal-header">
+              <div className="pwa-modal-title">
+                <img src="/images/candy.jpg" alt="Candy Kids" className="pwa-modal-icon" />
+                <div>
+                  <h3>Install Candy Kids App</h3>
+                  <p>Candy Garments PWA Experience</p>
+                </div>
+              </div>
+              <button className="pwa-modal-close" onClick={() => setShowModal(false)}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="pwa-modal-body">
+              {isIOS ? (
+                <div className="pwa-step-item">
+                  <div className="pwa-step-badge">1</div>
+                  <div className="pwa-step-content">
+                    <strong>Safari Share Menu</strong>
+                    <p>Tap the <Smartphone size={14} className="inline-icon" /> <strong>Share</strong> icon in Safari at the bottom of your screen.</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="pwa-step-item">
+                  <div className="pwa-step-badge">1</div>
+                  <div className="pwa-step-content">
+                    <strong>Browser Address Bar / Menu</strong>
+                    <p>Click the <Monitor size={14} className="inline-icon" /> <strong>Install App icon</strong> in the top-right of your URL address bar or browser menu.</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="pwa-step-item">
+                <div className="pwa-step-badge">2</div>
+                <div className="pwa-step-content">
+                  <strong>Add to Home Screen</strong>
+                  <p>Select <strong>"Add to Home Screen"</strong> or <strong>"Install Candy Kids"</strong> to confirm installation.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="pwa-modal-footer">
+              <button className="pwa-modal-action-btn" onClick={() => setShowModal(false)}>
+                <span>Got It!</span> <ArrowRight size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
