@@ -38,6 +38,7 @@ export interface Product {
   fabric_type?: string;
   images: string[];
   in_stock: boolean;
+  stock_quantity?: number;
   created_at?: string;
 }
 
@@ -449,6 +450,9 @@ const IS_UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]
 export async function upsertProduct(product: Partial<Product>): Promise<Product | null> {
   const margin = (Number(product.retail_price) || 0) - (Number(product.wholesale_cost) || 0);
   const id = product.id || `prod-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+  const stockQty = product.stock_quantity !== undefined && !isNaN(Number(product.stock_quantity)) 
+    ? Number(product.stock_quantity) 
+    : 10;
   
   const savedProduct: Product = {
     id,
@@ -462,7 +466,8 @@ export async function upsertProduct(product: Partial<Product>): Promise<Product 
     department: product.department || (product.category === 'Girls' || product.category === 'Kids Wear' ? 'Kids' : 'Ladies'),
     fabric_type: product.fabric_type || 'Pure Raw Silk 80g',
     images: product.images && product.images.length > 0 ? product.images : ['/images/omnora.jpg'],
-    in_stock: product.in_stock ?? true,
+    stock_quantity: stockQty,
+    in_stock: stockQty > 0 ? (product.in_stock ?? true) : false,
     created_at: product.created_at || new Date().toISOString(),
   };
 
@@ -500,8 +505,61 @@ export async function toggleProductStock(productId: string, inStock: boolean): P
   const index = local.findIndex(p => p.id === productId);
   if (index > -1) {
     local[index].in_stock = inStock;
+    if (!inStock) {
+      local[index].stock_quantity = 0;
+    } else if ((local[index].stock_quantity || 0) <= 0) {
+      local[index].stock_quantity = 10;
+    }
     saveLocalProducts(local);
   }
+  return true;
+}
+
+/**
+ * Permanently delete product from Supabase DB and local storage
+ */
+export async function deleteProduct(productId: string): Promise<boolean> {
+  try {
+    await supabase.from('products').delete().eq('id', productId);
+  } catch (err) {
+    console.warn('Supabase delete product warning:', err);
+  }
+
+  const local = getLocalProducts();
+  const filtered = local.filter(p => p.id !== productId);
+  saveLocalProducts(filtered);
+  window.dispatchEvent(new Event('products-updated'));
+  return true;
+}
+
+/**
+ * Deduct purchased quantity from stock_quantity and auto-toggle in_stock when 0
+ */
+export async function decrementProductStock(productId: string, quantityToDeduct: number): Promise<boolean> {
+  const local = getLocalProducts();
+  const product = local.find(p => p.id === productId);
+  if (!product) return false;
+
+  const currentQty = product.stock_quantity !== undefined ? product.stock_quantity : 10;
+  const newQty = Math.max(0, currentQty - quantityToDeduct);
+  const newInStock = newQty > 0;
+
+  try {
+    await supabase.from('products').update({
+      stock_quantity: newQty,
+      in_stock: newInStock
+    }).eq('id', productId);
+  } catch (err) {}
+
+  product.stock_quantity = newQty;
+  product.in_stock = newInStock;
+
+  const index = local.findIndex(p => p.id === productId);
+  if (index > -1) {
+    local[index] = product;
+    saveLocalProducts(local);
+  }
+  window.dispatchEvent(new Event('products-updated'));
   return true;
 }
 

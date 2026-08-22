@@ -161,9 +161,15 @@ export default function Product() {
               <span className="font-mono" style={{ backgroundColor: '#FEF2F2', color: '#E52535', fontSize: '0.78rem', fontWeight: 700, padding: '4px 10px', borderRadius: '4px' }}>
                 Article: {product.article_no || 'CK-01'}
               </span>
-              <span style={{ fontSize: '0.78rem', color: '#0F9D58', backgroundColor: '#ECFDF5', padding: '4px 10px', borderRadius: '4px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                <CheckCircle size={14} /> Ready to Ship
-              </span>
+              {(!product.in_stock || (product.stock_quantity !== undefined && product.stock_quantity <= 0)) ? (
+                <span style={{ fontSize: '0.78rem', color: '#DC2626', backgroundColor: '#FEF2F2', padding: '4px 10px', borderRadius: '4px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <XCircle size={14} /> Out of Stock
+                </span>
+              ) : (
+                <span style={{ fontSize: '0.78rem', color: '#0F9D58', backgroundColor: '#ECFDF5', padding: '4px 10px', borderRadius: '4px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <CheckCircle size={14} /> Ready to Ship ({product.stock_quantity !== undefined ? product.stock_quantity : 10} Left)
+                </span>
+              )}
             </div>
 
             <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', margin: '0 0 10px 0', lineHeight: 1.2 }}>
@@ -195,31 +201,34 @@ export default function Product() {
               </div>
 
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                {ageSizes.map((item) => (
-                  <button
-                    key={item.label}
-                    onClick={() => item.inStock && setSelectedSize(item.label)}
-                    disabled={!item.inStock}
-                    style={{
-                      padding: '8px 14px',
-                      borderRadius: '8px',
-                      border: '1.5px solid',
-                      borderColor: selectedSize === item.label ? '#E52535' : item.inStock ? '#E5E7EB' : '#F3F4F6',
-                      backgroundColor: selectedSize === item.label ? '#E52535' : item.inStock ? '#FFFFFF' : '#F9FAFB',
-                      color: selectedSize === item.label ? '#FFFFFF' : item.inStock ? '#111827' : '#9CA3AF',
-                      fontWeight: 700,
-                      fontSize: '0.82rem',
-                      cursor: item.inStock ? 'pointer' : 'not-allowed',
-                      position: 'relative',
-                      opacity: item.inStock ? 1 : 0.6
-                    }}
-                  >
-                    {item.label}
-                    {!item.inStock && (
-                      <span style={{ display: 'block', fontSize: '0.62rem', fontWeight: 500, color: '#DC2626' }}>Sold Out</span>
-                    )}
-                  </button>
-                ))}
+                {ageSizes.map((item) => {
+                  const isItemInStock = item.inStock && product.in_stock && (product.stock_quantity === undefined || product.stock_quantity > 0);
+                  return (
+                    <button
+                      key={item.label}
+                      onClick={() => isItemInStock && setSelectedSize(item.label)}
+                      disabled={!isItemInStock}
+                      style={{
+                        padding: '8px 14px',
+                        borderRadius: '8px',
+                        border: '1.5px solid',
+                        borderColor: selectedSize === item.label ? '#E52535' : isItemInStock ? '#E5E7EB' : '#F3F4F6',
+                        backgroundColor: selectedSize === item.label ? '#E52535' : isItemInStock ? '#FFFFFF' : '#F9FAFB',
+                        color: selectedSize === item.label ? '#FFFFFF' : isItemInStock ? '#111827' : '#9CA3AF',
+                        fontWeight: 700,
+                        fontSize: '0.82rem',
+                        cursor: isItemInStock ? 'pointer' : 'not-allowed',
+                        position: 'relative',
+                        opacity: isItemInStock ? 1 : 0.6
+                      }}
+                    >
+                      {item.label}
+                      {!isItemInStock && (
+                        <span style={{ display: 'block', fontSize: '0.62rem', fontWeight: 500, color: '#DC2626' }}>Sold Out</span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -242,17 +251,19 @@ export default function Product() {
               {/* BRANDED RED BUTTON (#E52535) - ADD TO BAG */}
               <button
                 onClick={handleAddToCart}
+                disabled={!product.in_stock || (product.stock_quantity !== undefined && product.stock_quantity <= 0)}
                 className="btn btn-primary"
                 style={{
                   height: '48px',
                   width: '100%',
                   fontWeight: 700,
                   fontSize: '0.9rem',
-                  backgroundColor: '#E52535',
-                  borderColor: '#E52535'
+                  backgroundColor: (!product.in_stock || (product.stock_quantity !== undefined && product.stock_quantity <= 0)) ? '#9CA3AF' : '#E52535',
+                  borderColor: (!product.in_stock || (product.stock_quantity !== undefined && product.stock_quantity <= 0)) ? '#9CA3AF' : '#E52535',
+                  cursor: (!product.in_stock || (product.stock_quantity !== undefined && product.stock_quantity <= 0)) ? 'not-allowed' : 'pointer'
                 }}
               >
-                <ShoppingBag size={18} /> Add to Bag
+                <ShoppingBag size={18} /> {(!product.in_stock || (product.stock_quantity !== undefined && product.stock_quantity <= 0)) ? 'Out of Stock' : 'Add to Bag'}
               </button>
 
               {/* WHATSAPP GREEN BUTTON (#0F9D58) - INSTANT WHATSAPP ORDER */}

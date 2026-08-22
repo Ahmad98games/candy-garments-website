@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { fetchProducts, upsertProduct, toggleProductStock, Product, supabase } from '../lib/supabase';
+import { fetchProducts, upsertProduct, toggleProductStock, deleteProduct, Product, supabase } from '../lib/supabase';
 import { useToast } from '../context/ToastContext';
 import { processAndUploadImage } from '../utils/imageUpload';
 import {
-    Plus, Edit3, X, Upload, CheckCircle, XCircle, RefreshCw, Search,
+    Plus, Edit3, Trash2, X, Upload, CheckCircle, XCircle, RefreshCw, Search,
     Download, FileSpreadsheet, GripVertical, ChevronLeft, ChevronRight, AlertTriangle
 } from 'lucide-react';
 import './AdminProducts.css';
@@ -89,6 +89,28 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
     const totalPages = Math.ceil(products.length / pageSize) || 1;
     const paginatedProducts = products.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
+    // Delete Article state
+    const [deleteId, setDeleteId] = useState<string | null>(null);
+    const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
+
+    const handleDeleteClick = (product: Product) => {
+        setDeletingProduct(product);
+        setDeleteId(product.id);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!deleteId) return;
+        const success = await deleteProduct(deleteId);
+        if (success) {
+            showToast(`Article "${deletingProduct?.title || deleteId}" deleted permanently!`, 'success');
+            setProducts((prev) => prev.filter((p) => p.id !== deleteId));
+        } else {
+            showToast('Failed to delete article.', 'error');
+        }
+        setDeleteId(null);
+        setDeletingProduct(null);
+    };
+
     const handleEdit = (product: Product) => {
         setEditingId(product.id);
         setFormData({
@@ -102,6 +124,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
             fabric_type: product.fabric_type || '',
             images: product.images || [],
             in_stock: product.in_stock,
+            stock_quantity: product.stock_quantity !== undefined ? product.stock_quantity : 10,
         });
         setIsModalOpen(true);
     };
@@ -111,7 +134,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
         const success = await toggleProductStock(product.id, newStock);
         if (success) {
             showToast(`Updated stock status for ${product.title}`, 'success');
-            setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, in_stock: newStock } : p)));
+            setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, in_stock: newStock, stock_quantity: newStock ? (p.stock_quantity || 10) : 0 } : p)));
         } else {
             showToast('Stock status update failed', 'error');
         }
@@ -193,6 +216,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
             department: selectedDepartment !== 'All' ? selectedDepartment : 'Ladies',
             fabric_type: isLadies ? 'Plush Velvet & Silk' : 'Cotton Lawn',
             images: [],
+            stock_quantity: 10,
             in_stock: true,
         });
         setIsModalOpen(true);
@@ -206,6 +230,9 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
         }
 
         const margin = (Number(formData.retail_price) || 0) - (Number(formData.wholesale_cost) || 0);
+        const stockQty = formData.stock_quantity !== undefined && !isNaN(Number(formData.stock_quantity)) 
+            ? Number(formData.stock_quantity) 
+            : 10;
 
         const payload: Partial<Product> = {
             ...(editingId ? { id: editingId } : {}),
@@ -219,7 +246,8 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
             department: formData.department || (selectedDepartment !== 'All' ? selectedDepartment : 'Ladies'),
             fabric_type: formData.fabric_type || 'Pure Raw Silk 80g',
             images: formData.images && formData.images.length > 0 ? formData.images : ['https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=800&q=80'],
-            in_stock: formData.in_stock ?? true,
+            stock_quantity: stockQty,
+            in_stock: stockQty > 0 ? (formData.in_stock ?? true) : false,
         };
 
         const result = await upsertProduct(payload);
@@ -593,53 +621,71 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                                             </td>
 
                                             <td style={{ padding: '12px 16px' }}>
-                                                <span className="font-mono" style={{ background: 'var(--bg-surface)', padding: '2px 6px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)' }}>
+                                                <span className="article-no-badge">
                                                     {p.article_no || 'N/A'}
                                                 </span>
                                             </td>
 
-                                            <td style={{ padding: '12px 16px', fontWeight: 600 }}>{p.title}</td>
+                                            <td style={{ padding: '12px 16px' }}>
+                                                <span className="product-title-text">{p.title}</span>
+                                            </td>
 
-                                            <td style={{ padding: '12px 16px', color: 'var(--text-muted)' }}>
+                                            <td style={{ padding: '12px 16px', color: '#9CA3AF' }}>
                                                 {p.fabric_type || p.category}
                                             </td>
 
-                                            <td style={{ padding: '12px 16px', fontWeight: 700 }} className="font-mono text-emerald">
+                                            <td style={{ padding: '12px 16px', fontWeight: 700, color: '#10B981' }} className="font-mono">
                                                 PKR {p.retail_price.toLocaleString()}
                                             </td>
 
-                                            <td style={{ padding: '12px 16px' }} className="font-mono text-muted">
+                                            <td style={{ padding: '12px 16px', color: '#9CA3AF' }} className="font-mono">
                                                 PKR {(p.wholesale_cost || 0).toLocaleString()}
                                             </td>
 
                                             <td style={{ padding: '12px 16px' }}>
-                                                <button
-                                                    onClick={() => handleToggleStock(p)}
-                                                    style={{
-                                                        background: 'none',
-                                                        border: 'none',
-                                                        cursor: 'pointer',
-                                                        display: 'inline-flex',
-                                                        alignItems: 'center',
-                                                        gap: '4px',
-                                                        color: p.in_stock ? 'var(--accent-emerald)' : 'var(--accent-crimson)',
-                                                        fontWeight: 600,
-                                                        fontSize: '12px',
-                                                    }}
-                                                >
-                                                    {p.in_stock ? <CheckCircle size={16} /> : <XCircle size={16} />}
-                                                    {p.in_stock ? 'In Stock' : 'Out of Stock'}
-                                                </button>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                    <button
+                                                        onClick={() => handleToggleStock(p)}
+                                                        style={{
+                                                            background: 'none',
+                                                            border: 'none',
+                                                            cursor: 'pointer',
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            gap: '4px',
+                                                            color: p.in_stock && (p.stock_quantity === undefined || p.stock_quantity > 0) ? '#10B981' : '#EF4444',
+                                                            fontWeight: 700,
+                                                            fontSize: '12px',
+                                                        }}
+                                                    >
+                                                        {p.in_stock && (p.stock_quantity === undefined || p.stock_quantity > 0) ? <CheckCircle size={15} /> : <XCircle size={15} />}
+                                                        {p.in_stock && (p.stock_quantity === undefined || p.stock_quantity > 0) ? 'In Stock' : 'Out of Stock'}
+                                                    </button>
+                                                    <span className={`stock-qty-pill ${(!p.in_stock || (p.stock_quantity !== undefined && p.stock_quantity <= 0)) ? 'out-of-stock' : ''}`}>
+                                                        {p.stock_quantity !== undefined ? `${p.stock_quantity} Units` : '10 Units'}
+                                                    </span>
+                                                </div>
                                             </td>
 
                                             <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                                                <button
-                                                    className="btn btn-outline"
-                                                    onClick={() => handleEdit(p)}
-                                                    style={{ height: '32px', fontSize: '12px', padding: '0 10px' }}
-                                                >
-                                                    <Edit3 size={14} /> Edit
-                                                </button>
+                                                <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                                                    <button
+                                                        className="btn btn-outline"
+                                                        onClick={() => handleEdit(p)}
+                                                        style={{ height: '32px', fontSize: '12px', padding: '0 10px' }}
+                                                        title="Edit Article"
+                                                    >
+                                                        <Edit3 size={14} /> Edit
+                                                    </button>
+                                                    <button
+                                                        className="btn btn-delete-danger"
+                                                        onClick={() => handleDeleteClick(p)}
+                                                        style={{ height: '32px', fontSize: '12px', padding: '0 10px', background: 'transparent' }}
+                                                        title="Delete Article"
+                                                    >
+                                                        <Trash2 size={14} /> Delete
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     );
@@ -765,6 +811,25 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                                         value={formData.wholesale_cost || ''}
                                         onChange={(e) => setFormData((prev) => ({ ...prev, wholesale_cost: Number(e.target.value) }))}
                                         className="form-input font-mono"
+                                    />
+                                </div>
+
+                                <div className="admin-form-group">
+                                    <label>Available Stock Quantity (Units) *</label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        value={formData.stock_quantity !== undefined ? formData.stock_quantity : 10}
+                                        onChange={(e) => {
+                                            const qty = Number(e.target.value);
+                                            setFormData((prev) => ({
+                                                ...prev,
+                                                stock_quantity: qty,
+                                                in_stock: qty > 0
+                                            }));
+                                        }}
+                                        className="form-input font-mono"
+                                        required
                                     />
                                 </div>
                             </div>
@@ -938,6 +1003,37 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                                     {bulkImporting ? 'Importing...' : `Commit ${bulkResults.filter((r) => r.valid).length} Valid Products`}
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
+
+            {/* DELETE ARTICLE CONFIRMATION MODAL */}
+            {deleteId && createPortal(
+                <div className="modal-overlay">
+                    <div className="modal-card" style={{ maxWidth: '420px', padding: '0' }}>
+                        <div className="modal-header" style={{ borderColor: 'rgba(239, 68, 68, 0.3)' }}>
+                            <h3 style={{ color: '#EF4444', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <AlertTriangle size={18} /> Delete Article Permanently
+                            </h3>
+                            <button style={{ background: 'none', border: 'none', color: '#9CA3AF', cursor: 'pointer' }} onClick={() => setDeleteId(null)}>
+                                <X size={18} />
+                            </button>
+                        </div>
+                        <div style={{ padding: '20px', color: '#E5E7EB', fontSize: '14px', lineHeight: 1.5 }}>
+                            Are you sure you want to delete <strong>"{deletingProduct?.title || deleteId}"</strong> (Article No: {deletingProduct?.article_no || 'N/A'})?
+                            <p style={{ margin: '10px 0 0 0', color: '#9CA3AF', fontSize: '12px' }}>This action cannot be undone and will remove it permanently from the store inventory catalog.</p>
+                        </div>
+                        <div className="modal-footer" style={{ justifyContent: 'flex-end', gap: '10px', padding: '14px 20px' }}>
+                            <button className="btn btn-outline" onClick={() => setDeleteId(null)}>Cancel</button>
+                            <button 
+                                className="btn" 
+                                onClick={handleConfirmDelete} 
+                                style={{ background: '#EF4444', color: '#FFFFFF', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 700, cursor: 'pointer' }}
+                            >
+                                Delete Article
+                            </button>
                         </div>
                     </div>
                 </div>,
