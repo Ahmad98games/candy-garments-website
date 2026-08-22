@@ -132,7 +132,10 @@ export const FALLBACK_PRODUCTS: Product[] = [
     category: 'Ladies Wear',
     department: 'Ladies',
     fabric_type: 'Plush Micro-Velvet & Raw Silk',
-    images: ['https://images.unsplash.com/photo-1583391733956-6c78276477e2?auto=format&fit=crop&w=800&q=80', '/images/omnora.jpg'],
+    images: [
+      'https://images.unsplash.com/photo-1583391733956-6c78276477e2?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=800&q=80'
+    ],
     in_stock: true,
   },
   {
@@ -146,7 +149,10 @@ export const FALLBACK_PRODUCTS: Product[] = [
     category: 'Ladies Wear',
     department: 'Ladies',
     fabric_type: 'Pure Raw Silk 80g',
-    images: ['https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80', '/images/omnora store.png'],
+    images: [
+      'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80'
+    ],
     in_stock: true,
   },
   {
@@ -160,12 +166,15 @@ export const FALLBACK_PRODUCTS: Product[] = [
     category: 'Girls',
     department: 'Kids',
     fabric_type: 'Soft Cotton & Chiffon',
-    images: ['https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=800&q=80', '/images/omnora labs.png'],
+    images: [
+      'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=800&q=80'
+    ],
     in_stock: true,
   },
 ];
 
-const LOCAL_STORAGE_PRODUCTS_KEY = 'candy_boutique_products_v4';
+const LOCAL_STORAGE_PRODUCTS_KEY = 'candy_boutique_products_v5';
 
 function getLocalProducts(): Product[] {
   try {
