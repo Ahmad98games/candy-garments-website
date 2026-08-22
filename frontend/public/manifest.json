@@ -2,7 +2,7 @@
   "id": "/",
   "name": "Candy Kids | Luxury Kids Fashion & Garments",
   "short_name": "Candy Kids",
-  "description": "Premium luxury fashion for Girls, Boys & Infants. Change Your LifeStyle with Candy Kids. High-end retail apparel with nationwide delivery.",
+  "description": "Premium luxury fashion for Girls ladies or kids. Change Your LifeStyle with Candy Kids.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -12,26 +12,26 @@
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/images/candy.jpg",
-      "sizes": "512x512",
-      "type": "image/jpeg",
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/candy.jpg",
-      "sizes": "192x192 512x512",
-      "type": "image/jpeg",
-      "purpose": "any"
-    },
-    {
-      "src": "/pwa-192x192.jpg",
-      "sizes": "192x192",
-      "type": "image/jpeg"
-    },
-    {
-      "src": "/pwa-512x512.jpg",
+      "src": "/pwa-512x512.png",
       "sizes": "512x512",
-      "type": "image/jpeg"
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png"
     }
   ],
   "categories": [
@@ -43,12 +43,12 @@
     {
       "name": "Shop Collection",
       "url": "/collection",
-      "icons": [{ "src": "/images/candy.jpg", "sizes": "512x512" }]
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "View Cart",
       "url": "/cart",
-      "icons": [{ "src": "/images/candy.jpg", "sizes": "512x512" }]
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
 }

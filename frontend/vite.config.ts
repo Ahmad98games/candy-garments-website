@@ -11,8 +11,9 @@ export default defineConfig({
       devOptions: {
         enabled: true
       },
-      includeAssets: ['favicon.ico', 'apple-touch-icon.jpg', 'images/candy.jpg'],
+      includeAssets: ['favicon.png', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
       manifest: {
+        id: '/',
         name: 'Candy Kids | Luxury Kids Fashion & Garments',
         short_name: 'Candy Kids',
         description: 'Premium luxury fashion for Girls, Boys & Infants. Change Your LifeStyle with Candy Kids.',
@@ -22,26 +23,26 @@ export default defineConfig({
         orientation: 'portrait-primary',
         icons: [
           {
-            src: '/images/candy.jpg',
-            sizes: '512x512',
-            type: 'image/jpeg',
+            src: '/pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
             purpose: 'any maskable'
           },
           {
-            src: '/candy.jpg',
-            sizes: '192x192 512x512',
-            type: 'image/jpeg',
-            purpose: 'any'
-          },
-          {
-            src: '/pwa-192x192.jpg',
-            sizes: '192x192',
-            type: 'image/jpeg'
-          },
-          {
-            src: '/pwa-512x512.jpg',
+            src: '/pwa-512x512.png',
             sizes: '512x512',
-            type: 'image/jpeg'
+            type: 'image/png',
+            purpose: 'any maskable'
+          },
+          {
+            src: '/apple-touch-icon.png',
+            sizes: '180x180',
+            type: 'image/png'
+          },
+          {
+            src: '/favicon.png',
+            sizes: '512x512',
+            type: 'image/png'
           }
         ]
       },
