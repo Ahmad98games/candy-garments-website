@@ -87,6 +87,8 @@ export default function Layout() {
 
     const isActive = (path: string) => location.pathname === path ? 'active' : '';
 
+    const whatsappDirectLink = "https://wa.me/923311498773?text=" + encodeURIComponent("Assalamu Alaikum Candy Kids! I have an inquiry.");
+
     // 5. DISMISSIBLE MOBILE BOTTOM DOCK
     const [showMobileDock, setShowMobileDock] = useState<boolean>(() => {
         return localStorage.getItem('candy_hide_mobile_dock') !== 'true';
