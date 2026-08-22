@@ -87,7 +87,10 @@ export default function Layout() {
 
     const isActive = (path: string) => location.pathname === path ? 'active' : '';
 
-    const whatsappDirectLink = "whatsapp://send?phone=923311498773&text=" + encodeURIComponent("Assalamu Alaikum Candy Kids! I have an inquiry.");
+    // 5. DISMISSIBLE MOBILE BOTTOM DOCK
+    const [showMobileDock, setShowMobileDock] = useState<boolean>(() => {
+        return localStorage.getItem('candy_hide_mobile_dock') !== 'true';
+    });
 
     return (
         <div className="layout">
@@ -231,29 +234,41 @@ export default function Layout() {
             </div>
 
             {/* === 4. SYSTEM MAIN CONTENT === */}
-            <main className="main-content">
+            <main className="main-content" style={{ paddingBottom: showMobileDock ? '64px' : '0' }}>
                 <Outlet />
             </main>
 
-            {/* === 5. MOBILE BOTTOM APP DOCK === */}
-            <div className="mobile-bottom-dock">
-                <Link to="/" className={`dock-item ${isActive('/')}`}>
-                    <HomeIcon size={20} />
-                    <span>Home</span>
-                </Link>
-                <Link to="/collection" className={`dock-item ${isActive('/collection')}`}>
-                    <Grid size={20} />
-                    <span>Categories</span>
-                </Link>
-                <Link to="/cart" className={`dock-item ${isActive('/cart')}`}>
-                    <ShoppingCart size={20} />
-                    <span>Bag ({cartCount})</span>
-                </Link>
-                <a href={whatsappDirectLink} className="dock-item whatsapp-dock" target="_blank" rel="noopener noreferrer">
-                    <MessageSquare size={20} />
-                    <span>WhatsApp</span>
-                </a>
-            </div>
+            {/* === 5. OPTIONAL & DISMISSIBLE MOBILE BOTTOM APP DOCK === */}
+            {showMobileDock && (
+                <div className="mobile-bottom-dock">
+                    <Link to="/" className={`dock-item ${isActive('/')}`}>
+                        <HomeIcon size={20} />
+                        <span>Home</span>
+                    </Link>
+                    <Link to="/collection" className={`dock-item ${isActive('/collection')}`}>
+                        <Grid size={20} />
+                        <span>Categories</span>
+                    </Link>
+                    <Link to="/cart" className={`dock-item ${isActive('/cart')}`}>
+                        <ShoppingCart size={20} />
+                        <span>Bag ({cartCount})</span>
+                    </Link>
+                    <a href={whatsappDirectLink} className="dock-item whatsapp-dock" target="_blank" rel="noopener noreferrer">
+                        <MessageSquare size={20} />
+                        <span>WhatsApp</span>
+                    </a>
+                    <button 
+                        className="dock-dismiss-btn"
+                        onClick={() => {
+                            setShowMobileDock(false);
+                            localStorage.setItem('candy_hide_mobile_dock', 'true');
+                        }}
+                        title="Dismiss bottom bar"
+                    >
+                        <X size={14} />
+                    </button>
+                </div>
+            )}
 
             {/* === 6. SYSTEM FOOTER === */}
             <Footer />

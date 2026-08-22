@@ -356,6 +356,22 @@
   color: #0B8043;
 }
 
+.dock-dismiss-btn {
+  background: transparent;
+  border: none;
+  color: #9CA3AF;
+  padding: 4px 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.dock-dismiss-btn:hover {
+  color: #E52535;
+}
+
 /* Layout Content Wrapper */
 .layout {
   display: flex;
