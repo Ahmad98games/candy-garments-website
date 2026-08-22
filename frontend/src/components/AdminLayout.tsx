@@ -85,6 +85,10 @@ export default function AdminLayout() {
                         <Users size={18} />
                         <span>Customers</span>
                     </Link>
+                    <Link to="/admin/personnel" className={`nav-item ${isActive('personnel') || isActive('karigars')}`} onClick={closeSidebar}>
+                        <Users size={18} />
+                        <span>Karigars & Personnel</span>
+                    </Link>
                 </nav>
 
                 <div className="sidebar-footer">
