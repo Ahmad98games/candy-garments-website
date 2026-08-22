@@ -33,7 +33,6 @@ import AdminOrders from './pages/AdminOrders'
 import AdminUsers from './pages/AdminUsers'
 import AdminTheme from './pages/AdminTheme'
 import AdminSocial from './pages/AdminSocial'
-import AdminPersonnel from './pages/AdminPersonnel'
 
 import Terms from './pages/Terms'
 import Privacy from './pages/Privacy'
@@ -71,7 +70,6 @@ export default function App() {
                 <Route path="wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
                 <Route path="about" element={<About onBack={() => window.history.back()} />} />
                 <Route path="tech" element={<TechStackSection />} />
-                <Route path="karigars" element={<ProtectedRoute requireAdmin={true}><AdminPersonnel /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Route>
 
@@ -94,8 +92,6 @@ export default function App() {
                 <Route path="kids-collection" element={<AdminProducts defaultDepartment="Kids" />} />
                 <Route path="orders" element={<AdminOrders />} />
                 <Route path="users" element={<AdminUsers />} />
-                <Route path="personnel" element={<AdminPersonnel />} />
-                <Route path="karigars" element={<AdminPersonnel />} />
                 {/* Legacy/Specific Admin Routes can be mapped here if needed */}
                 <Route path="approve-order/:id" element={<AdminApprove />} />
               </Route>
