@@ -29,6 +29,15 @@ function ensureSessionId() {
 const sessionId = ensureSessionId()
 trackEvent({ type: 'app_start', path: location.pathname, sessionId, referrer: document.referrer, screen: { width: screen.width, height: screen.height } })
 
+// Register PWA Service Worker
+if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then((reg) => console.log('[PWA] ServiceWorker registered successfully:', reg.scope))
+      .catch((err) => console.error('[PWA] ServiceWorker registration failed:', err));
+  });
+}
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>

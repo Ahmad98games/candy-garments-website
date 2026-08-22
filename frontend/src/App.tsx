@@ -19,6 +19,7 @@ import ErrorBoundary from './components/ErrorBoundary'
 import { ToastProvider } from './context/ToastContext'
 import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
+import PWAInstallPrompt from './components/PWAInstallPrompt'
 import './styles/Animations.css'
 import About from './pages/About'
 
@@ -99,9 +100,10 @@ export default function App() {
             <Route path="/register" element={<ErrorBoundary><Register /></ErrorBoundary>} />
             <Route path="/payment-success" element={<ErrorBoundary><PaymentSuccess /></ErrorBoundary>} />
           </Routes>
-        </ToastProvider>
-      </ThemeProvider>
-    </AuthProvider>
-  </ErrorBoundary >
+            <PWAInstallPrompt />
+          </ToastProvider>
+        </ThemeProvider>
+      </AuthProvider>
+    </ErrorBoundary >
   )
 }
