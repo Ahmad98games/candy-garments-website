@@ -1,0 +1,71 @@
+{
+  "name": "omnora-ecommerce-backend",
+  "version": "1.0.0",
+  "description": "Omnora E-Commerce Backend - 30 Advanced Features",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js",
+    "build": "npm install --production",
+    "test": "jest --verbose",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:smoke": "node tests/smoke-tests.js",
+    "lint": "eslint backend/",
+    "lint:fix": "eslint backend/ --fix",
+    "migrate": "node backend/scripts/migrate.js",
+    "seed": "node backend/scripts/seed.js",
+    "backup": "node backend/scripts/backup.js",
+    "restore": "node backend/scripts/restore.js",
+    "pm2:start": "pm2 start ecosystem.config.js --env production",
+    "pm2:stop": "pm2 stop all",
+    "pm2:restart": "pm2 restart all",
+    "pm2:logs": "pm2 logs",
+    "pm2:monit": "pm2 monit",
+    "deploy": "pm2 deploy ecosystem.config.js production",
+    "health": "curl -X GET http://localhost:3000/api/phase3/health"
+  },
+  "keywords": [
+    "ecommerce",
+    "omnora",
+    "luxury",
+    "pakistan",
+    "api"
+  ],
+  "author": "Omnora",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "helmet": "^7.0.0",
+    "morgan": "^1.10.0",
+    "mongoose": "^7.0.0",
+    "jsonwebtoken": "^9.0.0",
+    "bcryptjs": "^2.4.3",
+    "crypto": "^1.0.1",
+    "aws-sdk": "^2.1400.0",
+    "stripe": "^12.0.0",
+    "sendgrid": "^7.7.0",
+    "twilio": "^3.80.0",
+    "openai": "^3.3.0",
+    "axios": "^1.4.0",
+    "joi": "^17.9.0",
+    "express-rate-limit": "^6.7.0",
+    "express-validator": "^7.0.0",
+    "redis": "^4.6.0",
+    "bull": "^4.11.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22",
+    "jest": "^29.5.0",
+    "supertest": "^6.3.3",
+    "eslint": "^8.45.0",
+    "prettier": "^2.8.8",
+    "pm2": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  }
+}

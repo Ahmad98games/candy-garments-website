@@ -1,0 +1,395 @@
+/* ============================================================================
+   CANDY KIDS EDITORIAL LUXURY HEADER & NAVIGATION STYLES
+   ============================================================================ */
+
+/* Top Announcement Banner */
+.top-announcement-bar {
+  background-color: #111827;
+  color: #FFFFFF;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  padding: 0.4rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  z-index: 1010;
+}
+
+.announcement-text {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0 auto;
+}
+
+.announcement-text a {
+  color: #F4B400;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+.announcement-text a:hover {
+  color: #FFFFFF;
+  text-decoration: underline;
+}
+
+.top-social-links {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.top-social-link {
+  color: #9CA3AF;
+  transition: color 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+}
+
+.top-social-link:hover {
+  color: #E52535;
+}
+
+/* Glassmorphism Header */
+.candy-header {
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  background-color: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid #E5E7EB;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.header.scrolled {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+.header-container {
+  max-width: 1380px;
+  margin: 0 auto;
+  padding: 0.75rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Brand Identity Logo */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  text-decoration: none;
+}
+
+.logo-brand-badge {
+  width: 38px;
+  height: 38px;
+  background-color: #E52535;
+  color: #FFFFFF;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 1.2rem;
+  letter-spacing: -0.05em;
+  box-shadow: 0 4px 12px rgba(229, 37, 53, 0.25);
+}
+
+.logo-text-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.logo-text {
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #111827;
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+.logo-subtext {
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: #E52535;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* Desktop Nav Links */
+.nav-desktop {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.nav-link {
+  color: #374151;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  position: relative;
+  padding: 0.5rem 0;
+  transition: color 0.2s ease;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0%;
+  height: 2px;
+  background-color: #E52535;
+  transition: width 0.25s ease;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  color: #E52535;
+}
+
+.nav-link:hover::after,
+.nav-link.active::after {
+  width: 100%;
+}
+
+.nav-link.sale-link {
+  color: #E52535;
+  font-weight: 700;
+}
+
+/* Nav Action Terminal */
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.search-terminal {
+  position: relative;
+  width: 180px;
+  transition: width 0.3s ease;
+}
+
+.search-terminal:focus-within {
+  width: 240px;
+}
+
+.search-input {
+  width: 100%;
+  background-color: #F3F4F6;
+  border: 1px solid #E5E7EB;
+  border-radius: 9999px;
+  color: #111827;
+  padding: 0.45rem 0.8rem 0.45rem 2.2rem;
+  font-size: 0.8rem;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.search-input:focus {
+  background-color: #FFFFFF;
+  border-color: #E52535;
+  box-shadow: 0 0 0 3px rgba(229, 37, 53, 0.1);
+}
+
+.search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9CA3AF;
+  pointer-events: none;
+}
+
+.action-btn {
+  background: transparent;
+  border: none;
+  color: #374151;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.action-btn:hover {
+  color: #E52535;
+  background-color: #FEF2F2;
+}
+
+.cart-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background-color: #E52535;
+  color: #FFFFFF;
+  font-size: 0.65rem;
+  font-weight: 800;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(229, 37, 53, 0.4);
+}
+
+/* Mobile Toggle */
+.menu-toggle {
+  display: none;
+  background: transparent;
+  border: none;
+  color: #111827;
+  cursor: pointer;
+  padding: 0.4rem;
+}
+
+/* Mobile Overlay Menu */
+.mobile-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(16px);
+  z-index: 1005;
+  display: flex;
+  flex-direction: column;
+  padding: 5rem 2rem 2rem 2rem;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
+.mobile-overlay.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.mobile-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.mobile-link {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #111827;
+  text-decoration: none;
+  transition: color 0.2s;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #F3F4F6;
+}
+
+.mobile-link:hover {
+  color: #E52535;
+}
+
+/* Sticky Mobile Bottom App Dock */
+.mobile-bottom-dock {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid #E5E7EB;
+  z-index: 999;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0 0.5rem;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.05);
+}
+
+.dock-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: #6B7280;
+  text-decoration: none;
+  font-size: 0.68rem;
+  font-weight: 600;
+  flex: 1;
+  height: 100%;
+  transition: color 0.2s ease;
+  position: relative;
+}
+
+.dock-item.active,
+.dock-item:hover {
+  color: #E52535;
+}
+
+.dock-item.whatsapp-dock {
+  color: #0F9D58;
+}
+
+.dock-item.whatsapp-dock:hover {
+  color: #0B8043;
+}
+
+/* Layout Content Wrapper */
+.layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  padding-bottom: 0;
+}
+
+@media (max-width: 1024px) {
+  .nav-desktop,
+  .search-terminal {
+    display: none;
+  }
+  .menu-toggle {
+    display: block;
+  }
+}
+
+@media (max-width: 768px) {
+  .top-announcement-bar {
+    font-size: 0.72rem;
+    padding: 0.35rem 0.75rem;
+  }
+  .top-social-links {
+    display: none;
+  }
+  .mobile-bottom-dock {
+    display: flex;
+  }
+  .main-content {
+    padding-bottom: 64px; /* Account for dock height */
+  }
+}

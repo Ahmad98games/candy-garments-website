@@ -1,0 +1,356 @@
+/* ============================================================================
+   ADMIN ORDERS - "The Log"
+   Aesthetic: Dark / Grid / Data-Dense
+   ============================================================================ */
+
+:root {
+    --ao-bg: #030304;
+    --ao-panel: rgba(20, 20, 20, 0.6);
+    --ao-border: rgba(255, 255, 255, 0.08);
+    --neon-cyan: #00f0ff;
+    --neon-green: #00ff88;
+    --neon-gold: #ffd600;
+    --neon-red: #ff2a6d;
+    --neon-purple: #a78bfa;
+    --text-main: #f8fafc;
+    --text-muted: #64748b;
+    --font-mono: 'JetBrains Mono', monospace;
+}
+
+.admin-orders-page {
+    padding: 1.5rem;
+    color: var(--text-main);
+    font-family: 'Inter', sans-serif;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- Header --- */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.page-header h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+}
+
+.header-icon {
+    color: var(--neon-cyan);
+}
+
+.refresh-btn {
+    background: var(--ao-panel);
+    border: 1px solid var(--ao-border);
+    color: #94a3b8;
+    padding: 0.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.refresh-btn:hover:not(:disabled) {
+    border-color: var(--neon-cyan);
+    color: var(--neon-cyan);
+    background: rgba(0, 240, 255, 0.05);
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* --- Table Styles --- */
+.orders-table-wrapper {
+    flex: 1;
+    background: rgba(10, 10, 10, 0.4);
+    border-radius: 4px;
+    border: 1px solid var(--ao-border);
+    overflow: auto;
+    /* Handle overflow */
+    backdrop-filter: blur(10px);
+}
+
+.orders-list-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 900px;
+    /* Ensure horizontal scroll on mobile */
+}
+
+.orders-list-table th {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 1rem 1.25rem;
+    text-align: left;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--ao-border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    backdrop-filter: blur(5px);
+}
+
+.orders-list-table td {
+    padding: 1.25rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    vertical-align: middle;
+    color: #e2e8f0;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+}
+
+.orders-list-table tr:last-child td {
+    border-bottom: none;
+}
+
+.orders-list-table tr:hover td {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* --- Typography & Cells --- */
+.font-mono {
+    font-family: var(--font-mono);
+    letter-spacing: -0.5px;
+    font-size: 0.85rem;
+}
+
+.text-accent {
+    color: var(--neon-cyan);
+    opacity: 0.9;
+}
+
+.customer-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.customer-name {
+    font-weight: 600;
+    color: #fff;
+}
+
+.customer-email {
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+.items-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.item-count {
+    font-weight: 600;
+    color: #e2e8f0;
+    font-size: 0.85rem;
+}
+
+.item-detail {
+    font-size: 0.75rem;
+    color: #888;
+}
+
+.price-cell {
+    font-weight: 700;
+    color: #fff;
+    font-family: var(--font-mono);
+}
+
+/* --- Status Badges --- */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 2px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    border: 1px solid transparent;
+}
+
+/* Badge Color Definitions */
+.status-gray {
+    background: rgba(148, 163, 184, 0.1);
+    color: #cbd5e1;
+    border-color: rgba(148, 163, 184, 0.2);
+}
+
+.status-yellow {
+    background: rgba(234, 179, 8, 0.1);
+    color: var(--neon-gold);
+    border-color: rgba(234, 179, 8, 0.2);
+}
+
+.status-blue {
+    background: rgba(59, 130, 246, 0.1);
+    color: #60a5fa;
+    border-color: rgba(59, 130, 246, 0.2);
+}
+
+.status-emerald {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--neon-green);
+    border-color: rgba(16, 185, 129, 0.2);
+}
+
+.status-indigo {
+    background: rgba(99, 102, 241, 0.1);
+    color: #818cf8;
+    border-color: rgba(99, 102, 241, 0.2);
+}
+
+.status-purple {
+    background: rgba(139, 92, 246, 0.1);
+    color: var(--neon-purple);
+    border-color: rgba(139, 92, 246, 0.2);
+}
+
+.status-green {
+    background: rgba(34, 197, 94, 0.1);
+    color: var(--neon-green);
+    border-color: rgba(34, 197, 94, 0.2);
+}
+
+.status-red {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--neon-red);
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+/* Payment Badges */
+.badge-payment {
+    padding: 0.2rem 0.5rem;
+    border-radius: 2px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border: 1px solid transparent;
+}
+
+.badge-payment.cod {
+    background: rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.badge-payment.online {
+    background: rgba(0, 240, 255, 0.1);
+    color: var(--neon-cyan);
+    border-color: rgba(0, 240, 255, 0.3);
+}
+
+/* --- Action Buttons --- */
+.action-buttons-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.btn-action {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 2px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.btn-approve {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--neon-green);
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.btn-approve:hover {
+    background: var(--neon-green);
+    color: #000;
+}
+
+.btn-process {
+    background: rgba(0, 240, 255, 0.1);
+    color: var(--neon-cyan);
+    border-color: rgba(0, 240, 255, 0.3);
+}
+
+.btn-process:hover {
+    background: var(--neon-cyan);
+    color: #000;
+}
+
+.btn-ship {
+    background: rgba(167, 139, 250, 0.1);
+    color: var(--neon-purple);
+    border-color: rgba(167, 139, 250, 0.3);
+}
+
+.btn-ship:hover {
+    background: var(--neon-purple);
+    color: #000;
+}
+
+.btn-deliver {
+    background: rgba(34, 197, 94, 0.1);
+    color: var(--neon-green);
+    border-color: rgba(34, 197, 94, 0.3);
+}
+
+.btn-deliver:hover {
+    background: var(--neon-green);
+    color: #000;
+}
+
+.icon-btn-danger {
+    background: transparent;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    padding: 0.4rem;
+    border-radius: 2px;
+    transition: all 0.2s;
+}
+
+.icon-btn-danger:hover {
+    color: var(--neon-red);
+    background: rgba(255, 42, 109, 0.1);
+}
+
+/* --- Utilities --- */
+.empty-state {
+    padding: 4rem;
+    text-align: center;
+    color: #666;
+    font-style: italic;
+}

@@ -1,0 +1,387 @@
+/* ============================================================================
+   CANDY KIDS LUXURY EDITORIAL CHECKOUT STYLES
+   Matched 1:1 with Home, Product, & Collection Page Design
+   ============================================================================ */
+
+.checkout-page {
+  min-height: 100vh;
+  background-color: #FAFAFA;
+  color: #111827;
+  font-family: 'Inter', 'Outfit', sans-serif;
+  padding-top: 30px;
+  padding-bottom: 80px;
+}
+
+.checkout-container {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 3vw, 2rem);
+}
+
+.checkout-content {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (min-width: 992px) {
+  .checkout-content {
+    grid-template-columns: 1.8fr 1fr;
+  }
+}
+
+/* Policy Warning Banner */
+.checkout-policy-banner {
+  background: #FFFBEB;
+  border: 1px solid #FCD34D;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.checkout-policy-banner-icon {
+  color: #D97706;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.checkout-policy-banner-content {
+  font-size: 0.9rem;
+  color: #92400E;
+  line-height: 1.6;
+}
+
+.checkout-policy-banner-title {
+  font-weight: 800;
+  display: block;
+  margin-bottom: 4px;
+  color: #78350F;
+  font-size: 0.95rem;
+}
+
+/* Card Containers */
+.checkout-card {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 16px;
+  padding: 1.75rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+.checkout-summary-card {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 16px;
+  padding: 1.75rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  position: sticky;
+  top: 90px;
+}
+
+/* Section Headings */
+.section-heading {
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #E5E7EB;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Form Controls */
+.form-field {
+  margin-bottom: 1.25rem;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #6B7280;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.form-input-text {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #D1D5DB;
+  background: #FFFFFF;
+  color: #111827;
+  font-size: 0.95rem;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-input-text:focus {
+  border-color: #E52535;
+  box-shadow: 0 0 0 3px rgba(229, 37, 53, 0.12);
+}
+
+.form-input-text::placeholder {
+  color: #9CA3AF;
+}
+
+/* TCS Delivery Notice Box */
+.tcs-delivery-box {
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  color: #065F46;
+}
+
+.tcs-delivery-box-icon {
+  color: #0F9D58;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.tcs-delivery-box-text {
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.tcs-delivery-box-title {
+  font-weight: 800;
+  display: block;
+  margin-bottom: 2px;
+  color: #047857;
+  font-size: 0.92rem;
+}
+
+/* Dual Faysal Bank Account Cards */
+.bank-accounts-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.bank-account-card {
+  background: #FFFFFF;
+  border: 1.5px solid #E5E7EB;
+  border-left: 5px solid #0F9D58;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.bank-account-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(15, 157, 88, 0.12);
+  border-color: #0F9D58;
+}
+
+.bank-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.bank-name-badge {
+  font-weight: 800;
+  font-size: 0.8rem;
+  color: #0F9D58;
+  background: #ECFDF5;
+  padding: 4px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.account-title-label {
+  font-size: 0.75rem;
+  color: #6B7280;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+
+.account-title-value {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 0.6rem;
+}
+
+.account-number-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #F3F4F6;
+  border: 1px dashed #9CA3AF;
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.account-number-text {
+  font-family: var(--font-mono, monospace);
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #111827;
+  letter-spacing: 0.08em;
+}
+
+.copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #0F9D58;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 6px;
+  padding: 7px 14px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.15s;
+  box-shadow: 0 2px 6px rgba(15, 157, 88, 0.25);
+}
+
+.copy-btn:hover {
+  background: #0B8043;
+  transform: translateY(-1px);
+}
+
+.copy-btn.copied {
+  background: #059669;
+}
+
+/* Transfer Instructions Box */
+.transfer-instructions-box {
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  border-radius: 10px;
+  padding: 1.1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.88rem;
+  color: #1E40AF;
+  line-height: 1.6;
+}
+
+.transfer-instructions-box p {
+  margin: 0;
+}
+
+/* Submit Order Button */
+.submit-order-btn {
+  width: 100%;
+  height: 50px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  background-color: #E52535 !important;
+  border-color: #E52535 !important;
+  color: #FFFFFF !important;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(229, 37, 53, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.submit-order-btn:hover {
+  background-color: #C81E2B !important;
+  border-color: #C81E2B !important;
+  transform: translateY(-1px);
+}
+
+/* Summary Box */
+.summary-items-list {
+  max-height: 320px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+  padding-right: 4px;
+}
+
+.summary-item-row {
+  display: flex;
+  gap: 12px;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #E5E7EB;
+  align-items: center;
+}
+
+.summary-item-img {
+  width: 60px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #E5E7EB;
+}
+
+.summary-item-info {
+  flex: 1;
+}
+
+.summary-item-title {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 3px;
+  line-height: 1.3;
+}
+
+.summary-item-meta {
+  font-size: 0.8rem;
+  color: #6B7280;
+}
+
+.summary-item-price {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #111827;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.85rem;
+  color: #4B5563;
+  font-size: 0.92rem;
+}
+
+.summary-row span:last-child {
+  font-weight: 800;
+  color: #111827;
+  font-family: var(--font-mono, monospace);
+}
+
+.summary-total {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 2px solid #E5E7EB;
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #111827;
+}
+
+.summary-total span:last-child {
+  color: #E52535;
+  font-family: var(--font-mono, monospace);
+}

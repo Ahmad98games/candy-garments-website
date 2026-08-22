@@ -1,0 +1,289 @@
+/* ============================================================================
+   OMNORA FAQ - "THE PROTOCOLS"
+   Status: Optimized
+   ============================================================================ */
+
+/* ... Inherits Fonts & Vars from App.css ... */
+
+.faq-magnum-page {
+    background-color: var(--void);
+    color: var(--text-primary);
+    min-height: 100vh;
+    position: relative;
+    padding-bottom: 4rem;
+}
+
+/* --- Hero --- */
+.faq-hero-magnum {
+    padding: 8rem 0 4rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.hero-super-title {
+    font-family: var(--font-serif);
+    font-size: clamp(4rem, 10vw, 8rem);
+    line-height: 0.9;
+    text-transform: uppercase;
+    color: #fff;
+    margin: 0;
+}
+
+.hero-super-title span {
+    display: block;
+    font-family: var(--font-sans);
+    font-size: 0.2em;
+    letter-spacing: 0.2em;
+    color: var(--accent, #3b82f6);
+    margin-bottom: 1rem;
+}
+
+.hero-desc {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    max-width: 600px;
+    margin-top: 2rem;
+    border-left: 2px solid var(--gold, #f59e0b);
+    padding-left: 1.5rem;
+}
+
+/* --- Layout --- */
+.faq-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4rem;
+    padding: 4rem 1.5rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+@media (min-width: 1024px) {
+    .faq-layout {
+        grid-template-columns: 350px 1fr;
+        align-items: start;
+    }
+}
+
+/* --- Sidebar --- */
+.manifesto-card {
+    background: #0a0a0a;
+    border: 1px solid var(--gold, #f59e0b);
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.manifesto-card::before {
+    content: '';
+    position: absolute;
+    top: -20px;
+    right: -20px;
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, rgba(245, 158, 11, 0.1) 0%, transparent 70%);
+    filter: blur(20px);
+}
+
+.manifesto-title {
+    font-family: var(--font-serif);
+    color: var(--gold, #f59e0b);
+    font-size: 1.5rem;
+    margin: 0 0 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.manifesto-text {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.manifesto-note {
+    font-size: 0.85rem;
+    font-style: italic;
+    color: #fff;
+    opacity: 0.8;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 1rem;
+    margin-top: 1.5rem;
+}
+
+.sidebar-link {
+    color: var(--accent, #3b82f6);
+    text-decoration: none;
+    display: inline-block;
+    margin-top: 0.5rem;
+    font-weight: 600;
+}
+
+.breadcrumbs-sidebar {
+    margin-top: 2rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.crumb-link {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* --- Accordion --- */
+.faq-group-title {
+    font-family: var(--font-serif);
+    font-size: 2rem;
+    margin: 0 0 2rem;
+    color: #fff;
+}
+
+.faq-item-magnum {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.faq-trigger {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 0;
+    background: none;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    color: #fff;
+}
+
+.faq-q-text {
+    font-family: var(--font-sans);
+    font-size: 1.1rem;
+    font-weight: 500;
+    transition: color 0.3s;
+}
+
+.faq-item-magnum.active .faq-q-text {
+    color: var(--accent, #3b82f6);
+}
+
+.faq-icon-box {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--text-muted);
+    transition: all 0.3s;
+    border-radius: 50%;
+}
+
+.faq-item-magnum.active .faq-icon-box {
+    border-color: var(--accent, #3b82f6);
+    color: var(--accent, #3b82f6);
+    transform: rotate(45deg);
+}
+
+.faq-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.faq-item-magnum.active .faq-content {
+    max-height: 500px;
+}
+
+.faq-inner {
+    padding: 0 0 2rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    font-size: 0.95rem;
+    max-width: 90%;
+}
+
+.note-text {
+    margin-top: 1rem;
+    font-style: italic;
+    color: var(--accent, #3b82f6);
+}
+
+/* --- Contact Block --- */
+.contact-block {
+    margin-top: 4rem;
+    padding: 3rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+}
+
+.contact-title {
+    font-family: var(--font-serif);
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    color: #fff;
+}
+
+.contact-sub {
+    color: var(--text-muted);
+}
+
+.btn-contact {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 1.5rem;
+    padding: 1rem 2rem;
+    background: #fff;
+    color: #000;
+    text-decoration: none;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    transition: all 0.2s;
+}
+
+.btn-contact:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 255, 255, 0.2);
+}
+
+.contact-meta {
+    margin-top: 1.5rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+/* --- Footer --- */
+.footer-magnum {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 3rem 0;
+    margin-top: 4rem;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+}
+
+.footer-credit {
+    opacity: 0.5;
+    font-size: 0.8em;
+    display: block;
+    margin-top: 0.5rem;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .faq-layout {
+        gap: 3rem;
+    }
+
+    .hero-super-title {
+        font-size: 3.5rem;
+    }
+
+    .faq-q-text {
+        font-size: 1rem;
+    }
+}

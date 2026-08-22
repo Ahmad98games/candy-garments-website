@@ -1,0 +1,576 @@
+/* ============================================================================
+   ABOUT PAGE - "MAGNUM OPUS" ENGINE v2.0
+   Enhanced with deeper interactions, improved hierarchy, and polish
+   ============================================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,900;1,6..96,400&family=Space+Grotesk:wght@300;400;500;700&display=swap');
+
+:root {
+  /* -- Palette -- */
+  --void: #0D0A0B;
+  --void-depth: #080607;
+  --text-primary: #FDE2E4;
+  --text-muted: #A5949D;
+  --accent: #722F37;
+  --accent-soft: rgba(114, 47, 55, 0.08);
+  --accent-glow: rgba(114, 47, 55, 0.1);
+
+  /* -- Fonts -- */
+  --font-serif: 'Bodoni Moda', serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
+
+  /* -- UI Physics -- */
+  --ease-elastic: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --glass: rgba(255, 255, 255, 0.03);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.about-page {
+  background-color: var(--void);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* --- The Cinematic Grain Texture (Disabled for Performance) --- */
+.noise-layer {
+  display: none;
+}
+
+.about-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 6rem 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* --- Enhanced Typography --- */
+.section-header-magnum {
+  font-family: var(--font-serif);
+  font-size: clamp(2.5rem, 8vw, 5rem);
+  text-transform: uppercase;
+  line-height: 1;
+  margin-bottom: 2rem;
+  color: #fff;
+}
+
+.highlight-blue {
+  color: #fff;
+}
+
+.highlight-gold {
+  color: var(--accent);
+  font-style: italic;
+}
+
+.text-editorial {
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  color: var(--text-muted);
+  line-height: 1.7;
+  max-width: 700px;
+}
+
+/* --- Enhanced Hero Section --- */
+.about-hero {
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 6rem;
+}
+
+.hero-super-title {
+  font-size: clamp(3rem, 15vw, 8rem);
+  font-family: var(--font-serif);
+  line-height: 0.8;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.3);
+  opacity: 0.5;
+  margin-bottom: -1rem;
+}
+
+/* --- Reveal Animation Enhanced --- */
+.reveal-block {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 1s ease, transform 1s var(--ease-elastic);
+}
+
+.reveal-block.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* --- Enhanced Founder Card with Glow --- */
+.founder-section {
+  background: var(--void-surface, #1a1a1a);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 3rem;
+  margin: 6rem 0;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.4s ease;
+}
+
+.founder-section:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Animation removed for performance */
+
+.founder-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 1.5rem;
+}
+
+.founder-avatar {
+  width: 80px;
+  height: 80px;
+  background: var(--void-depth);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  transition: all 0.3s ease;
+}
+
+.founder-avatar:hover {
+  transform: scale(1.05);
+  border-color: #fff;
+}
+
+.founder-name {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  margin: 0;
+}
+
+.founder-role {
+  font-family: var(--font-sans);
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.85rem;
+}
+
+/* --- Enhanced Mission Statement --- */
+.mission-blockquote {
+  border-left: 1px solid #fff;
+  padding-left: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.mission-blockquote::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 0;
+  background: #fff;
+  animation: borderGrow 2s ease-out forwards;
+  animation-delay: 0.5s;
+}
+
+@keyframes borderGrow {
+  to {
+    height: 100%;
+  }
+}
+
+.mission-quote {
+  font-style: italic;
+  font-size: 1.5rem;
+  color: #fff;
+  position: relative;
+  padding-left: 2rem;
+}
+
+.mission-quote::before {
+  content: '"';
+  position: absolute;
+  left: -0.5rem;
+  top: -0.5rem;
+  font-size: 4rem;
+  font-family: var(--font-serif);
+  color: #fff;
+  opacity: 0.1;
+  line-height: 1;
+}
+
+/* --- Enhanced Tech Grid with Stagger --- */
+.tech-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 3rem;
+}
+
+.tech-card {
+  background: var(--void);
+  padding: 2.5rem;
+  transition: all 0.4s var(--ease-smooth);
+  position: relative;
+  overflow: hidden;
+}
+
+.tech-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--accent) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.tech-card:hover {
+  background: var(--void-depth);
+  transform: translateY(-4px);
+}
+
+.tech-card:hover::before {
+  opacity: 0.05;
+}
+
+.tech-icon {
+  color: var(--accent);
+  margin-bottom: 1.5rem;
+  transition: transform 0.3s var(--ease-elastic);
+  position: relative;
+  z-index: 1;
+}
+
+.tech-card:hover .tech-icon {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.tech-title {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: #fff;
+  position: relative;
+  z-index: 1;
+}
+
+.tech-desc {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  position: relative;
+  z-index: 1;
+}
+
+.tech-metric {
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 0.75rem;
+  display: block;
+  position: relative;
+  z-index: 1;
+}
+
+/* --- Enhanced Values List --- */
+.values-list {
+  display: grid;
+  gap: 1.5rem;
+  margin-top: 3rem;
+}
+
+.value-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  border-left: 2px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.02) 0%, transparent 100%);
+  transition: all 0.3s var(--ease-smooth);
+}
+
+.value-row:hover {
+  border-left-color: #fff;
+  padding-left: 2rem;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.value-icon {
+  transition: transform 0.3s var(--ease-elastic);
+}
+
+.value-row:hover .value-icon {
+  transform: scale(1.15);
+}
+
+.value-text {
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+/* --- Enhanced Modern Buttons --- */
+.btn-modern {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 2.5rem;
+  background: #fff;
+  color: #000;
+  text-decoration: none;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 2rem;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-modern:hover {
+  transform: translateY(-2px);
+  background: #000;
+  color: #fff;
+  border: 1px solid #fff;
+}
+
+.btn-neon span {
+  position: relative;
+  z-index: 1;
+}
+
+.btn-neon:focus {
+  outline: 2px solid var(--neon-cyan);
+  outline-offset: 4px;
+}
+
+.contact-link {
+  color: var(--gold);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: all 0.2s;
+}
+
+.contact-link:hover {
+  border-bottom-color: var(--gold);
+}
+
+/* --- Projects Preview Section --- */
+.projects-preview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
+  margin-top: 3rem;
+}
+
+.project-card {
+  background: var(--glass);
+  border: var(--glass-border);
+  padding: 2rem;
+  transition: all 0.4s var(--ease-smooth);
+  position: relative;
+  overflow: hidden;
+}
+
+.project-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--gold));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s var(--ease-smooth);
+}
+
+.project-card:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-5px);
+}
+
+.project-card:hover::after {
+  transform: scaleX(1);
+}
+
+.project-tag {
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 1rem;
+  border: 1px solid var(--accent-glow);
+}
+
+.project-title {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: #fff;
+}
+
+.project-desc {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* --- Footer --- */
+.footer-magnum {
+  margin-top: 8rem;
+  padding: 3rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+}
+
+.footer-magnum img {
+  height: 40px;
+  opacity: 0.8;
+  margin-bottom: 1rem;
+  filter: grayscale(100%) contrast(200%);
+  transition: all 0.3s;
+}
+
+.footer-magnum img:hover {
+  opacity: 1;
+  filter: grayscale(0%) contrast(100%);
+}
+
+/* --- Social Links --- */
+.social-links {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.social-link {
+  color: var(--text-muted);
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.social-link:hover {
+  color: var(--neon-cyan);
+  transform: translateY(-2px);
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+  .about-container {
+    padding: 4rem 1rem;
+  }
+
+  .founder-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .founder-avatar {
+    margin: 0 auto;
+  }
+
+  .hero-super-title {
+    font-size: clamp(2.5rem, 15vw, 6rem);
+  }
+
+  .tech-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .projects-preview {
+    grid-template-columns: 1fr;
+  }
+
+  .mission-quote {
+    font-size: 1.2rem;
+  }
+
+  .btn-modern {
+    padding: 1rem 2rem;
+  }
+}
+
+/* ... Keep your existing CSS ... */
+
+/* --- New Helper Classes (To replace inline styles) --- */
+
+.mt-section {
+  margin-top: 8rem;
+}
+
+.mission-header {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  color: #fff;
+  text-transform: uppercase;
+}
+
+.founder-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.cta-section {
+  margin-top: 8rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.center-text {
+  margin: 0 auto 2rem auto;
+  text-align: center;
+}
+
+.contact-sub {
+  margin-top: 2rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.copyright {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  margin-top: 1rem;
+}
+
+/* Fix for the Founder Avatar Background */
+.founder-avatar {
+  /* Ensure the background logic works */
+  background-color: var(--void-depth);
+  overflow: hidden;
+}
+
+/* Mobile Adjustments for margins */
+@media (max-width: 768px) {
+  .mt-section {
+    margin-top: 5rem;
+  }
+}

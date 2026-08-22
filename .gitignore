@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Production / Build
+dist/
+**/dist/
+build/
+**/build/
+
+# Environment Variables & Secrets
+.env
+.env.*
+!.env.example
+*.env
+
+# IDE / OS / Tooling
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Gemini / AGY artifacts if any
+.gemini/

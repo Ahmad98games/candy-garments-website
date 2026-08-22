@@ -1,0 +1,353 @@
+/* ============================================================================
+   CANDY KIDS LUXURY EDITORIAL HOMEPAGE STYLES
+   ============================================================================ */
+
+:root {
+  --bg-canvas: #FAFAFA;
+  --bg-surface: #FFFFFF;
+  --text-primary: #111827;
+  --text-muted: #4B5563;
+  --accent-red: #E52535;
+  --accent-red-hover: #C81E2B;
+  --accent-emerald: #0F9D58;
+  --accent-blue: #1A73E8;
+  --border-subtle: #E5E7EB;
+}
+
+.home-magnum {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--bg-canvas);
+}
+
+/* HERO SECTION */
+.hero-magnum {
+  position: relative;
+  min-height: 85vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 0;
+  overflow: hidden;
+}
+
+.hero-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.hero-backdrop-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.65);
+  transition: transform 10s ease;
+}
+
+.hero-magnum:hover .hero-backdrop-img {
+  transform: scale(1.05);
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  max-width: 900px;
+  margin: 0 auto;
+  color: #FFFFFF;
+}
+
+.hero-badge {
+  display: inline-block;
+  padding: 0.4rem 1.2rem;
+  background-color: rgba(229, 37, 53, 0.9);
+  color: #FFFFFF;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  border-radius: 9999px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 12px rgba(229, 37, 53, 0.3);
+}
+
+.hero-title {
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-size: clamp(2.5rem, 6vw, 4.8rem);
+  font-weight: 900;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  margin-bottom: 1.2rem;
+  color: #FFFFFF;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.hero-slogan {
+  font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+  font-weight: 700;
+  color: #F4B400;
+  letter-spacing: 0.02em;
+  margin-bottom: 1.5rem;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.hero-subtitle {
+  max-width: 640px;
+  margin: 0 auto 2.5rem;
+  font-size: clamp(0.95rem, 1.8vw, 1.15rem);
+  line-height: 1.6;
+  color: #F3F4F6;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.btn-group {
+  display: flex;
+  gap: 1.25rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* SECTION PADDING & HEADERS */
+.section-pad {
+  padding: 4.5rem 0;
+  position: relative;
+}
+
+.section-badge {
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #E52535;
+  margin-bottom: 0.3rem;
+  display: inline-block;
+}
+
+.section-title {
+  font-family: 'Outfit', 'Inter', sans-serif;
+  color: #111827;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+/* CATEGORY GRID - Asymmetrical 4-column responsive grid */
+.category-grid,
+.category-grid-4col {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+
+.category-card {
+  position: relative;
+  height: 380px;
+  border-radius: 12px;
+  overflow: hidden;
+  text-decoration: none;
+  border: 1px solid #E5E7EB;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.category-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.category-card:hover .category-card-img {
+  transform: scale(1.08);
+}
+
+.category-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(17, 24, 39, 0.85) 0%, rgba(17, 24, 39, 0.1) 60%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 1.5rem;
+  color: #FFFFFF;
+}
+
+.category-card-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  margin-bottom: 0.25rem;
+}
+
+.category-card-sub {
+  font-size: 0.82rem;
+  color: #D1D5DB;
+  font-weight: 500;
+}
+
+/* PRODUCT CARD STYLING */
+.candy-product-card {
+  background-color: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.candy-product-card:hover {
+  border-color: #E52535;
+  box-shadow: 0 12px 24px rgba(229, 37, 53, 0.12);
+  transform: translateY(-3px);
+}
+
+.card-img-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  background-color: #F3F4F6;
+}
+
+.card-primary-img,
+.card-secondary-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.card-secondary-img {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+
+.candy-product-card:hover .card-secondary-img {
+  opacity: 1;
+  transform: scale(1.04);
+}
+
+.candy-product-card:hover .card-primary-img {
+  opacity: 0;
+}
+
+/* INSTAGRAM FEED GRID - 6-column */
+.instagram-grid-6col {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1rem;
+}
+
+.insta-item {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+  overflow: hidden;
+  display: block;
+}
+
+.insta-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.insta-overlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(229, 37, 53, 0.8);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.insta-item:hover .insta-overlay {
+  opacity: 1;
+}
+
+.insta-item:hover .insta-img {
+  transform: scale(1.1);
+}
+
+/* TRUST BADGES GRID */
+.trust-badges-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  background-color: #FFFFFF;
+  padding: 2.5rem;
+  border-radius: 16px;
+  border: 1px solid #E5E7EB;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+.trust-badge-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.trust-badge-icon {
+  width: 48px;
+  height: 48px;
+  background-color: #FEF2F2;
+  color: #E52535;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.trust-badge-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.trust-badge-desc {
+  font-size: 0.8rem;
+  color: #6B7280;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1024px) {
+  .category-grid-4col {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .instagram-grid-6col {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .trust-badges-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .category-grid-4col {
+    grid-template-columns: 1fr;
+  }
+  .instagram-grid-6col {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .trust-badges-grid {
+    grid-template-columns: 1fr;
+    padding: 1.5rem;
+  }
+  .category-card {
+    height: 280px;
+  }
+}

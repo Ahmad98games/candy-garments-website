@@ -1,0 +1,201 @@
+/* ================================================================
+   CANDY KIDS LUXURY EDITORIAL DESIGN SYSTEM
+   Brand Identity & Color Tokens (Zara / Khaadi Inspired)
+   Slogan: "Change Your LifeStyle with Candy Kids"
+   ================================================================ */
+
+:root {
+    /* --- 1. Typography Hierarchy --- */
+    --font-main: 'Inter', 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-heading: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-serif: 'Cormorant Garamond', Georgia, serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.25rem;
+    --text-2xl: 1.6rem;
+    --text-3xl: 2.2rem;
+    --text-4xl: 3rem;
+
+    /* --- 2. Luxury Clean Canvas & Light Surfaces --- */
+    --bg-canvas: #FAFAFA;
+    --bg-surface: #FFFFFF;
+    --bg-card: #FFFFFF;
+    --bg-card-hover: #F8FAFC;
+    --bg-subtle: #F3F4F6;
+    
+    /* Architectural Borders */
+    --border-subtle: #E5E7EB;
+    --border-muted: #D1D5DB;
+    --border-brand: #E52535;
+
+    /* --- 3. Candy Kids Brand Color Palette --- */
+    --accent-red: #E52535;         /* Primary Brand Red for CTAs, active states, cart */
+    --accent-red-hover: #C81E2B;
+    --accent-emerald: #0F9D58;     /* WhatsApp & Stock badges */
+    --accent-emerald-hover: #0B8043;
+    --accent-blue: #1A73E8;        /* Royal Blue for tags/highlights */
+    --accent-yellow: #F4B400;      /* Sun Yellow for ratings/accents */
+
+    /* Legacy CSS Variable Mappings for backward compatibility */
+    --accent-gold: #E52535;
+    --accent-gold-light: #FF4D5E;
+    --accent-gold-dark: #C81E2B;
+    --accent-cyan: #1A73E8;
+    --accent-amber: #F4B400;
+    --accent-crimson: #E52535;
+
+    /* --- 4. High-Contrast Typography Colors --- */
+    --text-primary: #111827;       /* Dark Contrast Headings & Titles */
+    --text-body: #4B5563;          /* Soft Body Text */
+    --text-muted: #6B7280;         /* Secondary Muted Text */
+    --text-brand: #E52535;        /* Branded Red Accent Text */
+    --text-emerald: #0F9D58;      /* WhatsApp / Stock Green Text */
+
+    /* --- 5. Clean Architectural Radius --- */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-full: 9999px;
+
+    /* --- 6. 60 FPS Shadows & Smooth Transitions --- */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.08);
+    --shadow-brand: 0 8px 20px rgba(229, 37, 53, 0.2);
+    --shadow-whatsapp: 0 8px 20px rgba(15, 157, 88, 0.2);
+
+    --transition-fast: 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    --transition-base: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    --transition-slow: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Base resets & overflow enforcement */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
+    font-family: var(--font-main);
+    font-size: 16px;
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+}
+
+body {
+    font-family: var(--font-main);
+    background-color: var(--bg-canvas);
+    color: var(--text-body);
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* Global Container */
+.container {
+    width: min(100% - 2rem, 1320px);
+    margin-inline: auto;
+    position: relative;
+}
+
+/* Helper Typography */
+.font-sans { font-family: var(--font-main); }
+.font-heading { font-family: var(--font-heading); }
+.font-serif { font-family: var(--font-serif); }
+.font-mono { font-family: var(--font-mono); }
+
+.text-brand { color: var(--accent-red); }
+.text-emerald { color: var(--accent-emerald); }
+.text-blue { color: var(--accent-blue); }
+.text-yellow { color: var(--accent-yellow); }
+.text-heading { color: var(--text-primary); }
+.text-muted { color: var(--text-muted); }
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.5rem;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: var(--transition-base);
+    text-decoration: none;
+    border: 1px solid transparent;
+    height: 44px;
+}
+
+.btn-primary {
+    background-color: var(--accent-red);
+    color: #FFFFFF;
+    border-color: var(--accent-red);
+    box-shadow: var(--shadow-brand);
+}
+
+.btn-primary:hover {
+    background-color: var(--accent-red-hover);
+    border-color: var(--accent-red-hover);
+    transform: translateY(-1px);
+}
+
+.btn-whatsapp {
+    background-color: var(--accent-emerald);
+    color: #FFFFFF;
+    border-color: var(--accent-emerald);
+    box-shadow: var(--shadow-whatsapp);
+}
+
+.btn-whatsapp:hover {
+    background-color: var(--accent-emerald-hover);
+    border-color: var(--accent-emerald-hover);
+    transform: translateY(-1px);
+}
+
+.btn-outline {
+    background-color: #FFFFFF;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+}
+
+.btn-outline:hover {
+    border-color: var(--accent-red);
+    color: var(--accent-red);
+    background-color: #FFF5F5;
+}
+
+/* Glassmorphism Navigation */
+.glass-header {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background-color: rgba(255, 255, 255, 0.92);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #FAFAFA;
+}
+::-webkit-scrollbar-thumb {
+    background: #D1D5DB;
+    border-radius: 9999px;
+}
+
+::selection {
+    background: #FFE5E7;
+    color: var(--accent-red);
+}

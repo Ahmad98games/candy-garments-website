@@ -1,0 +1,487 @@
+/* ============================================================================
+   TECH STACK ARCHIVE - "The Engine Room"
+   Refined by: Senior Partner
+   Aesthetic: Cyberpunk / Ethereal / High-End
+   ============================================================================ */
+
+:root {
+    /* --- PALETTE: Obsidian Rose --- */
+    --void: #0D0A0B;
+    --void-light: #080607;
+    --neon-cyan: #722F37;
+    /* Deep Wine */
+    --neon-gold: #E5989B;
+    /* Pale Rose */
+    --text-primary: #FDE2E4;
+    --text-secondary: #A5949D;
+
+    /* --- SURFACES --- */
+    --glass-dark: rgba(13, 10, 11, 0.8);
+    --glass-border: rgba(114, 47, 55, 0.15);
+    --glass-highlight: rgba(114, 47, 55, 0.2);
+
+    /* --- METRICS --- */
+    --header-height: 80px;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+    --font-serif: 'Bodoni Moda', serif;
+}
+
+/* --- GLOBAL RESET & SCROLLBAR --- */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--void);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+}
+
+/* Custom Scrollbar for that "Dev" feel */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--void);
+}
+
+::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--neon-cyan);
+}
+
+/* ============================================================================
+   MAIN CONTAINER & ATMOSPHERE
+   ============================================================================ */
+.tech-container {
+    min-height: 100vh;
+    background-color: var(--void);
+    /* Complex, layered background for depth */
+    background-image:
+        linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+        radial-gradient(circle at 15% 50%, rgba(0, 240, 255, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 85% 30%, rgba(255, 214, 0, 0.03) 0%, transparent 40%);
+    background-size: 50px 50px, 50px 50px, 100% 100%, 100% 100%;
+    position: relative;
+    overflow-x: hidden;
+}
+
+.tech-wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 6rem 2rem;
+}
+
+/* ============================================================================
+   HEADER SECTION
+   ============================================================================ */
+.tech-header {
+    margin-bottom: 5rem;
+    position: relative;
+    max-width: 900px;
+}
+
+.tech-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    background: rgba(0, 240, 255, 0.05);
+    border: 1px solid rgba(0, 240, 255, 0.2);
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--neon-cyan);
+    margin-bottom: 2rem;
+    letter-spacing: 0.1em;
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.1);
+}
+
+.tech-title {
+    font-family: var(--font-sans);
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    line-height: 1.1;
+    margin-bottom: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.tech-title span {
+    display: block;
+}
+
+/* The Glitch/Outline Effect */
+.tech-title .highlight {
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.5);
+    position: relative;
+    cursor: default;
+}
+
+.tech-title .highlight::after {
+    content: attr(data-text);
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: var(--neon-cyan);
+    opacity: 0;
+    filter: drop-shadow(0 0 8px var(--neon-cyan));
+    transition: opacity 0.4s ease-out;
+    -webkit-text-stroke: 0;
+}
+
+.tech-header:hover .highlight::after {
+    opacity: 1;
+}
+
+.tech-subtitle {
+    font-size: 1.125rem;
+    color: var(--text-secondary);
+    max-width: 650px;
+    line-height: 1.7;
+    border-left: 2px solid var(--neon-gold);
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+/* ============================================================================
+   STATS BAR
+   ============================================================================ */
+.stats-bar {
+    display: flex;
+    gap: 4rem;
+    margin-bottom: 4rem;
+    border-bottom: 1px solid var(--glass-border);
+    padding-bottom: 2rem;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.pulse-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #00ff88;
+    /* Success Green */
+    border-radius: 50%;
+    box-shadow: 0 0 10px #00ff88;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.5);
+        opacity: 0.5;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* ============================================================================
+   TECH GRID
+   ============================================================================ */
+.tech-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 2rem;
+    margin-bottom: 8rem;
+}
+
+.tech-card {
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+    border: 1px solid var(--glass-border);
+    padding: 2.5rem;
+    position: relative;
+    transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    backdrop-filter: blur(10px);
+    /* Glass effect */
+    border-radius: 2px;
+    /* Brutalist/Sharp corners */
+    overflow: hidden;
+}
+
+/* The Cyberpunk Scanline Effect on Hover */
+.tech-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease-in-out;
+    z-index: 2;
+}
+
+.tech-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+    background: var(--glass-dark);
+}
+
+.tech-card:hover::before {
+    transform: translateX(100%);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+}
+
+.tech-icon-box {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    color: var(--neon-cyan);
+    transition: color 0.3s;
+}
+
+.tech-card:hover .tech-icon-box {
+    color: #fff;
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+}
+
+.tech-category {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-secondary);
+    border: 1px solid var(--glass-border);
+    padding: 0.3rem 0.6rem;
+    border-radius: 100px;
+}
+
+.tech-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: #fff;
+}
+
+.tech-description {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #ccc;
+    margin-bottom: 2rem;
+}
+
+.tech-why {
+    background: rgba(255, 214, 0, 0.05);
+    /* Subtle Gold Tint */
+    border-left: 2px solid var(--neon-gold);
+    padding: 1rem;
+    font-size: 0.9rem;
+    color: #dedede;
+    margin-top: auto;
+}
+
+/* ============================================================================
+   ARCHITECTURE & DIAGRAM
+   ============================================================================ */
+.architecture-section {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 4rem;
+    border-top: 1px solid var(--glass-border);
+    padding-top: 5rem;
+    align-items: center;
+}
+
+.arch-info h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+    font-weight: 700;
+}
+
+.arch-diagram {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.flow-step {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.02);
+    padding: 1.5rem 2rem;
+    border: 1px solid var(--glass-border);
+    transition: all 0.3s;
+    position: relative;
+}
+
+.flow-step:hover {
+    border-color: var(--neon-cyan);
+    background: rgba(0, 240, 255, 0.03);
+    transform: translateX(10px);
+}
+
+.step-label {
+    min-width: 100px;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--neon-gold);
+}
+
+.step-arrow {
+    margin: 0 2rem;
+    color: var(--text-secondary);
+}
+
+.animated-arrow {
+    animation: slideRight 1.5s ease-in-out infinite;
+}
+
+@keyframes slideRight {
+    0% {
+        transform: translateX(0);
+        opacity: 0.3;
+    }
+
+    50% {
+        transform: translateX(5px);
+        opacity: 1;
+        color: var(--neon-cyan);
+    }
+
+    100% {
+        transform: translateX(0);
+        opacity: 0.3;
+    }
+}
+
+.step-content {
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: 0.02em;
+}
+
+/* ============================================================================
+   PHILOSOPHY
+   ============================================================================ */
+.philosophy-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin-top: 8rem;
+    padding-top: 4rem;
+    border-top: 1px solid var(--glass-border);
+}
+
+.philosophy-item {
+    text-align: left;
+    padding: 2rem;
+    background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.02));
+    border: 1px solid transparent;
+    transition: border 0.3s;
+}
+
+.philosophy-item:hover {
+    border: 1px solid var(--glass-border);
+}
+
+.philosophy-number {
+    font-family: var(--font-serif);
+    font-size: 4rem;
+    color: rgba(255, 255, 255, 0.05);
+    line-height: 1;
+    margin-bottom: 1.5rem;
+    font-weight: 700;
+}
+
+.philosophy-item h3 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+    color: var(--neon-cyan);
+    font-family: var(--font-mono);
+}
+
+/* ============================================================================
+   MOBILE RESPONSIVENESS
+   ============================================================================ */
+@media (max-width: 900px) {
+
+    .architecture-section,
+    .philosophy-grid {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+    }
+
+    .tech-title {
+        font-size: 3rem;
+    }
+
+    .stats-bar {
+        flex-direction: column;
+        gap: 1.5rem;
+        align-items: flex-start;
+    }
+
+    .flow-step {
+        padding: 1rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .step-arrow {
+        transform: rotate(90deg);
+        margin: 0;
+    }
+
+    .animated-arrow {
+        animation: slideDown 1.5s ease-in-out infinite;
+    }
+
+    @keyframes slideDown {
+        0% {
+            transform: translateY(0) rotate(90deg);
+            opacity: 0.3;
+        }
+
+        50% {
+            transform: translateY(5px) rotate(90deg);
+            opacity: 1;
+        }
+
+        100% {
+            transform: translateY(0) rotate(90deg);
+            opacity: 0.3;
+        }
+    }
+}

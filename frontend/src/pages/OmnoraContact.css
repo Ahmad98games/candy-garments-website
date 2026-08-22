@@ -1,0 +1,321 @@
+/* ============================================================================
+   OMNORA CONTACT - "THE TERMINAL"
+   Status: Optimized & Production Ready
+   ============================================================================ */
+
+/* Note: Fonts and Root Variables are inherited from index.css / App.css */
+
+.contact-magnum-page {
+    background-color: var(--void);
+    color: var(--text-primary);
+    min-height: 100vh;
+    position: relative;
+    padding-bottom: 4rem;
+}
+
+/* --- Hero Section --- */
+.contact-hero-magnum {
+    padding: 8rem 0 4rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-super-title {
+    font-family: var(--font-serif);
+    font-size: clamp(3rem, 8vw, 6rem);
+    line-height: 0.9;
+    text-transform: uppercase;
+    color: #fff;
+    margin: 0;
+}
+
+.hero-super-title span {
+    display: block;
+    font-family: var(--font-sans);
+    font-size: 0.25em;
+    letter-spacing: 0.2em;
+    color: var(--gold, #f59e0b);
+    margin-bottom: 1rem;
+}
+
+.hero-desc {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    max-width: 500px;
+    margin-top: 2rem;
+    padding-left: 1.5rem;
+    border-left: 2px solid var(--accent, #3b82f6);
+}
+
+/* --- Main Layout --- */
+.contact-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4rem;
+    padding: 6rem 1.5rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+@media (min-width: 1024px) {
+    .contact-layout {
+        grid-template-columns: 1fr 1.5fr;
+        /* Sidebar | Form */
+    }
+}
+
+/* --- Left Column: Info --- */
+.info-block {
+    margin-bottom: 4rem;
+}
+
+.info-label {
+    font-family: var(--font-serif);
+    font-size: 1.5rem;
+    color: #fff;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.data-row {
+    margin-bottom: 1.5rem;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    padding-left: 1rem;
+}
+
+.data-key {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent, #3b82f6);
+    margin-bottom: 0.25rem;
+}
+
+.data-val {
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.data-val-sub {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* Social Grid */
+.social-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.social-node {
+    padding: 0.8rem 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+    text-decoration: none;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    transition: all 0.3s;
+}
+
+.social-node:hover {
+    border-color: var(--gold, #f59e0b);
+    color: var(--gold);
+    background: rgba(245, 158, 11, 0.05);
+}
+
+/* --- Right Column: Form Terminal --- */
+.form-terminal {
+    background: #0a0a0a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 3rem;
+    position: relative;
+}
+
+/* Top Neon Line */
+.form-terminal::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, var(--accent, #3b82f6), transparent);
+}
+
+.terminal-title {
+    font-family: var(--font-serif);
+    font-size: 2rem;
+    margin-bottom: 2.5rem;
+    color: #fff;
+}
+
+.form-group {
+    margin-bottom: 2rem;
+}
+
+.form-label {
+    display: block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-muted);
+    margin-bottom: 0.8rem;
+}
+
+.form-input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    font-family: var(--font-sans);
+    font-size: 1.1rem;
+    padding: 0.5rem 0;
+    outline: none;
+    transition: all 0.3s;
+}
+
+.form-input:focus {
+    border-bottom-color: var(--accent, #3b82f6);
+    padding-left: 5px;
+    /* Subtle movement on focus */
+}
+
+.form-input::placeholder {
+    color: rgba(255, 255, 255, 0.2);
+}
+
+/* Submit Button */
+.btn-transmit {
+    width: 100%;
+    padding: 1.2rem;
+    background: #fff;
+    color: #000;
+    font-family: var(--font-sans);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.btn-transmit:hover {
+    background: var(--accent, #3b82f6);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+    transform: translateY(-2px);
+}
+
+.btn-transmit:disabled {
+    opacity: 0.5;
+    cursor: wait;
+}
+
+/* Messages */
+.success-msg {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    border: 1px solid var(--neon-green);
+    color: var(--neon-green);
+    background: rgba(0, 255, 136, 0.05);
+    text-align: center;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+/* --- Map Section --- */
+.map-section {
+    max-width: 1400px;
+    margin: 4rem auto 0;
+    padding: 0 1.5rem;
+}
+
+.map-overlay-text {
+    font-family: var(--font-serif);
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    color: #fff;
+}
+
+.map-frame {
+    width: 100%;
+    height: 450px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    /* High-Tech Dark Mode Filter for Google Maps */
+    filter: grayscale(100%) invert(92%) contrast(120%);
+    transition: filter 0.5s;
+}
+
+.map-frame:hover {
+    filter: grayscale(80%) invert(92%) contrast(110%);
+}
+
+/* --- Breadcrumbs --- */
+.breadcrumbs-nav {
+    margin-top: 4rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.breadcrumb-link {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.breadcrumb-link:hover {
+    color: var(--accent, #3b82f6);
+}
+
+.separator {
+    margin: 0 0.5rem;
+    color: rgba(255, 255, 255, 0.2);
+}
+
+/* --- Icons --- */
+.icon-blue {
+    color: var(--accent, #3b82f6);
+}
+
+.icon-cyan {
+    color: var(--accent, #3b82f6);
+}
+
+.icon-gold {
+    color: var(--gold, #f59e0b);
+}
+
+/* --- Mobile Responsiveness --- */
+@media (max-width: 768px) {
+    .contact-layout {
+        padding: 4rem 1.5rem;
+        gap: 3rem;
+    }
+
+    .form-terminal {
+        padding: 1.5rem;
+    }
+
+    .hero-super-title {
+        font-size: 3.5rem;
+    }
+
+    .map-frame {
+        height: 300px;
+    }
+}

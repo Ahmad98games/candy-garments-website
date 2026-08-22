@@ -1,0 +1,671 @@
+﻿/* ============================================================================
+   OMNORA COLLECTION - "MAGNUM OPUS" SHOWROOM v2.0
+   Enhanced with deeper interactions, better mobile UX, and polish
+   ============================================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,900;1,6..96,400&family=Space+Grotesk:wght@300;400;500;700&display=swap');
+
+:root {
+  /* -- Palette: Obsidian Rose -- */
+  --void: #0D0A0B;
+  --void-depth: #080607;
+  --text-primary: #FDE2E4;
+  --text-muted: #A5949D;
+  --neon-cyan: #722F37;
+  /* Deep Wine */
+  --neon-gold: #E5989B;
+  /* Pale Rose */
+
+  /* -- Fonts -- */
+  --font-serif: 'Bodoni Moda', serif;
+  --font-sans: 'Space Grotesk', sans-serif;
+
+  /* -- UI Physics -- */
+  --glass: rgba(20, 20, 20, 0.6);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+  --glass-blur: blur(20px);
+  --ease-elastic: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.collection-page {
+  background-color: var(--void);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+}
+
+/* --- Cinematic Grain Texture (Original Style) --- */
+.noise-layer {
+  position: fixed;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* ============================================================================
+   ENHANCED HERO SECTION
+   ============================================================================ */
+.collection-hero {
+  position: relative;
+  height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.hero-bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.4;
+  filter: contrast(1.2) grayscale(0.5);
+  transform: scale(1.05);
+  animation: slowPan 30s infinite alternate;
+}
+
+@keyframes slowPan {
+  to {
+    transform: scale(1.15);
+  }
+}
+
+.hero-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, transparent 0%, var(--void) 90%);
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  padding: 0 1rem;
+}
+
+.hero-title {
+  font-family: var(--font-serif);
+  font-size: clamp(3rem, 10vw, 6rem);
+  text-transform: uppercase;
+  line-height: 0.9;
+  margin: 0 0 1rem;
+  letter-spacing: -0.02em;
+}
+
+.hero-title span {
+  display: block;
+  font-size: 0.4em;
+  font-family: var(--font-sans);
+  letter-spacing: 0.5em;
+  color: var(--neon-cyan);
+  margin-bottom: 0.5rem;
+  text-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+}
+
+.hero-subtitle {
+  color: var(--text-muted);
+  max-width: 600px;
+  margin: 0 auto;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+/* ============================================================================
+   ENHANCED TOOLBAR (Sticky Filter Bar)
+   ============================================================================ */
+.toolbar-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  padding: 1rem 0;
+  background: rgba(5, 5, 5, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  margin-bottom: 3rem;
+  transition: all 0.3s var(--ease-smooth);
+}
+
+.toolbar-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.toolbar-count {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.toolbar-count strong {
+  color: var(--neon-cyan);
+  font-weight: 700;
+}
+
+.toolbar-controls {
+  display: flex;
+  gap: 1rem;
+}
+
+/* Enhanced Custom Select Styling */
+.select-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.magnum-select {
+  appearance: none;
+  background: var(--void-depth);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  padding: 0.75rem 2.5rem 0.75rem 1rem;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  border-radius: 0;
+  transition: all 0.3s var(--ease-smooth);
+}
+
+.magnum-select:hover {
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.1);
+}
+
+.magnum-select:focus {
+  outline: none;
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+}
+
+.select-arrow {
+  position: absolute;
+  right: 1rem;
+  pointer-events: none;
+  color: var(--neon-cyan);
+  font-size: 0.8rem;
+  transition: transform 0.3s;
+}
+
+.select-wrapper:hover .select-arrow {
+  transform: translateY(2px);
+}
+
+/* Enhanced Breadcrumbs */
+.breadcrumbs {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 2rem;
+}
+
+.breadcrumbs a {
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.breadcrumbs a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--neon-cyan);
+  transition: width 0.3s var(--ease-smooth);
+}
+
+.breadcrumbs a:hover {
+  color: var(--neon-cyan);
+}
+
+.breadcrumbs a:hover::after {
+  width: 100%;
+}
+
+.breadcrumbs span {
+  margin: 0 0.5rem;
+  color: rgba(255, 255, 255, 0.2);
+}
+
+/* ============================================================================
+   ENHANCED PRODUCT GRID
+   ============================================================================ */
+.product-grid-magnum {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 4rem;
+}
+
+/* ============================================================================
+   ENHANCED PRODUCT CARD
+   ============================================================================ */
+.card-magnum {
+  position: relative;
+  background: var(--void);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.4s var(--ease-smooth);
+  overflow: hidden;
+}
+
+.card-magnum:hover {
+  background: var(--void-depth);
+}
+
+.card-img-box {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+}
+
+.card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.7s var(--ease-elastic), filter 0.3s;
+  filter: grayscale(20%);
+}
+
+.card-magnum:hover .card-img {
+  transform: scale(1.1);
+  filter: grayscale(0%);
+}
+
+/* Enhanced Badges */
+.card-badges {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  z-index: 2;
+}
+
+.badge-neon {
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(5px);
+  border: 1px solid var(--neon-cyan);
+  color: var(--neon-cyan);
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.3rem 0.6rem;
+  letter-spacing: 0.1em;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+  animation: badgePulse 2s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+  }
+
+  50% {
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+  }
+}
+
+.badge-gold {
+  border-color: var(--neon-gold);
+  color: var(--neon-gold);
+  animation: badgePulseGold 2s ease-in-out infinite;
+}
+
+@keyframes badgePulseGold {
+
+  0%,
+  100% {
+    box-shadow: 0 0 10px rgba(255, 214, 0, 0.2);
+  }
+
+  50% {
+    box-shadow: 0 0 20px rgba(255, 214, 0, 0.4);
+  }
+}
+
+/* Enhanced Quick Add Overlay */
+.card-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 1.5rem;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.95), transparent);
+  transform: translateY(100%);
+  transition: transform 0.4s var(--ease-elastic);
+  display: flex;
+  justify-content: center;
+}
+
+.card-magnum:hover .card-overlay {
+  transform: translateY(0);
+}
+
+.btn-quick-add {
+  background: var(--text-primary);
+  color: var(--void);
+  border: none;
+  width: 100%;
+  padding: 0.8rem;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-smooth);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-quick-add::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--neon-cyan), var(--neon-gold));
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.btn-quick-add:hover {
+  background: var(--neon-cyan);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 20px rgba(0, 240, 255, 0.3);
+}
+
+.btn-quick-add:hover::before {
+  opacity: 1;
+}
+
+.btn-quick-add:active {
+  transform: translateY(0);
+}
+
+.btn-quick-add:focus {
+  outline: 2px solid var(--neon-cyan);
+  outline-offset: 2px;
+}
+
+/* Enhanced Card Details */
+.card-details {
+  padding: 1.5rem;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.card-title {
+  font-family: var(--font-sans);
+  font-size: 1.1rem;
+  margin: 0 0 0.5rem;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+  position: relative;
+  display: inline-block;
+  width: fit-content;
+}
+
+.card-title::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--neon-cyan);
+  transition: width 0.3s var(--ease-smooth);
+}
+
+.card-title:hover {
+  color: var(--neon-cyan);
+}
+
+.card-title:hover::after {
+  width: 100%;
+}
+
+.card-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin-bottom: 1rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-price {
+  margin-top: auto;
+  font-family: var(--font-serif);
+  font-size: 1.35rem;
+  color: var(--neon-gold);
+  text-shadow: 0 0 10px rgba(255, 214, 0, 0.2);
+}
+
+/* ============================================================================
+   ENHANCED EMPTY STATES & SKELETONS
+   ============================================================================ */
+.empty-magnum {
+  text-align: center;
+  padding: 6rem 1rem;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  grid-column: 1 / -1;
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.02) 0%, transparent 100%);
+}
+
+.empty-title {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.skeleton-magnum {
+  background: var(--void-depth);
+  height: 500px;
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton-magnum::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.03), transparent);
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* ============================================================================
+   SIDEBAR & ADS
+   ============================================================================ */
+.layout-magnum {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+@media (min-width: 1024px) {
+  .layout-magnum {
+    grid-template-columns: 1fr 250px;
+  }
+}
+
+.collection-sidebar {
+  position: sticky;
+  top: 120px;
+  height: fit-content;
+}
+
+.ad-zone {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1rem;
+  text-align: center;
+  background: var(--void-depth);
+  transition: border-color 0.3s;
+}
+
+.ad-zone:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ============================================================================
+   MOBILE-SPECIFIC ENHANCEMENTS
+   ============================================================================ */
+.mobile-btn-wrapper {
+  display: none;
+}
+
+@media (max-width: 768px) {
+
+  /* Mobile Grid */
+  .product-grid-magnum {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+  }
+
+  .card-img-box {
+    aspect-ratio: 1 / 1.2;
+  }
+
+  .card-details {
+    padding: 1rem;
+  }
+
+  .card-title {
+    font-size: 0.95rem;
+  }
+
+  .card-desc {
+    font-size: 0.8rem;
+    -webkit-line-clamp: 1;
+
+  }
+
+  .card-price {
+    font-size: 1.1rem;
+  }
+
+  /* Hide hover overlay, show mobile button instead */
+  .card-overlay {
+    display: none;
+  }
+
+  .mobile-btn-wrapper {
+    display: block;
+    position: static;
+    transform: none;
+    padding: 0 1rem 1rem;
+    background: transparent;
+  }
+
+  .mobile-btn-wrapper .btn-quick-add {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: transparent;
+    color: #fff;
+    padding: 0.7rem;
+  }
+
+  .mobile-btn-wrapper .btn-quick-add:hover {
+    background: var(--neon-cyan);
+    color: var(--void);
+    border-color: var(--neon-cyan);
+  }
+
+  /* Mobile Toolbar */
+  .toolbar-inner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .toolbar-controls {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .select-wrapper {
+    width: 100%;
+  }
+
+  .magnum-select {
+    width: 100%;
+  }
+
+  /* Mobile Hero */
+  .collection-hero {
+    height: 50vh;
+  }
+
+  .hero-title {
+    font-size: clamp(2rem, 8vw, 4rem);
+  }
+
+  .hero-subtitle {
+    font-size: 0.9rem;
+  }
+
+  /* Hide sidebar on mobile */
+  .collection-sidebar {
+    display: none;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 769px) and (max-width: 1023px) {
+  .product-grid-magnum {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

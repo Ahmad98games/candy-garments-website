@@ -1,0 +1,314 @@
+/* Ad Placement Zone Styles - Mobile-First Responsive Design */
+
+.ad-zone {
+    margin: 1.5rem 0;
+    position: relative;
+    width: 100%;
+}
+
+/* Video Zone */
+.ad-zone-video {
+    max-width: 100%;
+    width: 100%;
+}
+
+.video-container {
+    background: var(--color-bg-medium, #1C2D4A);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    border: 1px solid var(--border-color, #3B5998);
+    width: 100%;
+}
+
+.ad-zone-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.2rem, 4vw, 1.8rem);
+    color: var(--color-aqua, #4FC3F7);
+    margin-bottom: 0.5rem;
+    word-wrap: break-word;
+}
+
+.ad-zone-description {
+    color: var(--color-text-secondary, #A0B3C8);
+    margin-bottom: 1rem;
+    font-size: clamp(0.85rem, 2.5vw, 1rem);
+    line-height: 1.5;
+}
+
+.ad-video {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    background: #000;
+    aspect-ratio: 16 / 9;
+    object-fit: contain;
+}
+
+/* Banner Zone */
+.ad-zone-banner {
+    width: 100%;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 0.5rem;
+}
+
+.ad-zone-banner .ad-image {
+    width: 100%;
+    height: auto;
+    max-height: 300px;
+    object-fit: cover;
+    border-radius: 0.75rem;
+    display: block;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .ad-zone-banner a:hover .ad-image {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(79, 195, 247, 0.3);
+    }
+}
+
+/* Sidebar Zone - Mobile First */
+.ad-zone-sidebar {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    margin: 1.5rem 0;
+}
+
+.ad-zone-sidebar .ad-image {
+    width: 100%;
+    height: auto;
+    max-height: 400px;
+    object-fit: cover;
+    border-radius: 0.5rem;
+    transition: transform 0.3s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .ad-zone-sidebar a:hover .ad-image {
+        transform: scale(1.02);
+    }
+}
+
+/* Square Zone */
+.ad-zone-square {
+    max-width: 100%;
+    width: 100%;
+}
+
+.ad-zone-square .ad-image {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 0.5rem;
+}
+
+/* Placeholder Styles */
+.ad-placeholder {
+    background: linear-gradient(135deg, var(--color-bg-medium, #1C2D4A) 0%, var(--color-bg-light, #2B4262) 100%);
+    border: 2px dashed var(--border-color, #3B5998);
+    border-radius: 0.75rem;
+    padding: 1.5rem 1rem;
+    text-align: center;
+    min-height: 150px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+@media (hover: hover) {
+    .ad-placeholder:hover {
+        border-color: var(--color-aqua, #4FC3F7);
+        background: linear-gradient(135deg, var(--color-bg-light, #2B4262) 0%, var(--color-bg-medium, #1C2D4A) 100%);
+    }
+}
+
+.ad-placeholder-banner {
+    min-height: 180px;
+}
+
+.ad-placeholder-sidebar {
+    min-height: 250px;
+}
+
+.ad-placeholder-square {
+    aspect-ratio: 1;
+    min-height: 200px;
+}
+
+.placeholder-icon {
+    font-size: clamp(2rem, 6vw, 3rem);
+    margin-bottom: 0.75rem;
+    opacity: 0.7;
+}
+
+.ad-placeholder h4 {
+    color: var(--color-silver, #A0B3C8);
+    font-size: clamp(1rem, 3vw, 1.2rem);
+    margin-bottom: 0.5rem;
+    font-family: 'Playfair Display', serif;
+    word-wrap: break-word;
+    max-width: 100%;
+}
+
+.ad-placeholder p {
+    color: var(--color-text-secondary, #A0B3C8);
+    font-size: clamp(0.75rem, 2.5vw, 0.9rem);
+    margin-bottom: 0.5rem;
+    word-wrap: break-word;
+    max-width: 100%;
+}
+
+.ad-placeholder code {
+    background: rgba(79, 195, 247, 0.1);
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    color: var(--color-aqua, #4FC3F7);
+    font-family: 'Courier New', monospace;
+    font-size: clamp(0.7rem, 2vw, 0.85rem);
+    word-break: break-all;
+}
+
+.ad-placeholder small {
+    color: var(--color-text-secondary, #A0B3C8);
+    opacity: 0.7;
+    font-size: clamp(0.65rem, 1.8vw, 0.75rem);
+}
+
+/* Tablet Breakpoint (768px and up) */
+@media (min-width: 768px) {
+    .ad-zone {
+        margin: 2rem 0;
+    }
+
+    .video-container {
+        padding: 1.5rem;
+    }
+
+    .ad-zone-banner {
+        padding: 0;
+        max-width: 1200px;
+    }
+
+    .ad-zone-banner .ad-image {
+        max-height: 400px;
+    }
+
+    .ad-placeholder {
+        padding: 2rem;
+        min-height: 200px;
+    }
+
+    .ad-placeholder-banner {
+        min-height: 250px;
+    }
+
+    .ad-placeholder-sidebar {
+        min-height: 400px;
+    }
+}
+
+/* Desktop Breakpoint (1024px and up) - Sticky Sidebar */
+@media (min-width: 1024px) {
+    .ad-zone-sidebar {
+        position: sticky;
+        top: 100px;
+        max-width: 300px;
+        margin: 0;
+    }
+
+    .ad-zone-sidebar .ad-image {
+        max-height: 600px;
+    }
+}
+
+/* Large Desktop (1440px and up) */
+@media (min-width: 1440px) {
+    .ad-zone-sidebar {
+        max-width: 350px;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .ad-zone {
+        display: none !important;
+    }
+}
+
+/* Loading Animation */
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}
+
+.ad-placeholder {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@media (hover: hover) {
+    .ad-placeholder:hover {
+        animation: none;
+    }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) and (pointer: coarse) {
+
+    .ad-zone-banner a,
+    .ad-zone-sidebar a {
+        display: block;
+        min-height: 44px;
+    }
+
+    .ad-zone-banner .ad-image,
+    .ad-zone-sidebar .ad-image {
+        transform: none !important;
+    }
+
+    .ad-placeholder {
+        animation: none;
+    }
+}
+
+/* iOS Specific Fixes */
+@supports (-webkit-touch-callout: none) {
+    .ad-video {
+        -webkit-playsinline: true;
+        margin-inline: 0;
+    }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+
+    .ad-zone-banner .ad-image,
+    .ad-zone-sidebar .ad-image,
+    .ad-placeholder {
+        animation: none;
+        transition: none;
+    }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+    .ad-placeholder {
+        border-width: 3px;
+        border-color: currentColor;
+    }
+}

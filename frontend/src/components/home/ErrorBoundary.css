@@ -1,0 +1,141 @@
+/* ============================================================================
+   ERROR BOUNDARY - "System Failure"
+   ============================================================================ */
+
+:root {
+    --error-bg: #030304;
+    --neon-red: #ff2a6d; /* Cyberpunk Red */
+    --neon-cyan: #00f0ff;
+    --text-primary: #ffffff;
+    --text-muted: #888888;
+    --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+.error-boundary-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--error-bg);
+    color: var(--text-primary);
+    /* Subtle Red Noise Background */
+    background-image: radial-gradient(circle at 50% 50%, rgba(255, 42, 109, 0.05) 0%, transparent 50%);
+    padding: 2rem;
+    text-align: center;
+}
+
+.error-content {
+    max-width: 600px;
+    width: 100%;
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* --- Icon --- */
+.error-icon-wrapper {
+    color: var(--neon-red);
+    margin-bottom: 1.5rem;
+    animation: pulseRed 2s infinite;
+    display: inline-block;
+}
+
+@keyframes pulseRed {
+    0% { filter: drop-shadow(0 0 5px rgba(255, 42, 109, 0.5)); transform: scale(1); }
+    50% { filter: drop-shadow(0 0 20px rgba(255, 42, 109, 0.8)); transform: scale(1.05); }
+    100% { filter: drop-shadow(0 0 5px rgba(255, 42, 109, 0.5)); transform: scale(1); }
+}
+
+/* --- Typography --- */
+.error-content h1 {
+    font-family: 'Playfair Display', serif; /* Or your brand font */
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    letter-spacing: -0.02em;
+}
+
+.error-message {
+    font-family: 'Inter', sans-serif;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 2.5rem;
+}
+
+/* --- Actions --- */
+.error-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 3rem;
+}
+
+.error-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.error-btn.primary {
+    background: var(--neon-red);
+    border: 1px solid var(--neon-red);
+    color: #fff;
+    box-shadow: 0 0 15px rgba(255, 42, 109, 0.3);
+}
+
+.error-btn.primary:hover {
+    background: transparent;
+    color: var(--neon-red);
+    box-shadow: 0 0 25px rgba(255, 42, 109, 0.5);
+}
+
+.error-btn.secondary {
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+}
+
+.error-btn.secondary:hover {
+    border-color: var(--neon-cyan);
+    color: var(--neon-cyan);
+}
+
+/* --- Debug Terminal (Dev Only) --- */
+.debug-terminal {
+    background: #0a0a0a;
+    border: 1px solid #333;
+    border-radius: 6px;
+    overflow: hidden;
+    text-align: left;
+    margin-top: 2rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.terminal-header {
+    background: #1a1a1a;
+    padding: 0.5rem 1rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    color: #666;
+    border-bottom: 1px solid #333;
+}
+
+.debug-terminal pre {
+    padding: 1rem;
+    color: var(--neon-red);
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    margin: 0;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}

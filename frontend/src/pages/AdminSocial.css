@@ -1,0 +1,291 @@
+/* ============================================================================
+   ADMIN SOCIAL & DEEP LINK SETTINGS STYLES
+   ============================================================================ */
+
+.admin-social-container {
+    padding: 1.5rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.social-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-subtle);
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.social-header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0.25rem 0;
+}
+
+.header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--accent-cyan);
+    letter-spacing: 1px;
+}
+
+.social-grid {
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    gap: 2rem;
+    align-items: start;
+}
+
+@media (max-width: 1024px) {
+    .social-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.form-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.card-header {
+    margin-bottom: 1.25rem;
+}
+
+.card-header h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.form-group-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-field label {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.field-input-row {
+    display: flex;
+    gap: 8px;
+}
+
+.field-input-row .form-input {
+    flex: 1;
+}
+
+.form-input.error {
+    border-color: #EF4444 !important;
+}
+
+.field-error {
+    font-size: 11px;
+    color: #EF4444;
+    font-weight: 500;
+}
+
+.field-hint {
+    font-size: 11px;
+}
+
+.btn-test {
+    height: 38px;
+    padding: 0 12px;
+    font-size: 12px;
+}
+
+/* WhatsApp Live Preview Box */
+.wa-preview-box {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-left: 3px solid var(--accent-emerald);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    margin-top: 0.75rem;
+}
+
+.wa-preview-header {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent-cyan);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.wa-sample-message {
+    font-size: 13px;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+}
+
+.wa-sample-url {
+    font-size: 11px;
+}
+
+.wa-sample-url a {
+    color: var(--accent-emerald);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Placement Toggles */
+.sticky-toggles {
+    position: sticky;
+    top: 24px;
+}
+
+.toggles-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.toggle-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+}
+
+.toggle-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.toggle-main strong {
+    display: block;
+    font-size: 13px;
+    color: var(--text-primary);
+}
+
+.toggle-main p {
+    font-size: 11px;
+    margin: 2px 0 0 0;
+}
+
+.toggle-switch {
+    width: 38px;
+    height: 20px;
+    accent-color: var(--accent-emerald);
+    cursor: pointer;
+}
+
+/* Placement Thumbnails */
+.placement-thumbnail {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 8px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mini-bar {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+    background: var(--bg-surface);
+    border-radius: 4px;
+}
+
+.mini-logo {
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.mini-icons {
+    display: flex;
+    gap: 6px;
+}
+
+.mini-icons.hidden {
+    display: none;
+}
+
+.dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-muted);
+}
+
+.dot.cyan { background: var(--accent-cyan); }
+.dot.emerald { background: var(--accent-emerald); }
+
+.mini-footer-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-size: 9px;
+}
+
+.mini-prod-box {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.mini-buy-btn {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 4px 12px;
+    background: var(--accent-emerald);
+    color: #060708;
+    border-radius: 4px;
+}
+
+.mini-share-row {
+    font-size: 9px;
+}
+
+.mini-order-box {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.mini-wa-btn {
+    font-size: 9px;
+    padding: 4px 10px;
+    background: #25D366;
+    color: #fff;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}

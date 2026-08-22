@@ -1,0 +1,210 @@
+/* ============================================================================
+   TESTIMONIALS - "Social Proof"
+   Aesthetic: Dark Luxury / Glassmorphism
+   ============================================================================ */
+
+/* Using the same variables for consistency */
+:root {
+    --void: #050505;
+    --neon-cyan: #00f0ff;
+    --neon-gold: #ffd600;
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-dark: rgba(20, 20, 20, 0.6);
+    --text-primary: #ffffff;
+    --text-secondary: #a0a0a0;
+    --font-serif: 'Playfair Display', serif;
+    --font-sans: 'Inter', sans-serif;
+}
+
+.testimonials-section {
+    padding: 8rem 2rem;
+    background-color: var(--void);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Background Ambient Glow */
+.testimonials-section::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    height: 80%;
+    background: radial-gradient(circle, rgba(0, 240, 255, 0.03) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.testimonials-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+
+/* --- HEADER --- */
+.section-header {
+    text-align: center;
+    margin-bottom: 5rem;
+}
+
+.section-tag {
+    font-size: 0.75rem;
+    color: var(--neon-gold);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    border: 1px solid rgba(255, 214, 0, 0.2);
+    padding: 0.5rem 1rem;
+    border-radius: 100px;
+    background: rgba(255, 214, 0, 0.05);
+}
+
+.section-title {
+    font-family: var(--font-serif);
+    font-size: 3.5rem;
+    margin-top: 1.5rem;
+    color: var(--text-primary);
+}
+
+.highlight-text {
+    font-style: italic;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.5);
+}
+
+.section-subtitle {
+    color: var(--text-secondary);
+    margin-top: 1rem;
+    font-size: 1.1rem;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* --- GRID --- */
+.testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2.5rem;
+}
+
+/* --- CARD DESIGN --- */
+.testimonial-card {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+    border: 1px solid var(--glass-border);
+    border-radius: 2px;
+    padding: 2.5rem;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s ease;
+    backdrop-filter: blur(10px);
+}
+
+/* Hover Effect: Glow Border + Lift */
+.testimonial-card:hover {
+    transform: translateY(-8px);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+/* Ambient Quote Icon in Background */
+.quote-icon-bg {
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+    color: var(--neon-cyan);
+    opacity: 0.1;
+    transform: rotate(180deg);
+    transition: transform 0.6s ease;
+}
+
+.testimonial-card:hover .quote-icon-bg {
+    transform: rotate(180deg) scale(1.2);
+    opacity: 0.2;
+}
+
+.card-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.stars {
+    display: flex;
+    gap: 0.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.testimonial-text {
+    font-family: var(--font-serif); /* Serif for quotes feels more expensive */
+    font-size: 1.15rem;
+    line-height: 1.6;
+    color: #e0e0e0;
+    margin-bottom: 2rem;
+    flex-grow: 1;
+    font-style: italic;
+}
+
+/* --- FOOTER (Author) --- */
+.testimonial-footer {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border-top: 1px solid var(--glass-border);
+    padding-top: 1.5rem;
+}
+
+.author-avatar {
+    width: 45px;
+    height: 45px;
+    background: linear-gradient(135deg, var(--void), #222);
+    border: 1px solid var(--neon-gold);
+    color: var(--neon-gold);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.2rem;
+    box-shadow: 0 0 10px rgba(255, 214, 0, 0.1);
+}
+
+.author-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.author-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: 0.05em;
+}
+
+.author-location {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-top: 0.2rem;
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 768px) {
+    .section-title {
+        font-size: 2.5rem;
+    }
+    
+    .testimonials-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .testimonial-card {
+        padding: 2rem;
+    }
+}

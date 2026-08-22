@@ -1,0 +1,22 @@
+/* Container */
+.loading-wrapper {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+/* Animation for when content appears */
+.content-revealed {
+    animation: smoothFadeIn 0.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+@keyframes smoothFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

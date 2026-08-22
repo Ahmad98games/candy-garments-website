@@ -1,0 +1,237 @@
+/* ============================================================================
+   OMNORA POSTER GALLERY - SENIOR FIGMA ATELIER LOOKBOOK
+   Editorial Layout / Gold Foil Borders / High Couture HUD
+   ============================================================================ */
+
+:root {
+  --void: #0A0908;
+  --void-depth: #121110;
+  --text-primary: #F9F6F0;
+  --text-muted: #B5ADA4;
+  --accent: #D4AF37;
+  --accent-light: #F3E5AB;
+  --font-serif: 'Cormorant Garamond', 'Playfair Display', serif;
+  --font-title: 'Cinzel', 'Cormorant Garamond', serif;
+  --font-sans: 'Outfit', 'Inter', system-ui, sans-serif;
+  --ease-elastic: cubic-bezier(0.16, 1, 0.3, 1);
+  --glass-border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.gallery-magnum {
+  padding: 6rem 0 8rem;
+  background: var(--void);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  position: relative;
+  overflow: hidden;
+  border-top: 1px solid rgba(212, 175, 55, 0.15);
+}
+
+/* Noise Texture */
+.gallery-noise {
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  position: relative;
+  z-index: 2;
+}
+
+/* --- HEADER --- */
+.gallery-header-magnum {
+  margin-bottom: 3.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.18);
+  padding-bottom: 2rem;
+}
+
+.gallery-title {
+  font-family: var(--font-serif);
+  font-size: clamp(2.5rem, 5.5vw, 4.5rem);
+  line-height: 0.95;
+  margin: 0;
+  font-weight: 600;
+}
+
+.gallery-title span {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  margin-bottom: 0.6rem;
+  font-weight: 700;
+}
+
+.gallery-meta {
+  text-align: right;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  max-width: 360px;
+  line-height: 1.65;
+}
+
+/* --- GRID LAYOUT --- */
+.gallery-grid-magnum {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+@media (min-width: 1024px) {
+  .gallery-grid-magnum {
+    grid-template-columns: 1.2fr 1fr;
+    height: 780px;
+  }
+}
+
+.gallery-sub-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 1.5rem;
+  height: 100%;
+}
+
+/* --- ARTIFACT CARD --- */
+.poster-artifact {
+  position: relative;
+  background: var(--void-depth);
+  border: var(--glass-border);
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.4s var(--ease-elastic);
+  height: 100%;
+}
+
+.poster-artifact:hover {
+  border-color: var(--accent);
+  box-shadow: 0 12px 35px rgba(212, 175, 55, 0.2);
+  z-index: 10;
+}
+
+.artifact-img-wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.artifact-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.8s var(--ease-elastic), filter 0.3s;
+  filter: brightness(0.85) contrast(1.05);
+}
+
+.poster-artifact:hover .artifact-img {
+  transform: scale(1.06);
+  filter: brightness(0.95) contrast(1.05);
+}
+
+/* --- OVERLAY & HUD --- */
+.artifact-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(10, 9, 8, 0.95), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.4s;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.5rem;
+}
+
+.poster-artifact:hover .artifact-overlay {
+  opacity: 1;
+}
+
+/* Top Labels */
+.overlay-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  transform: translateY(-10px);
+  transition: transform 0.4s var(--ease-elastic);
+}
+
+.poster-artifact:hover .overlay-header {
+  transform: translateY(0);
+}
+
+.artifact-id {
+  font-family: var(--font-sans);
+  font-size: 0.65rem;
+  color: var(--accent-light);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  padding: 0.25rem 0.65rem;
+  background: rgba(26, 24, 22, 0.85);
+  backdrop-filter: blur(8px);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  border-radius: 4px;
+}
+
+.artifact-cat {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+
+/* Bottom Labels */
+.overlay-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  transform: translateY(20px);
+  transition: transform 0.4s var(--ease-elastic);
+}
+
+.poster-artifact:hover .overlay-footer {
+  transform: translateY(0);
+}
+
+.artifact-title {
+  font-family: var(--font-serif);
+  color: #FFF;
+  font-size: 1.8rem;
+  margin: 0;
+  line-height: 1.1;
+  font-weight: 600;
+}
+
+.artifact-title.small {
+  font-size: 1.15rem;
+}
+
+/* Action Button */
+.artifact-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-light), var(--accent));
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0A0908;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+}
+
+.artifact-btn:hover {
+  transform: rotate(45deg) scale(1.08);
+}

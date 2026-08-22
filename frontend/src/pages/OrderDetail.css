@@ -1,0 +1,290 @@
+/* ============================================================================
+   OMNORA ORDER DETAIL - "The Log"
+   Aesthetic: Dark / Monospace / System Interface
+   ============================================================================ */
+
+.order-detail-page {
+    min-height: 100vh;
+    padding: 2rem 1.5rem 4rem;
+    background-color: var(--void);
+    color: var(--text-primary);
+    position: relative;
+}
+
+/* --- Header --- */
+.order-header-magnum {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transition: color 0.2s;
+}
+
+.back-link:hover { color: var(--neon-cyan); }
+
+.order-id-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+}
+
+.order-id-group h1 {
+    font-family: var(--font-serif);
+    font-size: 2rem;
+    margin: 0;
+    color: #fff;
+    line-height: 1;
+}
+
+.copy-icon {
+    color: var(--text-muted);
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+
+.order-id-group:hover .copy-icon { opacity: 1; color: var(--neon-cyan); }
+
+.order-date {
+    display: block;
+    margin-top: 0.5rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-family: var(--font-mono);
+}
+
+/* Status Badges */
+.status-badge-lg {
+    padding: 0.5rem 1.25rem;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+    border: 1px solid transparent;
+}
+
+.status-badge-lg.pending { background: rgba(255, 214, 0, 0.1); color: var(--neon-gold); border-color: rgba(255, 214, 0, 0.3); }
+.status-badge-lg.processing { background: rgba(0, 240, 255, 0.1); color: var(--neon-cyan); border-color: rgba(0, 240, 255, 0.3); }
+.status-badge-lg.shipped { background: rgba(167, 139, 250, 0.1); color: #a78bfa; border-color: rgba(167, 139, 250, 0.3); }
+.status-badge-lg.delivered { background: rgba(0, 255, 136, 0.1); color: #00ff88; border-color: rgba(0, 255, 136, 0.3); }
+.status-badge-lg.cancelled { background: rgba(255, 42, 109, 0.1); color: #ff2a6d; border-color: rgba(255, 42, 109, 0.3); }
+
+/* --- Layout Grid --- */
+.order-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 2rem;
+}
+
+/* --- Panels --- */
+.panel {
+    background: rgba(20, 20, 20, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 4px; /* Brutalist/Tech feel */
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    backdrop-filter: blur(10px);
+}
+
+.panel-title {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    padding-bottom: 0.75rem;
+}
+
+/* --- Timeline --- */
+.timeline-track {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    position: relative;
+    padding-left: 1.5rem;
+}
+
+.timeline-track::before {
+    content: '';
+    position: absolute;
+    left: 9px;
+    top: 10px;
+    bottom: 10px;
+    width: 2px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.track-step {
+    display: flex;
+    gap: 1rem;
+    position: relative;
+    opacity: 0.5;
+    transition: opacity 0.3s;
+}
+
+.track-step.completed, .track-step.pending { opacity: 1; }
+
+.step-icon {
+    width: 20px;
+    height: 20px;
+    background: var(--void);
+    border: 2px solid var(--text-muted);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    color: var(--text-muted);
+}
+
+.step-icon svg { width: 12px; height: 12px; }
+
+/* Active States */
+.track-step.completed .step-icon {
+    border-color: var(--neon-cyan);
+    background: var(--neon-cyan);
+    color: #000;
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+}
+
+.track-step.pending .step-icon {
+    border-color: var(--neon-gold);
+    color: var(--neon-gold);
+}
+
+.step-info { display: flex; flex-direction: column; }
+.step-label { font-weight: 600; color: #fff; font-size: 0.95rem; }
+.step-desc, .step-time { font-size: 0.8rem; color: var(--text-muted); }
+
+/* --- Items List --- */
+.items-list { display: flex; flex-direction: column; gap: 1rem; }
+
+.manifest-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.item-thumb {
+    width: 60px;
+    height: 60px;
+    background: #fff;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.item-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+.item-meta h4 { margin: 0 0 0.25rem 0; font-size: 1rem; color: #fff; }
+.item-qty { font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); }
+
+.item-cost {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--neon-cyan);
+}
+
+/* --- Sidebar --- */
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+}
+
+.summary-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 1rem 0;
+}
+
+.summary-row.total {
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.total-value { color: var(--neon-cyan); font-family: var(--font-mono); }
+
+/* Details Panel */
+.detail-group { margin-bottom: 1rem; }
+.detail-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #fff;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.detail-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.05);
+    margin: 1.5rem 0;
+}
+
+.text-muted { color: var(--text-muted); font-size: 0.9rem; line-height: 1.5; margin: 0; }
+
+.payment-badge {
+    display: inline-block;
+    padding: 0.3rem 0.8rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: #fff;
+}
+
+/* Actions */
+.btn-terminate {
+    width: 100%;
+    background: transparent;
+    border: 1px solid rgba(255, 42, 109, 0.3);
+    color: #ff2a6d;
+    padding: 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+}
+
+.btn-terminate:hover {
+    background: rgba(255, 42, 109, 0.1);
+    border-color: #ff2a6d;
+}
+
+/* --- Mobile --- */
+@media (max-width: 900px) {
+    .order-grid { grid-template-columns: 1fr; }
+    .order-header-magnum { flex-direction: column; gap: 1rem; }
+    .status-badge-lg { align-self: flex-start; }
+}

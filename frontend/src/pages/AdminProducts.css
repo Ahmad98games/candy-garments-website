@@ -1,0 +1,358 @@
+/* ============================================================================
+   ADMIN PRODUCTS - "The Arsenal" & Article Management System
+   Aesthetic: Dark / High Precision / Zero-Overlap Alignment
+   ============================================================================ */
+
+:root {
+    --ap-bg: #0A0908;
+    --ap-panel: #161B22;
+    --ap-border: rgba(212, 175, 55, 0.2);
+    --neon-cyan: #38BDF8;
+    --neon-gold: #D4AF37;
+    --neon-red: #EF4444;
+    --neon-green: #10B981;
+    --font-mono: 'JetBrains Mono', monospace;
+}
+
+.admin-products {
+    padding: 1.5rem;
+    color: #fff;
+    font-family: 'Outfit', 'Inter', sans-serif;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- Header --- */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.page-header h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin: 0;
+    color: var(--text-primary, #F9F6F0);
+}
+
+.add-btn {
+    background: linear-gradient(135deg, var(--neon-gold), #AA771C);
+    color: #0A0908;
+    border: 1px solid rgba(243, 229, 171, 0.4);
+    padding: 0.6rem 1.2rem;
+    border-radius: 4px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+    font-size: 0.82rem;
+    letter-spacing: 0.05em;
+}
+
+.add-btn:hover {
+    background: linear-gradient(135deg, #F3E5AB, var(--neon-gold));
+    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+}
+
+/* --- Table --- */
+.products-table-container {
+    flex: 1;
+    background: var(--bg-card, #161B22);
+    border: 1px solid var(--ap-border);
+    border-radius: 8px;
+    overflow: auto;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
+
+.products-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 700px;
+}
+
+.products-table th {
+    background: rgba(26, 24, 22, 0.85);
+    padding: 1rem 1.2rem;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-muted, #B5ADA4);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--ap-border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    backdrop-filter: blur(8px);
+}
+
+.products-table td {
+    padding: 0.9rem 1.2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    vertical-align: middle;
+}
+
+.products-table tr:hover td { background: rgba(212, 175, 55, 0.04); }
+
+/* --- Cells --- */
+.product-cell {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.img-wrapper {
+    width: 44px;
+    height: 58px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px solid var(--ap-border);
+    flex-shrink: 0;
+}
+
+.product-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.placeholder-icon { color: #666; }
+
+.product-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #fff;
+    margin-bottom: 0.2rem;
+}
+
+.category-cell {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: #aaa;
+    text-transform: uppercase;
+}
+
+.price-cell {
+    font-family: var(--font-mono);
+    color: var(--neon-gold);
+    font-weight: 700;
+}
+
+/* Badges */
+.badges { display: flex; gap: 0.5rem; }
+
+.status-badge {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 3px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.status-badge.featured { background: rgba(212, 175, 55, 0.15); color: var(--neon-gold); border: 1px solid rgba(212, 175, 55, 0.4); }
+.status-badge.new { background: rgba(16, 185, 129, 0.15); color: var(--neon-green); border: 1px solid rgba(16, 185, 129, 0.4); }
+
+.stock-badge {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+}
+.stock-badge.low { color: var(--neon-red); }
+.stock-badge.good { color: var(--neon-green); }
+
+/* Actions */
+.text-right { text-align: right; }
+.action-buttons { display: flex; gap: 0.5rem; justify-content: flex-end; }
+
+.icon-btn {
+    background: transparent;
+    border: 1px solid var(--ap-border);
+    color: #aaa;
+    padding: 0.45rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-btn:hover { border-color: var(--neon-gold); color: var(--neon-gold); }
+.delete-btn:hover { border-color: var(--neon-red); color: var(--neon-red); }
+
+/* --- MODAL SYSTEM WITH ZERO OVERLAP & PERFECT SCROLLING --- */
+.modal-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(0, 0, 0, 0.88) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 9999999 !important;
+    pointer-events: auto !important;
+    padding: 1.2rem !important;
+    overflow-y: auto !important;
+}
+
+.modal-card {
+    background: #161B22 !important;
+    border: 1px solid rgba(212, 175, 55, 0.28) !important;
+    width: 100%;
+    max-width: 640px;
+    max-height: 88vh;
+    border-radius: 12px !important;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8) !important;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: modalScaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-sizing: border-box;
+}
+
+@keyframes modalScaleUp {
+    from {
+        opacity: 0;
+        transform: scale(0.96) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.modal-header {
+    padding: 1rem 1.4rem;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.18);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #121110;
+    flex-shrink: 0;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary, #F9F6F0);
+}
+
+.modal-card form {
+    padding: 1.2rem 1.4rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    flex: 1;
+}
+
+/* Grid Layout for Form Fields — Auto Collapses on Small Viewports to Prevent Overlap */
+.admin-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    width: 100%;
+}
+
+.admin-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    width: 100%;
+}
+
+.admin-form-group label {
+    font-size: 0.76rem;
+    color: var(--text-muted, #B5ADA4);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+}
+
+.admin-form-group input,
+.admin-form-group select,
+.admin-form-group textarea {
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+}
+
+.form-input {
+    background: #1F2937 !important;
+    border: 1px solid #4B5563 !important;
+    padding: 0.65rem 0.85rem;
+    color: #FFFFFF !important;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.88rem;
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-input option {
+    background-color: #1F2937 !important;
+    color: #FFFFFF !important;
+}
+
+.form-input::placeholder {
+    color: #9CA3AF !important;
+    opacity: 1 !important;
+}
+
+.form-input:focus {
+    border-color: #38BDF8 !important;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.25) !important;
+}
+
+/* Image Upload Thumbnail Alignment */
+.image-preview-strip {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.image-preview-thumb {
+    width: 52px;
+    height: 70px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    position: relative;
+    flex-shrink: 0;
+}
+
+.image-preview-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.modal-footer {
+    padding: 1rem 1.4rem;
+    border-top: 1px solid rgba(212, 175, 55, 0.18);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.8rem;
+    background: #121110;
+    flex-shrink: 0;
+}

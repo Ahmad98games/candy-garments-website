@@ -1,0 +1,218 @@
+/* ============================================================================
+   WHATSAPP PROTOCOL - "Secure Transmission"
+   ============================================================================ */
+
+.whatsapp-dialog-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.whatsapp-dialog {
+    background: linear-gradient(145deg, #121214 0%, #0a0a0a 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 480px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    overflow: hidden;
+    animation: slideUp 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    position: relative;
+}
+
+/* Optional: Neon Glow Border */
+.whatsapp-dialog::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #25D366, transparent);
+}
+
+/* --- Header --- */
+.whatsapp-dialog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.header-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #fff;
+    letter-spacing: 0.05em;
+}
+
+.close-btn {
+    background: transparent;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 4px;
+    transition: color 0.2s;
+}
+
+.close-btn:hover { color: #fff; }
+
+/* --- Content --- */
+.whatsapp-dialog-content {
+    padding: 1.5rem;
+}
+
+.dialog-title {
+    font-family: 'Bodoni Moda', serif;
+    font-size: 1.75rem;
+    margin: 0 0 1rem;
+    color: #fff;
+    line-height: 1.1;
+}
+
+.dialog-desc {
+    color: #aaa;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+/* Alert Box */
+.dialog-alert {
+    background: rgba(255, 193, 7, 0.05);
+    border: 1px solid rgba(255, 193, 7, 0.2);
+    border-radius: 6px;
+    padding: 1rem;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+}
+
+.alert-icon {
+    color: #FFC107;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.alert-text {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.9rem;
+    color: #FFC107;
+}
+
+.alert-text strong {
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    margin-bottom: 0.25rem;
+    letter-spacing: 0.1em;
+}
+
+/* Steps List */
+.steps-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    background: rgba(255, 255, 255, 0.02);
+    padding: 1rem;
+    border-radius: 6px;
+}
+
+.step-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.9rem;
+    color: #ccc;
+}
+
+.step-num {
+    font-family: 'JetBrains Mono', monospace;
+    color: #25D366;
+    font-size: 0.8rem;
+    background: rgba(37, 211, 102, 0.1);
+    padding: 2px 6px;
+    border-radius: 2px;
+}
+
+/* --- Actions --- */
+.whatsapp-dialog-actions {
+    padding: 1.5rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+.whatsapp-dialog-btn {
+    padding: 0.85rem 1.5rem;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+    font-family: 'Space Grotesk', sans-serif;
+}
+
+.whatsapp-dialog-btn-cancel {
+    background: transparent;
+    color: #888;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.whatsapp-dialog-btn-cancel:hover {
+    color: #fff;
+    border-color: #fff;
+}
+
+.whatsapp-dialog-btn-confirm {
+    background: #25D366;
+    color: #000;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 0 20px rgba(37, 211, 102, 0.2);
+}
+
+.whatsapp-dialog-btn-confirm:hover {
+    background: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 0 30px rgba(37, 211, 102, 0.4);
+}
+
+/* --- Animations --- */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* --- Mobile --- */
+@media (max-width: 600px) {
+    .whatsapp-dialog-actions {
+        flex-direction: column-reverse; /* Put Confirm button on top visually */
+    }
+    
+    .whatsapp-dialog-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}

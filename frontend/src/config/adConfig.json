@@ -1,0 +1,111 @@
+{
+    "home": {
+        "heroBanner": {
+            "enabled": true,
+            "type": "video",
+            "videoUrl": "/videos/video main.mp4",
+            "posterImage": "",
+            "title": "Hero Video Banner",
+            "description": "Add your promotional video URL here"
+        },
+        "midPageBanner": {
+            "enabled": true,
+            "type": "image",
+            "imageUrl": "/images/omnora.jpg",
+            "link": "",
+            "alt": "Promotional Banner"
+        },
+        
+        "sidebarAd": {
+            "enabled": true,
+            "imageUrl": "/images/omnora.jpg",
+            "link": "",
+            "alt": "Sidebar Advertisement"
+        }
+      
+    },
+    "collection": {
+        "topBanner": {
+            "enabled": true,
+            "imageUrl": "/images/omnora.jpg",
+            "link": "",
+            "alt": "Collection Page Banner"
+        },
+        "sidebarAd": {
+            "enabled": true,
+            "imageUrl": "/images/omnora.jpg",
+            "link": "",
+            "alt": "Sidebar Ad"
+        },
+        "midContentBanner": {
+            "enabled": true,
+            "imageUrl": "/images/omnora.jpg",
+            "link": "",
+            "alt": "Mid-Content Banner"
+        }
+    },
+    "product": {
+        "videoZone": {
+            "enabled": true,
+            "videoUrl": "/videos/video main.mp4",
+            "title": "Product Video",
+            "description": "Add product demonstration video"
+        },
+        "sidebarAd": {
+            "enabled": true,
+            "imageUrl": "/images/omnora.jpg",
+            "link": "",
+            "alt": "Product Page Sidebar Ad"
+        },
+        "belowProductBanner": {
+            "enabled": true,
+            "imageUrl": "/images/omnora.jpg",
+            "link": "",
+            "alt": "Below Product Banner"
+        }
+    },
+    "about": {
+        "brandVideo": {
+            "enabled": true,
+            "videoUrl": "/videos/video main.mp4",
+            "title": "Our Story",
+            "description": "Share your brand story video"
+        },
+        "certificationBanner": {
+            "enabled": true,
+            "imageUrl": "/images/omnora.jpg",
+            "alt": "Certifications & Partnerships"
+        }
+    },
+    "contact": {
+        "topBanner": {
+            "enabled": true,
+            "imageUrl": "/images/omnora.jpg",
+            "link": "",
+            "alt": "Contact Page Banner"
+        }
+    },
+    "cart": {
+        "upsellBanner": {
+            "enabled": true,
+            "imageUrl": "/images/omnora.jpg",
+            "link": "",
+            "alt": "Upsell Banner"
+        },
+        "promoCodeBanner": {
+            "enabled": true,
+            "imageUrl": "/images/omnora.jpg",
+            "link": "",
+            "alt": "Promotional Code Banner"
+        }
+    },
+    "googleAds": {
+        "enabled": false,
+        "clientId": "",
+        "slots": {
+            "homeSidebar": "",
+            "collectionTop": "",
+            "productSidebar": ""
+        }
+    }
+}

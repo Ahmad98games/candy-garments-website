@@ -1,0 +1,184 @@
+/* Candy Kids Global Style System */
+@import './styles/theme.css';
+
+:root {
+    --background-color: var(--bg-canvas);
+    --text-primary-color: var(--text-primary);
+    --text-secondary: var(--text-muted);
+    --accent-color: var(--accent-red);
+    --accent-color-2: var(--accent-emerald);
+    --border-color: var(--border-subtle);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px;
+    overflow-x: hidden;
+    width: 100%;
+}
+
+body {
+    font-family: var(--font-main);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: var(--bg-canvas);
+    color: var(--text-body);
+    line-height: 1.5;
+    overflow-x: hidden;
+    width: 100%;
+    min-width: 320px;
+}
+
+#root {
+    width: 100%;
+    overflow-x: hidden;
+}
+
+/* Prevent horizontal scroll */
+img,
+video,
+iframe {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Responsive containers */
+.container {
+    width: 100%;
+    max-width: 1320px;
+    margin: 0 auto;
+    padding-left: clamp(1rem, 3vw, 2rem);
+    padding-right: clamp(1rem, 3vw, 2rem);
+}
+
+/* Aspect ratio helper & Zero CLS image containers */
+.aspect-3-4 {
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    width: 100%;
+}
+
+/* GPU Hardware Acceleration & Mobile 60 FPS Compositing */
+.gpu-layer,
+.candy-header,
+.top-announcement-bar,
+.modal-card,
+.modal-overlay {
+    will-change: transform, opacity;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+}
+
+/* Touch Action & Scroll Lock Containment */
+.touch-pan-y,
+body,
+main,
+.catalog-layout-grid {
+    touch-action: pan-y;
+}
+
+.modal-overlay,
+.sidebar-overlay,
+.mobile-filter-drawer {
+    overscroll-behavior: contain;
+}
+
+/* Minimum 48px Touch Targets for Mobile UX */
+button,
+a.action-btn,
+a.nav-link,
+.touch-target-48,
+input[type="checkbox"],
+input[type="radio"],
+select {
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (max-width: 768px) {
+    button,
+    a.action-btn,
+    .touch-target-48 {
+        min-height: 48px !important;
+        min-width: 48px !important;
+    }
+}
+
+/* Buttons */
+.luxury-button {
+    padding: 0.6rem 1.4rem;
+    background: var(--accent-red);
+    color: #ffffff;
+    border: 1px solid var(--accent-red);
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: var(--text-sm);
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.luxury-button:hover {
+    background: var(--accent-red-hover);
+    border-color: var(--accent-red-hover);
+}
+
+/* Monospace Helpers */
+.mono-text,
+.font-mono {
+    font-family: var(--font-mono);
+}
+
+/* Cards */
+.card-magnum,
+.product-card,
+.testimonial-card {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-subtle) !important;
+    border-radius: var(--radius-lg) !important;
+}
+
+/* Toast Notifications */
+.toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.toast-message {
+    background: #FFFFFF;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    padding: 12px 18px;
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.toast-message.success {
+    border-left: 4px solid var(--accent-emerald);
+}
+
+.toast-message.error {
+    border-left: 4px solid var(--accent-red);
+}
+
+.toast-message.info {
+    border-left: 4px solid var(--accent-blue);
+}

@@ -1,0 +1,233 @@
+/* ============================================================================
+   OMNORA CAROUSEL - SENIOR FIGMA LUXURY CINEMATIC ENGINE
+   Refined for High Fashion Photography & Editorial Elegance
+   ============================================================================ */
+
+:root {
+  --carousel-height: 82vh;
+  --c-void: #0A0908;
+  --accent-gold: #D4AF37;
+  --accent-light: #F3E5AB;
+  --font-serif: 'Cormorant Garamond', 'Playfair Display', serif;
+  --font-title: 'Cinzel', 'Cormorant Garamond', serif;
+  --font-sans: 'Outfit', 'Inter', system-ui, sans-serif;
+  --ease-cinema: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.carousel-magnum {
+  position: relative;
+  width: 100%;
+  height: var(--carousel-height);
+  overflow: hidden;
+  background: var(--c-void);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+}
+
+/* --- The Slide Layer --- */
+.magnum-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 1.4s var(--ease-cinema), visibility 1.4s;
+  z-index: 1;
+}
+
+.magnum-slide.active {
+  opacity: 1;
+  visibility: visible;
+  z-index: 2;
+}
+
+/* Image Layer */
+.magnum-image-wrapper {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.magnum-image-wrapper::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, var(--c-void) 0%, rgba(10, 9, 8, 0.4) 50%, transparent 100%);
+  z-index: 2;
+}
+
+.magnum-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.12);
+  transition: transform 6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  filter: brightness(0.88) contrast(1.05);
+}
+
+.magnum-slide.active .magnum-img {
+  transform: scale(1);
+}
+
+/* --- Text Content --- */
+.magnum-content {
+  position: absolute;
+  bottom: 14%;
+  left: 6%;
+  z-index: 10;
+  max-width: 720px;
+  opacity: 0;
+  transform: translateY(40px);
+  transition: all 1s var(--ease-cinema);
+  transition-delay: 0.2s;
+}
+
+.magnum-slide.active .magnum-content {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.magnum-badge {
+  display: inline-block;
+  background: rgba(26, 24, 22, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  color: var(--accent-light);
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  padding: 0.5rem 1.2rem;
+  margin-bottom: 1.5rem;
+  border-radius: 4px;
+}
+
+.magnum-title {
+  font-family: var(--font-serif);
+  font-size: clamp(2.8rem, 6vw, 4.8rem);
+  line-height: 1.05;
+  color: #FFF;
+  margin: 0 0 1.2rem;
+  font-weight: 600;
+}
+
+.magnum-desc {
+  font-family: var(--font-sans);
+  color: #B5ADA4;
+  font-size: 1.05rem;
+  line-height: 1.65;
+  border-left: 2px solid var(--accent-gold);
+  padding-left: 1.2rem;
+  max-width: 85%;
+}
+
+/* --- Controls Interface --- */
+.magnum-controls {
+  position: absolute;
+  bottom: 2.5rem;
+  right: 3rem;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.magnum-counter {
+  font-family: var(--font-sans);
+  color: var(--accent-gold);
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  margin-right: 0.5rem;
+}
+
+.magnum-counter span {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.nav-btn {
+  background: rgba(26, 24, 22, 0.7);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  color: #FFF;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.35s var(--ease-cinema);
+  backdrop-filter: blur(10px);
+}
+
+.nav-btn:hover {
+  border-color: var(--accent-gold);
+  color: #0A0908;
+  background: linear-gradient(135deg, var(--accent-light), var(--accent-gold));
+  transform: scale(1.08);
+  box-shadow: 0 5px 20px rgba(212, 175, 55, 0.3);
+}
+
+/* --- Progress Bar --- */
+.magnum-progress-container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  z-index: 30;
+}
+
+.magnum-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #F3E5AB, #D4AF37);
+  width: 0%;
+  animation: loadProgress linear forwards;
+}
+
+@keyframes loadProgress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+/* Mobile Adjustments */
+@media (max-width: 768px) {
+  :root {
+    --carousel-height: 70vh;
+  }
+
+  .magnum-content {
+    bottom: 5rem;
+    left: 1.5rem;
+    right: 1.5rem;
+  }
+
+  .magnum-title {
+    font-size: 2.4rem;
+  }
+
+  .magnum-controls {
+    bottom: 1.5rem;
+    right: 1.5rem;
+    gap: 1rem;
+  }
+
+  .magnum-desc {
+    font-size: 0.95rem;
+    max-width: 100%;
+  }
+
+  .nav-btn {
+    width: 44px;
+    height: 44px;
+  }
+}

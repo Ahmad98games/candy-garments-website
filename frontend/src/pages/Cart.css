@@ -1,0 +1,346 @@
+/* ============================================================================
+   CANDY KIDS LUXURY EDITORIAL CART STYLES
+   Matched 1:1 with Home, Product, & Collection Page Design
+   ============================================================================ */
+
+.cart-page {
+  min-height: 100vh;
+  background-color: #FAFAFA;
+  color: #111827;
+  font-family: 'Inter', 'Outfit', sans-serif;
+  padding-top: 30px;
+  padding-bottom: 80px;
+}
+
+.cart-container {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 3vw, 2rem);
+}
+
+.cart-content {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (min-width: 992px) {
+  .cart-content {
+    grid-template-columns: 1.8fr 1fr;
+  }
+}
+
+/* Policy Warning Banner */
+.policy-banner {
+  background: #FFFBEB;
+  border: 1px solid #FCD34D;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.policy-banner-icon {
+  color: #D97706;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.policy-banner-content {
+  font-size: 0.9rem;
+  color: #92400E;
+  line-height: 1.6;
+}
+
+.policy-banner-title {
+  font-weight: 800;
+  display: block;
+  margin-bottom: 4px;
+  color: #78350F;
+  font-size: 0.95rem;
+}
+
+/* Cart Items Card */
+.cart-items {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 16px;
+  padding: 1.75rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+.cart-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid #E5E7EB;
+  font-weight: 700;
+  color: #6B7280;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Cart Item Row */
+.cart-item {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 1rem;
+  padding: 1.25rem 0;
+  border-bottom: 1px solid #E5E7EB;
+  align-items: center;
+  transition: background-color 0.2s ease;
+}
+
+.cart-item:last-child {
+  border-bottom: none;
+}
+
+.item-info {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.item-image-placeholder {
+  width: 80px;
+  height: 105px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #E5E7EB;
+  flex-shrink: 0;
+  background-color: #F3F4F6;
+}
+
+.item-image-placeholder img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.cart-item:hover .item-image-placeholder img {
+  transform: scale(1.06);
+}
+
+.item-info h3 {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #111827;
+  margin: 0 0 4px 0;
+  line-height: 1.3;
+}
+
+.item-info p {
+  color: #E52535;
+  font-weight: 800;
+  font-size: 0.95rem;
+  margin: 4px 0;
+  font-family: var(--font-mono, monospace);
+}
+
+.remove-btn {
+  background: none;
+  border: none;
+  color: #DC2626;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0;
+  margin-top: 6px;
+  transition: opacity 0.2s;
+}
+
+.remove-btn:hover {
+  text-decoration: underline;
+  opacity: 0.8;
+}
+
+/* Quantity Controls */
+.item-quantity {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.item-quantity button {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid #D1D5DB;
+  background: #FFFFFF;
+  color: #111827;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.item-quantity button:hover:not(:disabled) {
+  border-color: #E52535;
+  color: #E52535;
+  background: #FEF2F2;
+}
+
+.item-quantity button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.item-quantity span {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #111827;
+  min-width: 24px;
+  text-align: center;
+}
+
+.item-total {
+  font-weight: 900;
+  font-size: 1.05rem;
+  color: #111827;
+  text-align: right;
+  font-family: var(--font-mono, monospace);
+}
+
+.clear-cart-btn {
+  margin-top: 1.5rem;
+  padding: 0.75rem 1.25rem;
+  background: transparent;
+  border: 1px solid #E5E7EB;
+  color: #6B7280;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.clear-cart-btn:hover {
+  border-color: #DC2626;
+  color: #DC2626;
+  background: #FEF2F2;
+}
+
+/* Order Summary Sticky Card */
+.order-summary {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 16px;
+  padding: 1.75rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  position: sticky;
+  top: 90px;
+}
+
+.order-summary h2 {
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.85rem;
+  color: #4B5563;
+  font-size: 0.92rem;
+}
+
+.summary-row span:last-child {
+  font-weight: 800;
+  color: #111827;
+  font-family: var(--font-mono, monospace);
+}
+
+.shipping-note {
+  font-size: 0.84rem;
+  color: #065F46;
+  margin: 1rem 0;
+  padding: 0.85rem;
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  border-radius: 8px;
+  line-height: 1.55;
+  font-weight: 500;
+}
+
+.summary-total {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 2px solid #E5E7EB;
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #111827;
+}
+
+.summary-total span:last-child {
+  color: #E52535;
+  font-family: var(--font-mono, monospace);
+}
+
+.checkout-btn {
+  width: 100%;
+  margin-top: 1.5rem;
+  height: 50px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  background-color: #E52535 !important;
+  border-color: #E52535 !important;
+  color: #FFFFFF !important;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(229, 37, 53, 0.25);
+  transition: all 0.2s ease;
+}
+
+.checkout-btn:hover {
+  background-color: #C81E2B !important;
+  border-color: #C81E2B !important;
+  transform: translateY(-1px);
+}
+
+.empty-cart {
+  text-align: center;
+  padding: 5rem 1rem;
+}
+
+.empty-cart-content h2 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.empty-cart-content p {
+  color: #6B7280;
+  margin-bottom: 1.75rem;
+}
+
+@media (max-width: 640px) {
+  .cart-header {
+    display: none;
+  }
+  .cart-item {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
+  .item-total {
+    text-align: left;
+  }
+}

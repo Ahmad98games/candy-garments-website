@@ -1,0 +1,140 @@
+.stripe-payment-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.card-element-wrapper {
+    padding: 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    background: white;
+    transition: border-color 0.3s ease;
+}
+
+.card-element-wrapper:focus-within {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.payment-button {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.payment-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.payment-security {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.payment-security svg {
+    color: #00D924;
+}
+
+.payment-method-selector {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.payment-method-card {
+    padding: 1.5rem;
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.payment-method-card:hover {
+    border-color: var(--accent-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.payment-method-card.active {
+    border-color: var(--accent-color);
+    background: rgba(139, 92, 246, 0.05);
+}
+
+.payment-method-logo {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.payment-method-name {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.jazzcash-payment,
+.paypal-payment,
+.cod-payment {
+    padding: 2rem;
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    background: white;
+}
+
+.payment-instructions {
+    margin-bottom: 1.5rem;
+}
+
+.payment-instructions h3 {
+    font-size: 1.125rem;
+    margin-bottom: 0.75rem;
+    color: var(--text-primary);
+}
+
+.payment-instructions p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.payment-info-list {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+}
+
+.payment-info-list li {
+    padding: 0.75rem;
+    background: var(--surface-color);
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.payment-info-list strong {
+    color: var(--text-primary);
+}
+
+.copy-button {
+    padding: 0.25rem 0.75rem;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: background 0.3s ease;
+}
+
+.copy-button:hover {
+    background: var(--accent-color-2);
+}

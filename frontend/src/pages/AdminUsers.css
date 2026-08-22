@@ -1,0 +1,257 @@
+/* ============================================================================
+   ADMIN USERS - "Personnel Log"
+   Aesthetic: Dark / Grid / Data-Dense
+   ============================================================================ */
+
+:root {
+    --au-bg: #030304;
+    --au-panel: rgba(20, 20, 20, 0.6);
+    --au-border: rgba(255, 255, 255, 0.08);
+    --neon-cyan: #00f0ff;
+    --neon-gold: #ffd600;
+    --neon-red: #ff2a6d;
+    --text-main: #f8fafc;
+    --text-muted: #64748b;
+    --font-mono: 'JetBrains Mono', monospace;
+}
+
+.admin-users {
+    padding: 1.5rem;
+    color: var(--text-main);
+    font-family: 'Inter', sans-serif;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- Header --- */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.page-header h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    margin: 0;
+    color: #fff;
+}
+
+.user-count-badge {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--au-border);
+    padding: 0.4rem 0.8rem;
+    border-radius: 2px;
+    font-size: 0.75rem;
+    color: #aaa;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+}
+
+/* --- Controls --- */
+.controls-bar {
+    margin-bottom: 1.5rem;
+}
+
+.search-wrapper {
+    position: relative;
+    max-width: 400px;
+}
+
+.search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+}
+
+.glass-input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--au-border);
+    border-radius: 2px;
+    color: #fff;
+    font-size: 0.85rem;
+    font-family: var(--font-mono);
+    outline: none;
+    transition: all 0.2s;
+}
+
+.glass-input:focus {
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.1);
+}
+
+/* --- Table --- */
+.users-table-container {
+    flex: 1;
+    background: rgba(10, 10, 10, 0.4);
+    border: 1px solid var(--au-border);
+    border-radius: 4px;
+    overflow: auto;
+    backdrop-filter: blur(10px);
+}
+
+.users-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px;
+}
+
+.users-table th {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 1rem 1.5rem;
+    text-align: left;
+    font-weight: 600;
+    color: #888;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    border-bottom: 1px solid var(--au-border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    backdrop-filter: blur(5px);
+}
+
+.users-table td {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    vertical-align: middle;
+    transition: background 0.2s;
+}
+
+.users-table tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+/* Highlight Admin Rows */
+.users-table tr.row-admin td {
+    background: rgba(255, 214, 0, 0.02);
+}
+
+/* --- Profile Cell --- */
+.user-profile-cell {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: #fff;
+    font-size: 0.9rem;
+    border: 1px solid var(--au-border);
+}
+
+.avatar-circle.admin-glow {
+    border-color: var(--neon-gold);
+    color: var(--neon-gold);
+    box-shadow: 0 0 10px rgba(255, 214, 0, 0.2);
+    background: rgba(255, 214, 0, 0.05);
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.user-name { font-weight: 600; color: #fff; font-size: 0.9rem; }
+.user-email { 
+    font-size: 0.75rem; 
+    color: #888; 
+    display: flex; 
+    align-items: center; 
+    gap: 0.4rem; 
+    font-family: var(--font-mono);
+}
+
+/* --- Roles --- */
+.role-badge {
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 2px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: all 0.2s;
+}
+
+.role-user {
+    background: rgba(255, 255, 255, 0.05);
+    color: #888;
+    border: 1px solid var(--au-border);
+}
+
+.role-user:hover { border-color: #fff; color: #fff; }
+
+.role-admin {
+    background: rgba(255, 214, 0, 0.1);
+    color: var(--neon-gold);
+    border: 1px solid rgba(255, 214, 0, 0.3);
+}
+
+.role-admin:hover {
+    background: var(--neon-gold);
+    color: #000;
+}
+
+/* --- Meta --- */
+.date-cell {
+    color: #666;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+}
+
+/* --- Actions --- */
+.text-right { text-align: right; }
+.action-buttons { display: flex; justify-content: flex-end; }
+
+.icon-btn {
+    background: transparent;
+    border: 1px solid var(--au-border);
+    color: #888;
+    padding: 0.4rem;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.icon-btn:hover {
+    border-color: #fff;
+    color: #fff;
+}
+
+.delete-btn:hover {
+    border-color: var(--neon-red);
+    color: var(--neon-red);
+    background: rgba(255, 42, 109, 0.1);
+}
+
+/* --- Utils --- */
+.loading-container, .empty-state {
+    padding: 4rem;
+    text-align: center;
+    color: #666;
+    font-style: italic;
+}
