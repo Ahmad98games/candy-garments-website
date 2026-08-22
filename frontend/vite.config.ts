@@ -8,6 +8,9 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
+      devOptions: {
+        enabled: true
+      },
       includeAssets: ['favicon.ico', 'apple-touch-icon.jpg', 'images/candy.jpg'],
       manifest: {
         name: 'Candy Kids | Luxury Kids Fashion & Garments',

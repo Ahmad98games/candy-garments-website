@@ -30,7 +30,7 @@ const sessionId = ensureSessionId()
 trackEvent({ type: 'app_start', path: location.pathname, sessionId, referrer: document.referrer, screen: { width: screen.width, height: screen.height } })
 
 // Register PWA Service Worker
-if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then((reg) => console.log('[PWA] ServiceWorker registered successfully:', reg.scope))

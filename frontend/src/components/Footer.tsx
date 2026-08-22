@@ -76,6 +76,16 @@ export default function Footer() {
                         <Link to="/shipping" className="footer-link">Shipping & Delivery</Link>
                         <Link to="/terms" className="footer-link">Terms & Conditions</Link>
                         <Link to="/privacy" className="footer-link">Privacy Policy</Link>
+                        <button 
+                            onClick={() => {
+                                sessionStorage.removeItem('candy_pwa_dismissed');
+                                window.location.reload();
+                            }} 
+                            className="footer-link"
+                            style={{ background: 'none', border: 'none', padding: 0, color: '#EC4899', fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}
+                        >
+                            📱 Install Candy PWA App
+                        </button>
                     </nav>
                 </div>
 
