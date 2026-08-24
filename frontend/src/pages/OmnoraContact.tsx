@@ -114,7 +114,9 @@ export default function Contact() {
               </div>
               <p style={{ margin: 0, fontSize: '0.85rem', color: '#4B5563', lineHeight: 1.5 }}>
                 Candy Kids Garments Store, <br />
-                Main Retail Market, Shadbagh / Azam Market, <br />
+                MS Plaza, Shop No. 48, <br />
+                Near Yateem Khana Bazar, <br />
+                Bund Road (Orange Line Station), <br />
                 Lahore, Punjab, Pakistan.
               </p>
             </div>
@@ -227,7 +229,7 @@ export default function Contact() {
           <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#111827', marginBottom: '0.75rem' }}>Store Location Map</h3>
           <iframe
             title="Candy Kids Location Map"
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d54415.82527236526!2d74.3000!3d31.5800!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39191c71360c7a5f%3A0xc39722393226759c!2sShadbagh%2C%20Lahore%2C%20Punjab%2C%20Pakistan!5e0!3m2!1sen!2s!4v1700000000000!5m2!1sen!2s"
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3402.3!2d74.3350!3d31.5450!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x391904b42e2c2f0b%3A0x1a2e3f4d5c6b7890!2sBund%20Road%2C%20Lahore%2C%20Punjab%2C%20Pakistan!5e0!3m2!1sen!2s!4v1700000000001!5m2!1sen!2s"
             style={{ width: '100%', height: '320px', border: 'none', borderRadius: '12px' }}
             allowFullScreen
             loading="lazy"
