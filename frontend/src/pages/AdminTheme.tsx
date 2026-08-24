@@ -82,6 +82,20 @@ export default function AdminTheme() {
     const [saving, setSaving] = useState(false);
     const [publishing, setPublishing] = useState(false);
 
+    // Body scroll lock containment when publish modal is active
+    useEffect(() => {
+        if (showPublishModal) {
+            const originalOverflow = document.body.style.overflow;
+            const originalTouchAction = document.body.style.touchAction;
+            document.body.style.overflow = 'hidden';
+            document.body.style.touchAction = 'none';
+            return () => {
+                document.body.style.overflow = originalOverflow;
+                document.body.style.touchAction = originalTouchAction;
+            };
+        }
+    }, [showPublishModal]);
+
     // Dynamic Draft Token Extractors
     const currentPrimary = draftPayload.accent_primary || theme.accent_primary;
     const currentSecondary = draftPayload.accent_secondary || theme.accent_secondary;
@@ -589,8 +603,8 @@ export default function AdminTheme() {
 
             {/* PUBLISH CONFIRMATION MODAL WITH BEFORE / AFTER DIFF SUMMARY */}
             {showPublishModal && (
-                <div className="modal-overlay animate-fade-in">
-                    <div className="modal-card">
+                <div className="modal-overlay animate-fade-in" onClick={() => !publishing && setShowPublishModal(false)}>
+                    <div className="modal-card" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
                             <div className="modal-title-row">
                                 <UploadCloud size={22} className="text-emerald" />
@@ -598,7 +612,7 @@ export default function AdminTheme() {
                             </div>
                         </div>
 
-                        <div className="modal-body">
+                        <div className="modal-body modal-scrollable-body">
                             <p>
                                 Publishing will immediately broadcast these theme token updates to every active browser tab on the live storefront via Supabase Realtime.
                             </p>

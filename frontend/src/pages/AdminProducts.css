@@ -210,13 +210,18 @@
 .modal-overlay {
     position: fixed !important;
     inset: 0 !important;
-    background: rgba(15, 23, 42, 0.5) !important;
+    background: rgba(15, 23, 42, 0.65) !important;
     backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
     z-index: 999999 !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     padding: 16px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+    touch-action: pan-y !important;
 }
 
 .modal-card {
@@ -224,21 +229,31 @@
     border: 1px solid var(--ap-border) !important;
     border-radius: 16px !important;
     color: var(--text-primary) !important;
-    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15) !important;
-    max-height: 90vh;
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.2) !important;
+    max-height: min(90vh, 90dvh) !important;
+    max-height: calc(100dvh - 32px) !important;
     width: 100%;
     max-width: 680px;
-    overflow-y: auto;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    position: relative;
+    margin: auto;
+    touch-action: pan-y;
 }
 
 .modal-header {
+    flex-shrink: 0 !important;
     background: #f8fafc !important;
     border-bottom: 1px solid var(--ap-border) !important;
     color: var(--text-primary) !important;
     padding: 16px 20px !important;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .modal-header h3 {
@@ -248,14 +263,48 @@
     font-size: 1.1rem;
 }
 
+.modal-scrollable-body {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+    touch-action: pan-y !important;
+    padding: 20px !important;
+}
+
 .modal-footer {
-    padding: 16px 20px;
-    border-top: 1px solid var(--ap-border);
-    background: #f8fafc;
+    flex-shrink: 0 !important;
+    padding: 16px 20px !important;
+    border-top: 1px solid var(--ap-border) !important;
+    background: #f8fafc !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+}
+
+.admin-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.admin-form-group {
     display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+}
+
+.admin-form-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
 }
 
 /* Mobile Responsiveness */
@@ -283,10 +332,32 @@
     
     .admin-form-grid {
         grid-template-columns: 1fr !important;
+        gap: 12px;
+        margin-bottom: 12px;
     }
 
     .btn-action-group {
         flex-direction: column;
         align-items: stretch;
+    }
+}
+
+@media (max-width: 640px) {
+    .modal-overlay {
+        padding: 10px 8px !important;
+        align-items: flex-start !important;
+    }
+    .modal-card {
+        max-height: calc(100dvh - 20px) !important;
+        border-radius: 12px !important;
+    }
+    .modal-header {
+        padding: 12px 16px !important;
+    }
+    .modal-scrollable-body {
+        padding: 14px 14px !important;
+    }
+    .modal-footer {
+        padding: 12px 16px !important;
     }
 }

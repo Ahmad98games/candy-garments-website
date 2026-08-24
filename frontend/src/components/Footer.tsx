@@ -84,7 +84,7 @@ export default function Footer() {
                             className="footer-link"
                             style={{ background: 'none', border: 'none', padding: 0, color: '#EC4899', fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}
                         >
-                            📱 Install Candy PWA App
+                            📱 Install Candy Kids App
                         </button>
                     </nav>
                 </div>

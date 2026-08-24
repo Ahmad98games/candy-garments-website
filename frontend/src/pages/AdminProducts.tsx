@@ -51,6 +51,21 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
         }
     }, [defaultDepartment]);
 
+    // Body scroll lock containment when any admin modal is active
+    useEffect(() => {
+        const isAnyModalOpen = isModalOpen || isBulkModalOpen || !!deleteId;
+        if (isAnyModalOpen) {
+            const originalOverflow = document.body.style.overflow;
+            const originalTouchAction = document.body.style.touchAction;
+            document.body.style.overflow = 'hidden';
+            document.body.style.touchAction = 'none';
+            return () => {
+                document.body.style.overflow = originalOverflow;
+                document.body.style.touchAction = originalTouchAction;
+            };
+        }
+    }, [isModalOpen, isBulkModalOpen, deleteId]);
+
     // Pagination State (24, 48, 96 per page)
     const [pageSize, setPageSize] = useState<number>(24);
     const [currentPage, setCurrentPage] = useState<number>(1);
@@ -726,189 +741,195 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
 
             {/* CREATE / EDIT ARTICLE MODAL WITH ASPECT RATIO LOCK */}
             {isModalOpen && createPortal(
-                <div className="modal-overlay">
-                    <div className="modal-card font-sans">
+                <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
+                    <div className="modal-card font-sans" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h3>{editingId ? 'Edit Article' : 'Create New Article'}</h3>
-                            <button style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }} onClick={() => setIsModalOpen(false)}>
+                            <h3 style={{ margin: 0 }}>{editingId ? 'Edit Article' : 'Create New Article'}</h3>
+                            <button
+                                type="button"
+                                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}
+                                onClick={() => setIsModalOpen(false)}
+                            >
                                 <X size={20} />
                             </button>
                         </div>
 
-                        <form onSubmit={handleSubmit}>
-                            <div className="admin-form-grid">
-                                <div className="admin-form-group">
-                                    <label>Article Number *</label>
-                                    <input
-                                        type="text"
-                                        placeholder="e.g. CB-101"
-                                        value={formData.article_no || ''}
-                                        onChange={(e) => setFormData((prev) => ({ ...prev, article_no: e.target.value }))}
-                                        className="form-input font-mono"
-                                        required
-                                    />
-                                </div>
-
-                                <div className="admin-form-group">
-                                    <label>Title *</label>
-                                    <input
-                                        type="text"
-                                        placeholder="e.g. Noor-e-Zari Hand-Embroidered Velvet Suit"
-                                        value={formData.title || ''}
-                                        onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
-                                        className="form-input"
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="admin-form-grid">
-                                <div className="admin-form-group">
-                                    <label>Department / Wear Group</label>
-                                    <select
-                                        value={formData.department || 'Ladies'}
-                                        onChange={(e) => setFormData((prev) => ({ ...prev, department: e.target.value as any }))}
-                                        className="form-input"
-                                    >
-                                        <option value="Ladies">Ladies Wear Collection</option>
-                                        <option value="Kids">Kids Wear Collection</option>
-                                    </select>
-                                </div>
-
-                                <div className="admin-form-group">
-                                    <label>Category</label>
-                                    <select
-                                        value={formData.category || 'Ladies Wear'}
-                                        onChange={(e) => setFormData((prev) => ({ ...prev, category: e.target.value }))}
-                                        className="form-input"
-                                    >
-                                        <option value="Ladies Wear">Ladies Wear</option>
-                                        <option value="Luxury Formals">Luxury Formals</option>
-                                        <option value="Pret / Ready-to-Wear">Pret / Ready-to-Wear</option>
-                                        <option value="Unstitched Luxury">Unstitched Luxury</option>
-                                        <option value="Girls">Girls Wear</option>
-                                        <option value="Kids Wear">Kids Wear</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div className="admin-form-grid">
-                                <div className="admin-form-group">
-                                    <label>Retail Price (PKR) *</label>
-                                    <input
-                                        type="number"
-                                        value={formData.retail_price || ''}
-                                        onChange={(e) => setFormData((prev) => ({ ...prev, retail_price: Number(e.target.value) }))}
-                                        className="form-input font-mono"
-                                        required
-                                    />
-                                </div>
-
-                                <div className="admin-form-group">
-                                    <label>Wholesale Cost (PKR)</label>
-                                    <input
-                                        type="number"
-                                        value={formData.wholesale_cost || ''}
-                                        onChange={(e) => setFormData((prev) => ({ ...prev, wholesale_cost: Number(e.target.value) }))}
-                                        className="form-input font-mono"
-                                    />
-                                </div>
-
-                                <div className="admin-form-group">
-                                    <label>Available Stock Quantity (Units) *</label>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={formData.stock_quantity !== undefined ? formData.stock_quantity : 10}
-                                        onChange={(e) => {
-                                            const qty = Number(e.target.value);
-                                            setFormData((prev) => ({
-                                                ...prev,
-                                                stock_quantity: qty,
-                                                in_stock: qty > 0
-                                            }));
-                                        }}
-                                        className="form-input font-mono"
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="admin-form-group">
-                                <label>Description</label>
-                                <textarea
-                                    value={formData.description || ''}
-                                    onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
-                                    className="form-input"
-                                    rows={3}
-                                />
-                            </div>
-
-                            {/* DUAL IMAGE MANAGEMENT: FILE UPLOAD OR URL INPUT */}
-                            <div className="admin-form-group">
-                                <label>Product Images (File Upload or Image URL)</label>
-                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '10px' }}>
-                                    <label className="btn btn-outline" style={{ cursor: 'pointer', height: '36px', fontSize: '12px' }}>
-                                        <Upload size={14} /> {uploadingImage ? 'Cropping & Processing...' : 'Upload Image (3:4 Lock)'}
-                                        <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} disabled={uploadingImage} />
-                                    </label>
-
-                                    <div style={{ display: 'flex', gap: '6px', flex: 1, minWidth: '220px' }}>
+                        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: '1 1 auto', minHeight: 0, overflow: 'hidden' }}>
+                            <div className="modal-scrollable-body">
+                                <div className="admin-form-grid">
+                                    <div className="admin-form-group">
+                                        <label>Article Number *</label>
                                         <input
-                                            type="url"
-                                            placeholder="Or paste Image URL (e.g. https://...)"
-                                            value={imageUrlInput}
-                                            onChange={(e) => setImageUrlInput(e.target.value)}
-                                            className="form-input"
-                                            style={{ fontSize: '12px', height: '36px', flex: 1 }}
+                                            type="text"
+                                            placeholder="e.g. CB-101"
+                                            value={formData.article_no || ''}
+                                            onChange={(e) => setFormData((prev) => ({ ...prev, article_no: e.target.value }))}
+                                            className="form-input font-mono"
+                                            required
                                         />
-                                        <button
-                                            type="button"
-                                            className="btn btn-outline"
-                                            onClick={handleAddImageUrl}
-                                            style={{ height: '36px', fontSize: '12px', padding: '0 12px' }}
-                                        >
-                                            + Add
-                                        </button>
+                                    </div>
+
+                                    <div className="admin-form-group">
+                                        <label>Title *</label>
+                                        <input
+                                            type="text"
+                                            placeholder="e.g. Noor-e-Zari Hand-Embroidered Velvet Suit"
+                                            value={formData.title || ''}
+                                            onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
+                                            className="form-input"
+                                            required
+                                        />
                                     </div>
                                 </div>
 
-                                {/* PREVIEW THUMBNAILS WITH REMOVE BADGE */}
-                                {formData.images && formData.images.length > 0 && (
-                                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '10px' }}>
-                                        {formData.images.map((url, i) => (
-                                            <div key={i} style={{ position: 'relative', width: '64px', height: '85px', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--border-subtle)', background: '#000' }}>
-                                                <img src={url} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleRemoveImage(i)}
-                                                    title="Remove image"
-                                                    style={{
-                                                        position: 'absolute',
-                                                        top: '3px',
-                                                        right: '3px',
-                                                        background: 'rgba(239, 68, 68, 0.95)',
-                                                        color: '#fff',
-                                                        border: 'none',
-                                                        borderRadius: '50%',
-                                                        width: '18px',
-                                                        height: '18px',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        cursor: 'pointer',
-                                                        padding: 0
-                                                    }}
-                                                >
-                                                    <X size={12} />
-                                                </button>
-                                            </div>
-                                        ))}
+                                <div className="admin-form-grid">
+                                    <div className="admin-form-group">
+                                        <label>Department / Wear Group</label>
+                                        <select
+                                            value={formData.department || 'Ladies'}
+                                            onChange={(e) => setFormData((prev) => ({ ...prev, department: e.target.value as any }))}
+                                            className="form-input"
+                                        >
+                                            <option value="Ladies">Ladies Wear Collection</option>
+                                            <option value="Kids">Kids Wear Collection</option>
+                                        </select>
                                     </div>
-                                )}
+
+                                    <div className="admin-form-group">
+                                        <label>Category</label>
+                                        <select
+                                            value={formData.category || 'Ladies Wear'}
+                                            onChange={(e) => setFormData((prev) => ({ ...prev, category: e.target.value }))}
+                                            className="form-input"
+                                        >
+                                            <option value="Ladies Wear">Ladies Wear</option>
+                                            <option value="Luxury Formals">Luxury Formals</option>
+                                            <option value="Pret / Ready-to-Wear">Pret / Ready-to-Wear</option>
+                                            <option value="Unstitched Luxury">Unstitched Luxury</option>
+                                            <option value="Girls">Girls Wear</option>
+                                            <option value="Kids Wear">Kids Wear</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="admin-form-grid">
+                                    <div className="admin-form-group">
+                                        <label>Retail Price (PKR) *</label>
+                                        <input
+                                            type="number"
+                                            value={formData.retail_price || ''}
+                                            onChange={(e) => setFormData((prev) => ({ ...prev, retail_price: Number(e.target.value) }))}
+                                            className="form-input font-mono"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="admin-form-group">
+                                        <label>Wholesale Cost (PKR)</label>
+                                        <input
+                                            type="number"
+                                            value={formData.wholesale_cost || ''}
+                                            onChange={(e) => setFormData((prev) => ({ ...prev, wholesale_cost: Number(e.target.value) }))}
+                                            className="form-input font-mono"
+                                        />
+                                    </div>
+
+                                    <div className="admin-form-group">
+                                        <label>Available Stock Quantity (Units) *</label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            value={formData.stock_quantity !== undefined ? formData.stock_quantity : 10}
+                                            onChange={(e) => {
+                                                const qty = Number(e.target.value);
+                                                setFormData((prev) => ({
+                                                    ...prev,
+                                                    stock_quantity: qty,
+                                                    in_stock: qty > 0
+                                                }));
+                                            }}
+                                            className="form-input font-mono"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="admin-form-group">
+                                    <label>Description</label>
+                                    <textarea
+                                        value={formData.description || ''}
+                                        onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+                                        className="form-input"
+                                        rows={3}
+                                    />
+                                </div>
+
+                                {/* DUAL IMAGE MANAGEMENT: FILE UPLOAD OR URL INPUT */}
+                                <div className="admin-form-group">
+                                    <label>Product Images (File Upload or Image URL)</label>
+                                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '10px' }}>
+                                        <label className="btn btn-outline" style={{ cursor: 'pointer', height: '36px', fontSize: '12px' }}>
+                                            <Upload size={14} /> {uploadingImage ? 'Cropping & Processing...' : 'Upload Image (3:4 Lock)'}
+                                            <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} disabled={uploadingImage} />
+                                        </label>
+
+                                        <div style={{ display: 'flex', gap: '6px', flex: 1, minWidth: '220px' }}>
+                                            <input
+                                                type="url"
+                                                placeholder="Or paste Image URL (e.g. https://...)"
+                                                value={imageUrlInput}
+                                                onChange={(e) => setImageUrlInput(e.target.value)}
+                                                className="form-input"
+                                                style={{ fontSize: '12px', height: '36px', flex: 1 }}
+                                            />
+                                            <button
+                                                type="button"
+                                                className="btn btn-outline"
+                                                onClick={handleAddImageUrl}
+                                                style={{ height: '36px', fontSize: '12px', padding: '0 12px' }}
+                                            >
+                                                + Add
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* PREVIEW THUMBNAILS WITH REMOVE BADGE */}
+                                    {formData.images && formData.images.length > 0 && (
+                                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '10px' }}>
+                                            {formData.images.map((url, i) => (
+                                                <div key={i} style={{ position: 'relative', width: '64px', height: '85px', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--border-subtle)', background: '#000' }}>
+                                                    <img src={url} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleRemoveImage(i)}
+                                                        title="Remove image"
+                                                        style={{
+                                                            position: 'absolute',
+                                                            top: '3px',
+                                                            right: '3px',
+                                                            background: 'rgba(239, 68, 68, 0.95)',
+                                                            color: '#fff',
+                                                            border: 'none',
+                                                            borderRadius: '50%',
+                                                            width: '18px',
+                                                            height: '18px',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            cursor: 'pointer',
+                                                            padding: 0
+                                                        }}
+                                                    >
+                                                        <X size={12} />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
-                            <div className="modal-footer" style={{ margin: '10px -1.4rem -1.2rem -1.4rem' }}>
+                            <div className="modal-footer">
                                 <button type="button" className="btn btn-outline" onClick={() => setIsModalOpen(false)}>
                                     Cancel
                                 </button>
@@ -924,20 +945,24 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
 
             {/* BULK IMPORT MODAL WITH VALIDATION REPORT */}
             {isBulkModalOpen && createPortal(
-                <div className="modal-overlay">
-                    <div className="modal-card" style={{ maxWidth: '720px' }}>
-                        <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div className="modal-overlay" onClick={() => setIsBulkModalOpen(false)}>
+                    <div className="modal-card" style={{ maxWidth: '720px' }} onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <FileSpreadsheet size={20} className="text-emerald" />
                                 <h3 style={{ margin: 0 }}>Bulk Import Product Catalog (CSV)</h3>
                             </div>
-                            <button style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }} onClick={() => setIsBulkModalOpen(false)}>
+                            <button
+                                type="button"
+                                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}
+                                onClick={() => setIsBulkModalOpen(false)}
+                            >
                                 <X size={20} />
                             </button>
                         </div>
 
-                        <div style={{ padding: '16px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', background: 'var(--bg-surface)', padding: '12px', borderRadius: 'var(--radius-md)' }}>
+                        <div className="modal-scrollable-body">
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', background: 'var(--bg-surface, #f8fafc)', padding: '12px', borderRadius: 'var(--radius-md, 8px)', flexWrap: 'wrap', gap: '10px' }}>
                                 <div>
                                     <h4 style={{ margin: 0, fontSize: '14px' }}>Step 1: Download CSV Template</h4>
                                     <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: 'var(--text-muted)' }}>Contains required headers: title, article_no, retail_price, category, etc.</p>
@@ -956,12 +981,12 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
 
                             {/* VALIDATION REPORT TABLE */}
                             {bulkResults.length > 0 && (
-                                <div style={{ marginTop: '16px', background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', padding: '12px', border: '1px solid var(--border-subtle)' }}>
+                                <div style={{ marginTop: '16px', background: 'var(--bg-surface, #f8fafc)', borderRadius: 'var(--radius-md, 8px)', padding: '12px', border: '1px solid var(--border-subtle, #e2e8f0)' }}>
                                     <h4 style={{ margin: '0 0 8px 0', fontSize: '13px' }}>Validation Summary Report</h4>
                                     <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
                                         <table style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse' }}>
                                             <thead>
-                                                <tr style={{ color: 'var(--text-muted)', borderBottom: '1px solid var(--border-subtle)' }}>
+                                                <tr style={{ color: 'var(--text-muted)', borderBottom: '1px solid var(--border-subtle, #e2e8f0)' }}>
                                                     <th style={{ textAlign: 'left', padding: '6px' }}>Row #</th>
                                                     <th style={{ textAlign: 'left', padding: '6px' }}>Title</th>
                                                     <th style={{ textAlign: 'center', padding: '6px' }}>Status</th>
@@ -970,7 +995,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                                             </thead>
                                             <tbody>
                                                 {bulkResults.map((r, idx) => (
-                                                    <tr key={idx} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                                                    <tr key={idx} style={{ borderBottom: '1px solid var(--border-subtle, #e2e8f0)' }}>
                                                         <td style={{ padding: '6px' }}>{r.rowNumber}</td>
                                                         <td style={{ padding: '6px' }}>{r.title || 'N/A'}</td>
                                                         <td style={{ padding: '6px', textAlign: 'center' }}>
@@ -990,19 +1015,20 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                                     </div>
                                 </div>
                             )}
+                        </div>
 
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '16px' }}>
-                                <button className="btn btn-outline" onClick={() => setIsBulkModalOpen(false)}>
-                                    Cancel
-                                </button>
-                                <button
-                                    className="btn btn-emerald"
-                                    onClick={handleCommitBulkImport}
-                                    disabled={bulkImporting || bulkResults.filter((r) => r.valid).length === 0}
-                                >
-                                    {bulkImporting ? 'Importing...' : `Commit ${bulkResults.filter((r) => r.valid).length} Valid Products`}
-                                </button>
-                            </div>
+                        <div className="modal-footer">
+                            <button type="button" className="btn btn-outline" onClick={() => setIsBulkModalOpen(false)}>
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-emerald"
+                                onClick={handleCommitBulkImport}
+                                disabled={bulkImporting || bulkResults.filter((r) => r.valid).length === 0}
+                            >
+                                {bulkImporting ? 'Importing...' : `Commit ${bulkResults.filter((r) => r.valid).length} Valid Products`}
+                            </button>
                         </div>
                     </div>
                 </div>,
@@ -1011,26 +1037,31 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
 
             {/* DELETE ARTICLE CONFIRMATION MODAL */}
             {deleteId && createPortal(
-                <div className="modal-overlay">
-                    <div className="modal-card" style={{ maxWidth: '420px', padding: '0' }}>
+                <div className="modal-overlay" onClick={() => setDeleteId(null)}>
+                    <div className="modal-card" style={{ maxWidth: '440px' }} onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header" style={{ borderColor: 'rgba(239, 68, 68, 0.3)' }}>
-                            <h3 style={{ color: '#EF4444', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <h3 style={{ color: '#EF4444', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
                                 <AlertTriangle size={18} /> Delete Article Permanently
                             </h3>
-                            <button style={{ background: 'none', border: 'none', color: '#9CA3AF', cursor: 'pointer' }} onClick={() => setDeleteId(null)}>
+                            <button
+                                type="button"
+                                style={{ background: 'none', border: 'none', color: '#9CA3AF', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}
+                                onClick={() => setDeleteId(null)}
+                            >
                                 <X size={18} />
                             </button>
                         </div>
-                        <div style={{ padding: '20px', color: '#E5E7EB', fontSize: '14px', lineHeight: 1.5 }}>
+                        <div className="modal-scrollable-body" style={{ color: '#1E293B', fontSize: '14px', lineHeight: 1.5 }}>
                             Are you sure you want to delete <strong>"{deletingProduct?.title || deleteId}"</strong> (Article No: {deletingProduct?.article_no || 'N/A'})?
-                            <p style={{ margin: '10px 0 0 0', color: '#9CA3AF', fontSize: '12px' }}>This action cannot be undone and will remove it permanently from the store inventory catalog.</p>
+                            <p style={{ margin: '10px 0 0 0', color: '#64748B', fontSize: '12px' }}>This action cannot be undone and will remove it permanently from the store inventory catalog.</p>
                         </div>
-                        <div className="modal-footer" style={{ justifyContent: 'flex-end', gap: '10px', padding: '14px 20px' }}>
-                            <button className="btn btn-outline" onClick={() => setDeleteId(null)}>Cancel</button>
+                        <div className="modal-footer">
+                            <button type="button" className="btn btn-outline" onClick={() => setDeleteId(null)}>Cancel</button>
                             <button 
+                                type="button"
                                 className="btn" 
                                 onClick={handleConfirmDelete} 
-                                style={{ background: '#EF4444', color: '#FFFFFF', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 700, cursor: 'pointer' }}
+                                style={{ background: '#EF4444', color: '#FFFFFF', border: 'none', padding: '8px 16px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}
                             >
                                 Delete Article
                             </button>

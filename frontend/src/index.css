@@ -66,9 +66,7 @@ iframe {
 /* GPU Hardware Acceleration & Mobile 60 FPS Compositing */
 .gpu-layer,
 .candy-header,
-.top-announcement-bar,
-.modal-card,
-.modal-overlay {
+.top-announcement-bar {
     will-change: transform, opacity;
     transform: translateZ(0);
     backface-visibility: hidden;
@@ -87,6 +85,102 @@ main,
 .sidebar-overlay,
 .mobile-filter-drawer {
     overscroll-behavior: contain;
+}
+
+/* Universal Modal & Dialog System - Mobile Scroll Lock & Touch Containment */
+.modal-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(15, 23, 42, 0.65) !important;
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+    z-index: 999999 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 16px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+    touch-action: pan-y !important;
+}
+
+.modal-card {
+    background: #ffffff !important;
+    border: 1px solid var(--border-subtle, #e2e8f0) !important;
+    border-radius: 16px !important;
+    color: var(--text-primary, #0f172a) !important;
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.2) !important;
+    width: 100%;
+    max-width: 680px;
+    max-height: calc(100dvh - 32px) !important;
+    max-height: min(90vh, 90dvh) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    position: relative;
+    margin: auto;
+    touch-action: pan-y;
+}
+
+.modal-header {
+    flex-shrink: 0 !important;
+    background: #f8fafc !important;
+    border-bottom: 1px solid var(--border-subtle, #e2e8f0) !important;
+    color: var(--text-primary, #0f172a) !important;
+    padding: 14px 20px !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.modal-body,
+.modal-scrollable-body {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+    touch-action: pan-y !important;
+    padding: 18px 20px !important;
+}
+
+.modal-footer {
+    flex-shrink: 0 !important;
+    padding: 14px 20px !important;
+    border-top: 1px solid var(--border-subtle, #e2e8f0) !important;
+    background: #f8fafc !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+}
+
+@media (max-width: 640px) {
+    .modal-overlay {
+        padding: 10px 8px !important;
+        align-items: flex-start !important;
+    }
+    .modal-card {
+        max-height: calc(100dvh - 20px) !important;
+        border-radius: 12px !important;
+    }
+    .modal-header {
+        padding: 12px 14px !important;
+    }
+    .modal-body,
+    .modal-scrollable-body {
+        padding: 14px 12px !important;
+    }
+    .modal-footer {
+        padding: 12px 14px !important;
+    }
 }
 
 /* Minimum 48px Touch Targets for Mobile UX */
