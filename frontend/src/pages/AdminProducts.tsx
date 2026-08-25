@@ -23,6 +23,19 @@ const INITIAL_FORM_STATE: Partial<Product> = {
     in_stock: true,
 };
 
+// Safe Helper to prevent string-character splitting bugs
+const getSafeImagesArray = (imgs: any): string[] => {
+    if (!imgs) return [];
+    if (Array.isArray(imgs)) return imgs;
+    if (typeof imgs === 'string') {
+        if (imgs.startsWith('[')) {
+            try { return JSON.parse(imgs); } catch { return [imgs]; }
+        }
+        return [imgs];
+    }
+    return [];
+};
+
 interface BulkRowResult {
     rowNumber: number;
     title: string;
@@ -122,7 +135,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
             category: product.category || 'Ladies Wear',
             department: product.department || 'Ladies',
             fabric_type: product.fabric_type || '',
-            images: product.images || [],
+            images: getSafeImagesArray(product.images), // <--- Safe array parsing
             in_stock: product.in_stock,
             stock_quantity: product.stock_quantity !== undefined ? product.stock_quantity : 10,
         });
@@ -143,9 +156,10 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
     const handleAddImageUrl = (e?: React.MouseEvent) => {
         if (e) e.preventDefault();
         if (!imageUrlInput.trim()) return;
+        
         setFormData((prev) => ({
             ...prev,
-            images: [...(prev.images || []), imageUrlInput.trim()],
+            images: [...getSafeImagesArray(prev.images), imageUrlInput.trim()],
         }));
         setImageUrlInput('');
         showToast('Image URL added!', 'success');
@@ -154,7 +168,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
     const handleRemoveImage = (indexToRemove: number) => {
         setFormData((prev) => ({
             ...prev,
-            images: (prev.images || []).filter((_, idx) => idx !== indexToRemove),
+            images: getSafeImagesArray(prev.images).filter((_, idx) => idx !== indexToRemove),
         }));
         showToast('Image removed.', 'info');
     };
@@ -183,11 +197,11 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
             if (uploadedUrls.length > 0) {
                 setFormData((prev) => ({
                     ...prev,
-                    images: [...(prev.images || []), ...uploadedUrls],
+                    images: [...getSafeImagesArray(prev.images), ...uploadedUrls],
                 }));
-                showToast(`Uploaded ${uploadedUrls.length} file(s)!`, 'success');
+                showToast(`Uploaded ${uploadedUrls.length} image(s) successfully!`, 'success');
             } else {
-                showToast('Image upload failed.', 'error');
+                showToast('Image upload failed to return URL.', 'error');
             }
         } catch (err) {
             console.error('Image upload error:', err);
@@ -230,6 +244,9 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
             ? Number(formData.stock_quantity) 
             : 10;
 
+        const safeFinalImages = getSafeImagesArray(formData.images);
+        const fallbackImages = safeFinalImages.length > 0 ? safeFinalImages : ['https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=800&q=80'];
+
         const payload: Partial<Product> = {
             ...(editingId ? { id: editingId } : {}),
             article_no: formData.article_no?.trim() || `CB-${Math.floor(100 + Math.random() * 900)}`,
@@ -241,7 +258,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
             category: formData.category || 'Ladies Wear',
             department: formData.department || (selectedDepartment !== 'All' ? selectedDepartment : 'Ladies'),
             fabric_type: formData.fabric_type || 'Pure Raw Silk',
-            images: formData.images && formData.images.length > 0 ? formData.images : ['https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=800&q=80'],
+            images: fallbackImages, 
             stock_quantity: stockQty,
             in_stock: stockQty > 0 ? (formData.in_stock ?? true) : false,
         };
@@ -273,88 +290,27 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
 
     return (
         <div className="admin-products-container" style={{ padding: '16px', backgroundColor: '#F9FAFB', minHeight: '100vh' }}>
-            {/* DEPARTMENT TABS */}
             <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
-                <button
-                    onClick={() => setSelectedDepartment('Ladies')}
-                    style={{
-                        backgroundColor: selectedDepartment === 'Ladies' ? '#111827' : '#FFFFFF',
-                        color: selectedDepartment === 'Ladies' ? '#F59E0B' : '#374151',
-                        fontWeight: 700,
-                        border: '1px solid #E5E7EB',
-                        padding: '10px 16px',
-                        cursor: 'pointer',
-                        borderRadius: '8px',
-                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                    }}
-                >
-                    ✨ Ladies Wear Admin
-                </button>
-                <button
-                    onClick={() => setSelectedDepartment('Kids')}
-                    style={{
-                        backgroundColor: selectedDepartment === 'Kids' ? '#E52535' : '#FFFFFF',
-                        color: selectedDepartment === 'Kids' ? '#FFFFFF' : '#374151',
-                        fontWeight: 700,
-                        border: '1px solid #E5E7EB',
-                        padding: '10px 16px',
-                        cursor: 'pointer',
-                        borderRadius: '8px',
-                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                    }}
-                >
-                    👑 Kids Wear Admin
-                </button>
-                <button
-                    onClick={() => setSelectedDepartment('All')}
-                    style={{
-                        backgroundColor: selectedDepartment === 'All' ? '#4F46E5' : '#FFFFFF',
-                        color: selectedDepartment === 'All' ? '#FFFFFF' : '#374151',
-                        fontWeight: 700,
-                        border: '1px solid #E5E7EB',
-                        padding: '10px 16px',
-                        cursor: 'pointer',
-                        borderRadius: '8px',
-                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                    }}
-                >
-                    📦 All Inventory
-                </button>
+                <button onClick={() => setSelectedDepartment('Ladies')} style={{ backgroundColor: selectedDepartment === 'Ladies' ? '#111827' : '#FFFFFF', color: selectedDepartment === 'Ladies' ? '#F59E0B' : '#374151', fontWeight: 700, border: '1px solid #E5E7EB', padding: '10px 16px', cursor: 'pointer', borderRadius: '8px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>✨ Ladies Wear Admin</button>
+                <button onClick={() => setSelectedDepartment('Kids')} style={{ backgroundColor: selectedDepartment === 'Kids' ? '#E52535' : '#FFFFFF', color: selectedDepartment === 'Kids' ? '#FFFFFF' : '#374151', fontWeight: 700, border: '1px solid #E5E7EB', padding: '10px 16px', cursor: 'pointer', borderRadius: '8px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>👑 Kids Wear Admin</button>
+                <button onClick={() => setSelectedDepartment('All')} style={{ backgroundColor: selectedDepartment === 'All' ? '#4F46E5' : '#FFFFFF', color: selectedDepartment === 'All' ? '#FFFFFF' : '#374151', fontWeight: 700, border: '1px solid #E5E7EB', padding: '10px 16px', cursor: 'pointer', borderRadius: '8px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>📦 All Inventory</button>
             </div>
 
-            {/* ACTION BAR */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
                 <div style={{ position: 'relative', width: '100%' }}>
                     <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} />
-                    <input
-                        type="text"
-                        placeholder="Search by title, article #..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        style={{ ...lightInputStyle, paddingLeft: '40px', marginTop: 0 }}
-                    />
+                    <input type="text" placeholder="Search by title, article #..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ ...lightInputStyle, paddingLeft: '40px', marginTop: 0 }} />
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
-                    <button 
-                        type="button"
-                        onClick={handleOpenCreateModal} 
-                        style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: '#E52535', color: '#FFFFFF', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}
-                    >
-                        <Plus size={18} /> ADD ARTICLE
-                    </button>
-                    <button type="button" onClick={loadProducts} style={{ border: '1px solid #D1D5DB', padding: '10px 14px', borderRadius: '8px', background: '#FFFFFF', color: '#374151', cursor: 'pointer' }}>
-                        <RefreshCw size={18} />
-                    </button>
+                    <button type="button" onClick={handleOpenCreateModal} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: '#E52535', color: '#FFFFFF', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}><Plus size={18} /> ADD ARTICLE</button>
+                    <button type="button" onClick={loadProducts} style={{ border: '1px solid #D1D5DB', padding: '10px 14px', borderRadius: '8px', background: '#FFFFFF', color: '#374151', cursor: 'pointer' }}><RefreshCw size={18} /></button>
                 </div>
             </div>
 
-            {/* PRODUCT LIST TABLE */}
             {loading ? (
                 <div style={{ textAlign: 'center', padding: '40px', color: '#6B7280' }}>Loading catalog...</div>
             ) : paginatedProducts.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px', background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E5E7EB', color: '#6B7280' }}>
-                    No products found in this category.
-                </div>
+                <div style={{ textAlign: 'center', padding: '40px', background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E5E7EB', color: '#6B7280' }}>No products found in this category.</div>
             ) : (
                 <div style={{ overflowX: 'auto', background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
@@ -367,14 +323,13 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                             </tr>
                         </thead>
                         <tbody>
-                            {paginatedProducts.map((product) => (
+                            {paginatedProducts.map((product) => {
+                                const safeImgs = getSafeImagesArray(product.images);
+                                const firstImg = safeImgs.length > 0 ? safeImgs[0] : 'https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=100&q=80';
+                                return (
                                 <tr key={product.id} style={{ borderBottom: '1px solid #F3F4F6' }}>
                                     <td style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                        <img 
-                                            src={product.images && product.images.length > 0 ? product.images[0] : 'https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=100&q=80'} 
-                                            alt={product.title} 
-                                            style={{ width: '40px', height: '40px', borderRadius: '6px', objectFit: 'cover', border: '1px solid #E5E7EB' }} 
-                                        />
+                                        <img src={firstImg} alt={product.title} style={{ width: '40px', height: '40px', borderRadius: '6px', objectFit: 'cover', border: '1px solid #E5E7EB' }} />
                                         <div>
                                             <div style={{ fontWeight: 600, color: '#111827' }}>{product.title}</div>
                                             <div style={{ fontSize: '12px', color: '#6B7280' }}>{product.category} ({product.article_no})</div>
@@ -382,47 +337,19 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                                     </td>
                                     <td style={{ padding: '12px 14px', fontWeight: 700, color: '#111827' }}>Rs {product.retail_price?.toLocaleString()}</td>
                                     <td style={{ padding: '12px 14px' }}>
-                                        <button
-                                            type="button"
-                                            onClick={() => handleToggleStock(product)}
-                                            style={{
-                                                padding: '5px 10px',
-                                                borderRadius: '6px',
-                                                border: 'none',
-                                                cursor: 'pointer',
-                                                background: product.in_stock ? '#D1FAE5' : '#FEE2E2',
-                                                color: product.in_stock ? '#065F46' : '#991B1B',
-                                                fontWeight: 600,
-                                                fontSize: '12px'
-                                            }}
-                                        >
-                                            {product.in_stock ? 'In Stock' : 'Out of Stock'}
-                                        </button>
+                                        <button type="button" onClick={() => handleToggleStock(product)} style={{ padding: '5px 10px', borderRadius: '6px', border: 'none', cursor: 'pointer', background: product.in_stock ? '#D1FAE5' : '#FEE2E2', color: product.in_stock ? '#065F46' : '#991B1B', fontWeight: 600, fontSize: '12px' }}>{product.in_stock ? 'In Stock' : 'Out of Stock'}</button>
                                     </td>
                                     <td style={{ padding: '12px 14px', textAlign: 'right' }}>
-                                        <button 
-                                            type="button"
-                                            onClick={() => handleEdit(product)} 
-                                            style={{ marginRight: '10px', background: 'none', border: 'none', cursor: 'pointer', padding: '6px' }}
-                                        >
-                                            <Edit3 size={18} color="#374151" />
-                                        </button>
-                                        <button 
-                                            type="button"
-                                            onClick={() => handleDeleteClick(product)} 
-                                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444', padding: '6px' }}
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
+                                        <button type="button" onClick={() => handleEdit(product)} style={{ marginRight: '10px', background: 'none', border: 'none', cursor: 'pointer', padding: '6px' }}><Edit3 size={18} color="#374151" /></button>
+                                        <button type="button" onClick={() => handleDeleteClick(product)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444', padding: '6px' }}><Trash2 size={18} /></button>
                                     </td>
                                 </tr>
-                            ))}
+                            )})}
                         </tbody>
                     </table>
                 </div>
             )}
 
-            {/* PORTAL: LIGHT-THEME ADD/EDIT MODAL WITH IMAGE UPLOADER */}
             {isModalOpen && typeof document !== 'undefined' && createPortal(
                 <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(17, 24, 39, 0.6)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
                     <div style={{ background: '#FFFFFF', borderRadius: '12px', width: '100%', maxWidth: '520px', maxHeight: '90vh', overflowY: 'auto', padding: '24px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.15)' }}>
@@ -432,109 +359,35 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                         </div>
                         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                                <div>
-                                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Article #</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={formData.article_no || ''}
-                                        onChange={(e) => setFormData({ ...formData, article_no: e.target.value })}
-                                        style={lightInputStyle}
-                                    />
-                                </div>
-                                <div>
-                                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Department</label>
-                                    <select
-                                        value={formData.department || 'Ladies'}
-                                        onChange={(e) => setFormData({ ...formData, department: e.target.value as any })}
-                                        style={lightInputStyle}
-                                    >
-                                        <option value="Ladies">Ladies</option>
-                                        <option value="Kids">Kids</option>
-                                    </select>
-                                </div>
+                                <div><label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Article #</label><input type="text" required value={formData.article_no || ''} onChange={(e) => setFormData({ ...formData, article_no: e.target.value })} style={lightInputStyle} /></div>
+                                <div><label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Department</label><select value={formData.department || 'Ladies'} onChange={(e) => setFormData({ ...formData, department: e.target.value as any })} style={lightInputStyle}><option value="Ladies">Ladies</option><option value="Kids">Kids</option></select></div>
                             </div>
-
-                            <div>
-                                <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Title / Design Name</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={formData.title || ''}
-                                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                    style={lightInputStyle}
-                                />
-                            </div>
-
+                            <div><label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Title / Design Name</label><input type="text" required value={formData.title || ''} onChange={(e) => setFormData({ ...formData, title: e.target.value })} style={lightInputStyle} /></div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                                <div>
-                                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Retail Price (Rs)</label>
-                                    <input
-                                        type="number"
-                                        required
-                                        value={formData.retail_price || ''}
-                                        onChange={(e) => setFormData({ ...formData, retail_price: Number(e.target.value) })}
-                                        style={lightInputStyle}
-                                    />
-                                </div>
-                                <div>
-                                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Wholesale Cost (Rs)</label>
-                                    <input
-                                        type="number"
-                                        value={formData.wholesale_cost || ''}
-                                        onChange={(e) => setFormData({ ...formData, wholesale_cost: Number(e.target.value) })}
-                                        style={lightInputStyle}
-                                    />
-                                </div>
+                                <div><label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Retail Price (Rs)</label><input type="number" required value={formData.retail_price || ''} onChange={(e) => setFormData({ ...formData, retail_price: Number(e.target.value) })} style={lightInputStyle} /></div>
+                                <div><label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Wholesale Cost (Rs)</label><input type="number" value={formData.wholesale_cost || ''} onChange={(e) => setFormData({ ...formData, wholesale_cost: Number(e.target.value) })} style={lightInputStyle} /></div>
                             </div>
-
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                                <div>
-                                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Category</label>
-                                    <input
-                                        type="text"
-                                        value={formData.category || ''}
-                                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                        style={lightInputStyle}
-                                    />
-                                </div>
-                                <div>
-                                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Fabric Type</label>
-                                    <input
-                                        type="text"
-                                        value={formData.fabric_type || ''}
-                                        onChange={(e) => setFormData({ ...formData, fabric_type: e.target.value })}
-                                        style={lightInputStyle}
-                                    />
-                                </div>
+                                <div><label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Category</label><input type="text" value={formData.category || ''} onChange={(e) => setFormData({ ...formData, category: e.target.value })} style={lightInputStyle} /></div>
+                                <div><label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Fabric Type</label><input type="text" value={formData.fabric_type || ''} onChange={(e) => setFormData({ ...formData, fabric_type: e.target.value })} style={lightInputStyle} /></div>
                             </div>
 
-                            {/* DUAL IMAGE UPLOAD SYSTEM (URL + FILE UPLOAD) */}
                             <div style={{ background: '#F9FAFB', padding: '12px', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
-                                <label style={{ fontSize: '13px', fontWeight: 700, color: '#111827', display: 'block', marginBottom: '8px' }}>Product Images (Web & App)</label>
-                                
+                                <label style={{ fontSize: '13px', fontWeight: 700, color: '#111827', display: 'block', marginBottom: '8px' }}>Product Images</label>
                                 <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                                    <input
-                                        type="text"
-                                        placeholder="Paste image URL here..."
-                                        value={imageUrlInput}
-                                        onChange={(e) => setImageUrlInput(e.target.value)}
-                                        style={{ ...lightInputStyle, marginTop: 0, flex: 1 }}
-                                    />
+                                    <input type="text" placeholder="Paste image URL here..." value={imageUrlInput} onChange={(e) => setImageUrlInput(e.target.value)} style={{ ...lightInputStyle, marginTop: 0, flex: 1 }} />
                                     <button type="button" onClick={handleAddImageUrl} style={{ padding: '8px 14px', borderRadius: '8px', border: '1px solid #D1D5DB', background: '#FFFFFF', color: '#374151', fontWeight: 600, cursor: 'pointer' }}>Add URL</button>
                                 </div>
-
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                     <label style={{ padding: '8px 14px', borderRadius: '8px', border: '1px solid #D1D5DB', background: '#FFFFFF', color: '#374151', fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                                        <Upload size={16} /> Upload WebP Image
+                                        <Upload size={16} /> Upload Image
                                         <input type="file" multiple accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
                                     </label>
                                     {uploadingImage && <span style={{ fontSize: '12px', color: '#4F46E5', fontWeight: 600 }}>Uploading... {uploadProgress}%</span>}
                                 </div>
-
-                                {formData.images && formData.images.length > 0 && (
+                                {getSafeImagesArray(formData.images).length > 0 && (
                                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '12px' }}>
-                                        {formData.images.map((img, i) => (
+                                        {getSafeImagesArray(formData.images).map((img, i) => (
                                             <div key={i} style={{ position: 'relative', width: '64px', height: '64px', borderRadius: '6px', overflow: 'hidden', border: '1px solid #D1D5DB' }}>
                                                 <img src={img} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                                 <button type="button" onClick={() => handleRemoveImage(i)} style={{ position: 'absolute', top: 2, right: 2, background: 'rgba(239,68,68,0.9)', color: '#fff', border: 'none', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '12px' }}>×</button>
@@ -543,27 +396,11 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                                     </div>
                                 )}
                             </div>
-
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '16px' }}>
                                 <button type="button" onClick={() => setIsModalOpen(false)} style={{ padding: '10px 18px', borderRadius: '8px', border: '1px solid #D1D5DB', background: '#FFFFFF', color: '#374151', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
                                 <button type="submit" style={{ padding: '10px 18px', borderRadius: '8px', border: 'none', background: '#E52535', color: '#FFFFFF', fontWeight: 700, cursor: 'pointer' }}>{editingId ? 'Save Changes' : 'Create Article'}</button>
                             </div>
                         </form>
-                    </div>
-                </div>,
-                document.body
-            )}
-
-            {/* PORTAL: LIGHT-THEME DELETE CONFIRMATION */}
-            {deleteId && typeof document !== 'undefined' && createPortal(
-                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(17, 24, 39, 0.6)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-                    <div style={{ background: '#FFFFFF', borderRadius: '12px', maxWidth: '400px', width: '100%', padding: '24px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.15)' }}>
-                        <h3 style={{ margin: 0, color: '#111827', fontWeight: 700 }}>Confirm Delete</h3>
-                        <p style={{ color: '#4B5563', margin: '12px 0 20px', fontSize: '14px' }}>Are you sure you want to delete "{deletingProduct?.title || 'this item'}"?</p>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                            <button type="button" onClick={() => setDeleteId(null)} style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid #D1D5DB', background: '#FFFFFF', color: '#374151', cursor: 'pointer' }}>Cancel</button>
-                            <button type="button" onClick={handleConfirmDelete} style={{ padding: '10px 16px', borderRadius: '8px', border: 'none', background: '#EF4444', color: '#FFFFFF', fontWeight: 700, cursor: 'pointer' }}>Delete</button>
-                        </div>
                     </div>
                 </div>,
                 document.body
