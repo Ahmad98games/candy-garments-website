@@ -51,7 +51,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
     const [uploadingImage, setUploadingImage] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
 
-    const [pageSize] = useState<number>(24);
+    const [pageSize, setPageSize] = useState<number>(24);
     const [currentPage, setCurrentPage] = useState<number>(1);
 
     const [bulkResults, setBulkResults] = useState<BulkRowResult[]>([]);
@@ -199,8 +199,20 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
         }
     };
 
+    const lightInputStyle: React.CSSProperties = {
+        width: '100%',
+        padding: '10px 12px',
+        borderRadius: '8px',
+        border: '1px solid #D1D5DB',
+        backgroundColor: '#FFFFFF',
+        color: '#111827',
+        fontSize: '14px',
+        marginTop: '4px',
+        outline: 'none',
+    };
+
     return (
-        <div className="admin-products-container" style={{ padding: '16px', position: 'relative' }}>
+        <div className="admin-products-container" style={{ padding: '16px', backgroundColor: '#F9FAFB', minHeight: '100vh' }}>
             {/* DEPARTMENT TABS */}
             <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
                 <button
@@ -210,9 +222,10 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                         color: selectedDepartment === 'Ladies' ? '#F59E0B' : '#374151',
                         fontWeight: 700,
                         border: '1px solid #E5E7EB',
-                        padding: '10px 14px',
+                        padding: '10px 16px',
                         cursor: 'pointer',
                         borderRadius: '8px',
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
                     }}
                 >
                     ✨ Ladies Wear Admin
@@ -224,9 +237,10 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                         color: selectedDepartment === 'Kids' ? '#FFFFFF' : '#374151',
                         fontWeight: 700,
                         border: '1px solid #E5E7EB',
-                        padding: '10px 14px',
+                        padding: '10px 16px',
                         cursor: 'pointer',
                         borderRadius: '8px',
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
                     }}
                 >
                     👑 Kids Wear Admin
@@ -238,25 +252,26 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                         color: selectedDepartment === 'All' ? '#FFFFFF' : '#374151',
                         fontWeight: 700,
                         border: '1px solid #E5E7EB',
-                        padding: '10px 14px',
+                        padding: '10px 16px',
                         cursor: 'pointer',
                         borderRadius: '8px',
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
                     }}
                 >
                     📦 All Inventory
                 </button>
             </div>
 
-            {/* ACTION BAR */}
+            {/* ACTION BAR: SEARCH & BUTTONS */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
                 <div style={{ position: 'relative', width: '100%' }}>
-                    <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }} />
+                    <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} />
                     <input
                         type="text"
                         placeholder="Search by title, article #..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        style={{ width: '100%', padding: '10px 10px 10px 38px', borderRadius: '8px', border: '1px solid #D1D5DB', background: '#FFFFFF', color: '#111827' }}
+                        style={{ ...lightInputStyle, paddingLeft: '40px', marginTop: 0 }}
                     />
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
@@ -267,47 +282,47 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                     >
                         <Plus size={18} /> ADD ARTICLE
                     </button>
-                    <button type="button" onClick={() => setIsBulkModalOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', border: '1px solid #D1D5DB', padding: '10px 14px', borderRadius: '8px', background: '#FFFFFF' }}>
+                    <button type="button" onClick={() => setIsBulkModalOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', border: '1px solid #D1D5DB', padding: '10px 14px', borderRadius: '8px', background: '#FFFFFF', color: '#374151', fontWeight: 600, cursor: 'pointer' }}>
                         <FileSpreadsheet size={18} /> Bulk CSV
                     </button>
-                    <button type="button" onClick={loadProducts} style={{ border: '1px solid #D1D5DB', padding: '10px 14px', borderRadius: '8px', background: '#FFFFFF' }}>
+                    <button type="button" onClick={loadProducts} style={{ border: '1px solid #D1D5DB', padding: '10px 14px', borderRadius: '8px', background: '#FFFFFF', color: '#374151', cursor: 'pointer' }}>
                         <RefreshCw size={18} />
                     </button>
                 </div>
             </div>
 
-            {/* PRODUCT LIST */}
+            {/* PRODUCT LIST TABLE */}
             {loading ? (
-                <div style={{ textAlign: 'center', padding: '40px' }}>Loading catalog...</div>
+                <div style={{ textAlign: 'center', padding: '40px', color: '#6B7280' }}>Loading catalog...</div>
             ) : paginatedProducts.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px', background: '#F9FAFB', borderRadius: '8px' }}>
+                <div style={{ textAlign: 'center', padding: '40px', background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E5E7EB', color: '#6B7280' }}>
                     No products found in this category.
                 </div>
             ) : (
                 <div style={{ overflowX: 'auto', background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                         <thead>
-                            <tr style={{ borderBottom: '1px solid #E5E7EB', background: '#F9FAFB' }}>
-                                <th style={{ padding: '12px 8px' }}>Category</th>
-                                <th style={{ padding: '12px 8px' }}>Retail Price</th>
-                                <th style={{ padding: '12px 8px' }}>Stock</th>
-                                <th style={{ padding: '12px 8px', textAlign: 'right' }}>Actions</th>
+                            <tr style={{ borderBottom: '1px solid #E5E7EB', background: '#F3F4F6' }}>
+                                <th style={{ padding: '12px 14px', color: '#374151', fontSize: '13px' }}>Category</th>
+                                <th style={{ padding: '12px 14px', color: '#374151', fontSize: '13px' }}>Retail Price</th>
+                                <th style={{ padding: '12px 14px', color: '#374151', fontSize: '13px' }}>Stock</th>
+                                <th style={{ padding: '12px 14px', color: '#374151', fontSize: '13px', textAlign: 'right' }}>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {paginatedProducts.map((product) => (
                                 <tr key={product.id} style={{ borderBottom: '1px solid #F3F4F6' }}>
-                                    <td style={{ padding: '12px 8px' }}>
-                                        <div style={{ fontWeight: 600 }}>{product.title}</div>
+                                    <td style={{ padding: '12px 14px' }}>
+                                        <div style={{ fontWeight: 600, color: '#111827' }}>{product.title}</div>
                                         <div style={{ fontSize: '12px', color: '#6B7280' }}>{product.category} ({product.article_no})</div>
                                     </td>
-                                    <td style={{ padding: '12px 8px', fontWeight: 700 }}>Rs {product.retail_price?.toLocaleString()}</td>
-                                    <td style={{ padding: '12px 8px' }}>
+                                    <td style={{ padding: '12px 14px', fontWeight: 700, color: '#111827' }}>Rs {product.retail_price?.toLocaleString()}</td>
+                                    <td style={{ padding: '12px 14px' }}>
                                         <button
                                             type="button"
                                             onClick={() => handleToggleStock(product)}
                                             style={{
-                                                padding: '4px 8px',
+                                                padding: '5px 10px',
                                                 borderRadius: '6px',
                                                 border: 'none',
                                                 cursor: 'pointer',
@@ -320,7 +335,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                                             {product.in_stock ? 'In Stock' : 'Out of Stock'}
                                         </button>
                                     </td>
-                                    <td style={{ padding: '12px 8px', textAlign: 'right' }}>
+                                    <td style={{ padding: '12px 14px', textAlign: 'right' }}>
                                         <button 
                                             type="button"
                                             onClick={() => handleEdit(product)} 
@@ -343,79 +358,79 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                 </div>
             )}
 
-            {/* PORTAL: ADD/EDIT MODAL */}
+            {/* PORTAL: LIGHT-THEME ADD/EDIT MODAL */}
             {isModalOpen && typeof document !== 'undefined' && createPortal(
-                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.75)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-                    <div style={{ background: '#FFFFFF', borderRadius: '12px', width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto', padding: '20px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)' }}>
+                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(17, 24, 39, 0.6)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+                    <div style={{ background: '#FFFFFF', borderRadius: '12px', width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto', padding: '24px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.15)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #E5E7EB', paddingBottom: '12px' }}>
-                            <h3 style={{ margin: 0, fontSize: '18px', color: '#111827' }}>{editingId ? 'Edit Article' : 'Add New Article'}</h3>
-                            <button type="button" onClick={() => setIsModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={22} /></button>
+                            <h3 style={{ margin: 0, fontSize: '18px', color: '#111827', fontWeight: 700 }}>{editingId ? 'Edit Article' : 'Add New Article'}</h3>
+                            <button type="button" onClick={() => setIsModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280' }}><X size={22} /></button>
                         </div>
-                        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                             <div>
-                                <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151' }}>Article #</label>
+                                <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Article #</label>
                                 <input
                                     type="text"
                                     required
                                     value={formData.article_no || ''}
                                     onChange={(e) => setFormData({ ...formData, article_no: e.target.value })}
-                                    style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #D1D5DB', marginTop: '4px' }}
+                                    style={lightInputStyle}
                                 />
                             </div>
                             <div>
-                                <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151' }}>Title / Design Name</label>
+                                <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Title / Design Name</label>
                                 <input
                                     type="text"
                                     required
                                     value={formData.title || ''}
                                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                    style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #D1D5DB', marginTop: '4px' }}
+                                    style={lightInputStyle}
                                 />
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                                 <div>
-                                    <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151' }}>Retail Price (Rs)</label>
+                                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Retail Price (Rs)</label>
                                     <input
                                         type="number"
                                         required
                                         value={formData.retail_price || ''}
                                         onChange={(e) => setFormData({ ...formData, retail_price: Number(e.target.value) })}
-                                        style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #D1D5DB', marginTop: '4px' }}
+                                        style={lightInputStyle}
                                     />
                                 </div>
                                 <div>
-                                    <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151' }}>Wholesale Cost (Rs)</label>
+                                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Wholesale Cost (Rs)</label>
                                     <input
                                         type="number"
                                         value={formData.wholesale_cost || ''}
                                         onChange={(e) => setFormData({ ...formData, wholesale_cost: Number(e.target.value) })}
-                                        style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #D1D5DB', marginTop: '4px' }}
+                                        style={lightInputStyle}
                                     />
                                 </div>
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                                 <div>
-                                    <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151' }}>Category</label>
+                                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Category</label>
                                     <input
                                         type="text"
                                         value={formData.category || ''}
                                         onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                        style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #D1D5DB', marginTop: '4px' }}
+                                        style={lightInputStyle}
                                     />
                                 </div>
                                 <div>
-                                    <label style={{ fontSize: '12px', fontWeight: 600, color: '#374151' }}>Fabric Type</label>
+                                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Fabric Type</label>
                                     <input
                                         type="text"
                                         value={formData.fabric_type || ''}
                                         onChange={(e) => setFormData({ ...formData, fabric_type: e.target.value })}
-                                        style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #D1D5DB', marginTop: '4px' }}
+                                        style={lightInputStyle}
                                     />
                                 </div>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '16px' }}>
-                                <button type="button" onClick={() => setIsModalOpen(false)} style={{ padding: '10px 16px', borderRadius: '6px', border: '1px solid #D1D5DB', background: '#FFFFFF', cursor: 'pointer' }}>Cancel</button>
-                                <button type="submit" style={{ padding: '10px 16px', borderRadius: '6px', border: 'none', background: '#E52535', color: '#FFFFFF', fontWeight: 700, cursor: 'pointer' }}>{editingId ? 'Save Changes' : 'Create Article'}</button>
+                                <button type="button" onClick={() => setIsModalOpen(false)} style={{ padding: '10px 18px', borderRadius: '8px', border: '1px solid #D1D5DB', background: '#FFFFFF', color: '#374151', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+                                <button type="submit" style={{ padding: '10px 18px', borderRadius: '8px', border: 'none', background: '#E52535', color: '#FFFFFF', fontWeight: 700, cursor: 'pointer' }}>{editingId ? 'Save Changes' : 'Create Article'}</button>
                             </div>
                         </form>
                     </div>
@@ -423,15 +438,15 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                 document.body
             )}
 
-            {/* PORTAL: DELETE CONFIRMATION */}
+            {/* PORTAL: LIGHT-THEME DELETE CONFIRMATION */}
             {deleteId && typeof document !== 'undefined' && createPortal(
-                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.75)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-                    <div style={{ background: '#FFFFFF', borderRadius: '12px', maxWidth: '400px', width: '100%', padding: '20px' }}>
-                        <h3 style={{ margin: 0, color: '#111827' }}>Confirm Delete</h3>
-                        <p style={{ color: '#4B5563', margin: '12px 0 20px' }}>Are you sure you want to delete "{deletingProduct?.title || 'this item'}"?</p>
+                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(17, 24, 39, 0.6)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+                    <div style={{ background: '#FFFFFF', borderRadius: '12px', maxWidth: '400px', width: '100%', padding: '24px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.15)' }}>
+                        <h3 style={{ margin: 0, color: '#111827', fontWeight: 700 }}>Confirm Delete</h3>
+                        <p style={{ color: '#4B5563', margin: '12px 0 20px', fontSize: '14px' }}>Are you sure you want to delete "{deletingProduct?.title || 'this item'}"?</p>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                            <button type="button" onClick={() => setDeleteId(null)} style={{ padding: '10px 16px', borderRadius: '6px', border: '1px solid #D1D5DB', background: '#FFFFFF', cursor: 'pointer' }}>Cancel</button>
-                            <button type="button" onClick={handleConfirmDelete} style={{ padding: '10px 16px', borderRadius: '6px', border: 'none', background: '#EF4444', color: '#FFFFFF', fontWeight: 700, cursor: 'pointer' }}>Delete</button>
+                            <button type="button" onClick={() => setDeleteId(null)} style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid #D1D5DB', background: '#FFFFFF', color: '#374151', cursor: 'pointer' }}>Cancel</button>
+                            <button type="button" onClick={handleConfirmDelete} style={{ padding: '10px 16px', borderRadius: '8px', border: 'none', background: '#EF4444', color: '#FFFFFF', fontWeight: 700, cursor: 'pointer' }}>Delete</button>
                         </div>
                     </div>
                 </div>,
