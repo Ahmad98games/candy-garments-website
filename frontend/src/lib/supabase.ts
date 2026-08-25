@@ -1,29 +1,22 @@
-import { createClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
 
 import collectionImg1 from '../collection/WhatsApp Image 2026-08-20 at 6.56.51 PM (1).jpeg';
 import collectionImg2 from '../collection/WhatsApp Image 2026-08-20 at 6.56.51 PM (2).jpeg';
 import collectionImg3 from '../collection/WhatsApp Image 2026-08-20 at 6.56.51 PM (3).jpeg';
 import collectionImg4 from '../collection/WhatsApp Image 2026-08-20 at 6.56.51 PM.jpeg';
 
-const getEnvVar = (viteKey: string, nextKey: string) => {
-  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[viteKey]) {
-    return import.meta.env[viteKey];
-  }
-  if (typeof process !== 'undefined' && process.env && process.env[nextKey]) {
-    return process.env[nextKey];
-  }
-  return undefined;
-};
-
 const supabaseUrl =
-  getEnvVar('VITE_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL') ||
+  process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_URL) ||
   'https://qlqowijkxmluakyzqqou.supabase.co';
 
 const supabaseKey =
-  getEnvVar('VITE_SUPABASE_PUBLISHABLE_KEY', 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY') ||
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_PUBLISHABLE_KEY) ||
   'sb_publishable_EdpgC3Vi_2XyZ_CwrzC00w_SxD_xDKV';
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+// NEXT.JS BROWSER CLIENT (SSR & COOKIE SUPPORT)
+export const supabase = createBrowserClient(supabaseUrl, supabaseKey);
 
 export interface Product {
   id: string;
@@ -176,9 +169,10 @@ export const FALLBACK_PRODUCTS: Product[] = [
   },
 ];
 
-const LOCAL_STORAGE_PRODUCTS_KEY = 'candy_boutique_products_v9';
+const LOCAL_STORAGE_PRODUCTS_KEY = 'candy_boutique_products_v11';
 
 function getLocalProducts(): Product[] {
+  if (typeof window === 'undefined') return FALLBACK_PRODUCTS;
   try {
     const cached = localStorage.getItem(LOCAL_STORAGE_PRODUCTS_KEY);
     if (cached) {
@@ -194,6 +188,7 @@ function getLocalProducts(): Product[] {
 }
 
 function saveLocalProducts(products: Product[]): void {
+  if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(LOCAL_STORAGE_PRODUCTS_KEY, JSON.stringify(products));
     window.dispatchEvent(new Event('products-updated'));
@@ -343,7 +338,7 @@ export async function updateOrderStatus(orderId: string, status: Order['status']
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
- * Universal Add & Edit handler with clean Postgres UUID support
+ * Clean Insert & Update with SSR Auth support
  */
 export async function upsertProduct(product: Partial<Product>): Promise<Product | null> {
   const margin = (Number(product.retail_price) || 0) - (Number(product.wholesale_cost) || 0);
@@ -363,7 +358,7 @@ export async function upsertProduct(product: Partial<Product>): Promise<Product 
     wholesale_cost: Number(product.wholesale_cost) || 0,
     margin: margin > 0 ? margin : 0,
     category: product.category || 'Ladies Wear',
-    department: product.department || (product.category === 'Girls' || product.category === 'Kids Wear' ? 'Kids' : 'Ladies'),
+    department: product.department || 'Ladies',
     fabric_type: product.fabric_type || 'Pure Raw Silk 80g',
     images: imagesArray,
     stock_quantity: stockQty,
@@ -371,40 +366,44 @@ export async function upsertProduct(product: Partial<Product>): Promise<Product 
     updated_at: new Date().toISOString(),
   };
 
-  const isExistingRecord = product.id && UUID_REGEX.test(product.id);
-  let savedRecord: Product | null = null;
+  const isExistingUuid = product.id && UUID_REGEX.test(product.id);
 
   try {
-    if (isExistingRecord) {
-      // 1. UPDATE EXISTING RECORD
+    let savedRecord: Product | null = null;
+
+    if (isExistingUuid) {
+      // 1. UPDATE EXISTING
       const { data, error } = await supabase
         .from('products')
         .update(payload)
         .eq('id', product.id)
-        .select()
-        .single();
+        .select();
 
-      if (error) throw error;
-      savedRecord = data;
+      if (error) {
+        alert(`UPDATE FAILED:\n${error.message}\n(Code: ${error.code})`);
+        return null;
+      }
+      savedRecord = data && data[0] ? (data[0] as Product) : ({ ...payload, id: product.id } as Product);
     } else {
-      // 2. INSERT NEW RECORD (Supabase auto-assigns UUID)
+      // 2. INSERT NEW
       const { data, error } = await supabase
         .from('products')
         .insert([payload])
-        .select()
-        .single();
+        .select();
 
-      if (error) throw error;
-      savedRecord = data;
+      if (error) {
+        alert(`INSERT FAILED:\n${error.message}\n(Code: ${error.code})`);
+        return null;
+      }
+      if (data && data.length > 0) {
+        savedRecord = data[0] as Product;
+      } else {
+        alert("Saved, but Supabase returned empty select. Refreshing view.");
+        savedRecord = { ...payload, id: `local-${Date.now()}` } as Product;
+      }
     }
-  } catch (dbError: any) {
-    console.error('Supabase DB Exception:', dbError);
-    alert(`DATABASE SAVE ERROR:\n${dbError.message || dbError}`);
-    return null;
-  }
 
-  // Update local cache & broadcast update
-  if (savedRecord) {
+    // Save directly to local storage cache
     const local = getLocalProducts();
     const index = local.findIndex(p => p.id === savedRecord!.id);
     if (index > -1) {
@@ -413,9 +412,12 @@ export async function upsertProduct(product: Partial<Product>): Promise<Product 
       local.unshift(savedRecord);
     }
     saveLocalProducts(local);
-  }
 
-  return savedRecord;
+    return savedRecord;
+  } catch (err: any) {
+    alert(`UNEXPECTED ERROR:\n${err.message || err}`);
+    return null;
+  }
 }
 
 export async function toggleProductStock(productId: string, inStock: boolean): Promise<boolean> {
