@@ -29,42 +29,36 @@ export async function processAndUploadImageDetailed(
   const originalSizeKb = Math.round(file.size / 1024);
   const timestamp = Date.now();
   const randomHash = Math.random().toString(36).substring(2, 9);
-  
+
   let uploadFile: File | Blob = file;
   let fileExt = file.name.split('.').pop() || 'jpg';
   let mimeType = file.type || 'image/jpeg';
   let compressedSizeKb = originalSizeKb;
 
-  // 1. Safe Image Compression Pipeline with WebWorker Fallback
+  // 1. Safe Compression
   try {
-    if (onProgress) onProgress(15);
-
+    if (onProgress) onProgress(20);
     const compressionOptions = {
-      maxSizeMB: 0.25,          // ~150KB - 250KB safe high-quality range
+      maxSizeMB: 0.3,
       maxWidthOrHeight: 1200,
-      useWebWorker: typeof Worker !== 'undefined', // Safe check
+      useWebWorker: false, // Set to false to avoid Android/mobile worker crashes
       fileType: 'image/webp',
-      initialQuality: 0.82,
-      onProgress: onProgress ? (progress: number) => onProgress(Math.min(85, Math.round(progress))) : undefined
+      initialQuality: 0.8,
     };
 
     const compressedBlob = await imageCompression(file, compressionOptions);
     compressedSizeKb = Math.round(compressedBlob.size / 1024);
-    
     fileExt = 'webp';
     mimeType = 'image/webp';
-    uploadFile = new File([compressedBlob], `item-${timestamp}-${randomHash}.webp`, {
-      type: 'image/webp'
-    });
-  } catch (compressionErr) {
-    console.warn('WebP compression skipped/fallback to raw image:', compressionErr);
-    uploadFile = file; // Fallback to raw file if mobile browser fails worker
+    uploadFile = compressedBlob;
+  } catch (err) {
+    console.warn('Compression skipped, using original file', err);
+    uploadFile = file;
   }
 
-  // 2. Direct Supabase Storage Upload
+  // 2. Upload to Supabase
   try {
-    if (onProgress) onProgress(90);
-
+    if (onProgress) onProgress(60);
     const fileName = `item-${timestamp}-${randomHash}.${fileExt}`;
     const filePath = `uploads/${fileName}`;
 
@@ -72,15 +66,15 @@ export async function processAndUploadImageDetailed(
       .from(bucket)
       .upload(filePath, uploadFile, {
         contentType: mimeType,
-        upsert: true
+        upsert: true,
       });
 
     if (uploadError) {
-      console.error('Supabase storage upload error:', uploadError);
+      console.error('Supabase Upload Detailed Error:', uploadError);
+      alert(`Upload Failed: ${uploadError.message} (Bucket: ${bucket})`);
       throw uploadError;
     }
 
-    // 3. Retrieve Public URL
     const { data: publicUrlData } = supabase.storage
       .from(bucket)
       .getPublicUrl(filePath);
@@ -91,10 +85,10 @@ export async function processAndUploadImageDetailed(
       publicUrl: publicUrlData.publicUrl,
       originalSizeKb,
       compressedSizeKb,
-      fileName
+      fileName,
     };
-  } catch (uploadError) {
-    console.error('Image Processing/Upload Fatal Error:', uploadError);
-    throw uploadError;
+  } catch (fatalError: any) {
+    console.error('Fatal Upload Error:', fatalError);
+    throw fatalError;
   }
 }
