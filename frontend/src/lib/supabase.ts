@@ -1,22 +1,29 @@
-import { createBrowserClient } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 
 import collectionImg1 from '../collection/WhatsApp Image 2026-08-20 at 6.56.51 PM (1).jpeg';
 import collectionImg2 from '../collection/WhatsApp Image 2026-08-20 at 6.56.51 PM (2).jpeg';
 import collectionImg3 from '../collection/WhatsApp Image 2026-08-20 at 6.56.51 PM (3).jpeg';
 import collectionImg4 from '../collection/WhatsApp Image 2026-08-20 at 6.56.51 PM.jpeg';
 
+const getEnvVar = (viteKey: string, nextKey: string) => {
+  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[viteKey]) {
+    return import.meta.env[viteKey];
+  }
+  if (typeof process !== 'undefined' && process.env && process.env[nextKey]) {
+    return process.env[nextKey];
+  }
+  return undefined;
+};
+
 const supabaseUrl =
-  process.env.NEXT_PUBLIC_SUPABASE_URL ||
-  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_URL) ||
+  getEnvVar('VITE_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL') ||
   'https://qlqowijkxmluakyzqqou.supabase.co';
 
 const supabaseKey =
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_PUBLISHABLE_KEY) ||
+  getEnvVar('VITE_SUPABASE_PUBLISHABLE_KEY', 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY') ||
   'sb_publishable_EdpgC3Vi_2XyZ_CwrzC00w_SxD_xDKV';
 
-// NEXT.JS BROWSER CLIENT (SSR & COOKIE SUPPORT)
-export const supabase = createBrowserClient(supabaseUrl, supabaseKey);
+export const supabase = createClient(supabaseUrl, supabaseKey);
 
 export interface Product {
   id: string;
@@ -172,7 +179,6 @@ export const FALLBACK_PRODUCTS: Product[] = [
 const LOCAL_STORAGE_PRODUCTS_KEY = 'candy_boutique_products_v11';
 
 function getLocalProducts(): Product[] {
-  if (typeof window === 'undefined') return FALLBACK_PRODUCTS;
   try {
     const cached = localStorage.getItem(LOCAL_STORAGE_PRODUCTS_KEY);
     if (cached) {
@@ -188,7 +194,6 @@ function getLocalProducts(): Product[] {
 }
 
 function saveLocalProducts(products: Product[]): void {
-  if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(LOCAL_STORAGE_PRODUCTS_KEY, JSON.stringify(products));
     window.dispatchEvent(new Event('products-updated'));
@@ -337,9 +342,6 @@ export async function updateOrderStatus(orderId: string, status: Order['status']
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/**
- * Clean Insert & Update with SSR Auth support
- */
 export async function upsertProduct(product: Partial<Product>): Promise<Product | null> {
   const margin = (Number(product.retail_price) || 0) - (Number(product.wholesale_cost) || 0);
   const stockQty = product.stock_quantity !== undefined && !isNaN(Number(product.stock_quantity)) 
@@ -372,7 +374,6 @@ export async function upsertProduct(product: Partial<Product>): Promise<Product 
     let savedRecord: Product | null = null;
 
     if (isExistingUuid) {
-      // 1. UPDATE EXISTING
       const { data, error } = await supabase
         .from('products')
         .update(payload)
@@ -385,7 +386,6 @@ export async function upsertProduct(product: Partial<Product>): Promise<Product 
       }
       savedRecord = data && data[0] ? (data[0] as Product) : ({ ...payload, id: product.id } as Product);
     } else {
-      // 2. INSERT NEW
       const { data, error } = await supabase
         .from('products')
         .insert([payload])
@@ -398,12 +398,10 @@ export async function upsertProduct(product: Partial<Product>): Promise<Product 
       if (data && data.length > 0) {
         savedRecord = data[0] as Product;
       } else {
-        alert("Saved, but Supabase returned empty select. Refreshing view.");
         savedRecord = { ...payload, id: `local-${Date.now()}` } as Product;
       }
     }
 
-    // Save directly to local storage cache
     const local = getLocalProducts();
     const index = local.findIndex(p => p.id === savedRecord!.id);
     if (index > -1) {
