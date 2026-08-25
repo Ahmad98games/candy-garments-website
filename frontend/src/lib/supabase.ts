@@ -39,7 +39,9 @@ export interface Product {
   images: string[];
   in_stock: boolean;
   stock_quantity?: number;
+  display_order?: number;
   created_at?: string;
+  updated_at?: string;
 }
 
 export interface OrderItem {
@@ -64,7 +66,6 @@ export interface Order {
   created_at?: string;
 }
 
-// Fallback initial products if table is currently empty
 export const FALLBACK_PRODUCTS: Product[] = [
   {
     id: 'omn-ladies-001',
@@ -175,7 +176,7 @@ export const FALLBACK_PRODUCTS: Product[] = [
   },
 ];
 
-const LOCAL_STORAGE_PRODUCTS_KEY = 'candy_boutique_products_v5';
+const LOCAL_STORAGE_PRODUCTS_KEY = 'candy_boutique_products_v6';
 
 function getLocalProducts(): Product[] {
   try {
@@ -189,9 +190,6 @@ function getLocalProducts(): Product[] {
   } catch (e) {
     console.warn('Failed to parse local products cache', e);
   }
-  try {
-    localStorage.setItem(LOCAL_STORAGE_PRODUCTS_KEY, JSON.stringify(FALLBACK_PRODUCTS));
-  } catch (e) {}
   return FALLBACK_PRODUCTS;
 }
 
@@ -204,42 +202,8 @@ function saveLocalProducts(products: Product[]): void {
   }
 }
 
-let hasSyncedToSupabase = false;
-
-async function syncFallbackProductsToSupabase(dbProducts: Product[]): Promise<void> {
-  if (hasSyncedToSupabase) return;
-  hasSyncedToSupabase = true;
-
-  try {
-    const existingIds = new Set(dbProducts.map(p => p.id));
-    const missingFallback = FALLBACK_PRODUCTS.filter(p => !existingIds.has(p.id));
-
-    if (missingFallback.length > 0) {
-      const recordsToInsert = missingFallback.map(p => ({
-        id: p.id,
-        article_no: p.article_no,
-        title: p.title,
-        description: p.description,
-        retail_price: p.retail_price,
-        wholesale_cost: p.wholesale_cost,
-        margin: p.margin,
-        category: p.category,
-        department: p.department,
-        fabric_type: p.fabric_type,
-        images: p.images,
-        in_stock: p.in_stock,
-        created_at: new Date().toISOString(),
-      }));
-
-      await supabase.from('products').upsert(recordsToInsert);
-    }
-  } catch (e) {
-    console.warn('Silent database sync attempt:', e);
-  }
-}
-
 /**
- * Fetch all products from Supabase with optional filters and LocalStorage fallback
+ * Fetch products directly from Supabase (Live Database is strictly authoritative)
  */
 export async function fetchProducts(filters?: {
   category?: string;
@@ -251,29 +215,19 @@ export async function fetchProducts(filters?: {
   let allProducts: Product[] = [];
 
   try {
-    const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
-    if (!error && data) {
-      const dbList = data as Product[];
-      syncFallbackProductsToSupabase(dbList);
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-      const local = getLocalProducts();
-      const dbMap = new Map<string, Product>();
-      
-      // 1. Seed with FALLBACK first
-      FALLBACK_PRODUCTS.forEach(p => dbMap.set(p.id, p));
-
-      // 2. Layer local cache
-      local.forEach(p => dbMap.set(p.id, p));
-
-      // 3. Layer live database products ON TOP (Live DB is authoritative)
-      dbList.forEach(p => dbMap.set(p.id, p));
-
-      allProducts = Array.from(dbMap.values());
+    if (!error && data && data.length > 0) {
+      allProducts = data as Product[];
       saveLocalProducts(allProducts);
     } else {
       allProducts = getLocalProducts();
     }
   } catch (err) {
+    console.warn('Supabase fetch failed, loading local cache:', err);
     allProducts = getLocalProducts();
   }
 
@@ -282,7 +236,6 @@ export async function fetchProducts(filters?: {
   if (filters?.department) {
     filtered = filtered.filter(p => {
       if (p.department) return p.department === filters.department;
-      // Fallback inference by category
       if (filters.department === 'Ladies') {
         return p.category === 'Ladies Wear' || p.category === 'Luxury Formals' || p.category === 'Pret / Ready-to-Wear';
       } else {
@@ -312,14 +265,7 @@ export async function fetchProducts(filters?: {
   return filtered;
 }
 
-/**
- * Fetch single product by ID or Article No.
- */
 export async function fetchProductById(idOrArticleNo: string): Promise<Product | null> {
-  const local = getLocalProducts();
-  const match = local.find(p => p.id === idOrArticleNo || p.article_no === idOrArticleNo);
-  if (match) return match;
-
   try {
     const { data, error } = await supabase
       .from('products')
@@ -332,12 +278,10 @@ export async function fetchProductById(idOrArticleNo: string): Promise<Product |
     }
   } catch (err) {}
 
-  return FALLBACK_PRODUCTS[0];
+  const local = getLocalProducts();
+  return local.find(p => p.id === idOrArticleNo || p.article_no === idOrArticleNo) || FALLBACK_PRODUCTS[0];
 }
 
-/**
- * Insert new order into Supabase
- */
 export async function createOrder(order: Omit<Order, 'id' | 'created_at'>): Promise<Order | null> {
   try {
     const { data, error } = await supabase
@@ -359,7 +303,6 @@ export async function createOrder(order: Omit<Order, 'id' | 'created_at'>): Prom
 
     if (error) {
       console.error('Supabase order creation error:', error);
-      // Return a simulated order object with generated ID if Supabase error
       return {
         ...order,
         id: 'ORD-' + Math.floor(100000 + Math.random() * 900000),
@@ -377,9 +320,6 @@ export async function createOrder(order: Omit<Order, 'id' | 'created_at'>): Prom
   }
 }
 
-/**
- * Fetch all orders for Admin Portal
- */
 export async function fetchOrders(): Promise<Order[]> {
   try {
     const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
@@ -393,9 +333,6 @@ export async function fetchOrders(): Promise<Order[]> {
   }
 }
 
-/**
- * Update order status
- */
 export async function updateOrderStatus(orderId: string, status: Order['status']): Promise<boolean> {
   try {
     const { error } = await supabase.from('orders').update({ status }).eq('id', orderId);
@@ -407,45 +344,7 @@ export async function updateOrderStatus(orderId: string, status: Order['status']
 }
 
 /**
- * Upload image to Supabase `product-media` bucket
- */
-export async function uploadProductImage(file: File): Promise<string | null> {
-  try {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
-    const filePath = `articles/${fileName}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from('product-media')
-      .upload(filePath, file, { upsert: true });
-
-    if (!uploadError) {
-      const { data } = supabase.storage.from('product-media').getPublicUrl(filePath);
-      if (data?.publicUrl) {
-        return data.publicUrl;
-      }
-    } else {
-      console.warn('Supabase storage warning (falling back to Base64 DataURL):', uploadError.message);
-    }
-  } catch (err) {
-    console.warn('Storage upload exception (falling back to Base64 DataURL):', err);
-  }
-
-  // Guaranteed Fallback: Convert image File to Base64 Data URL so upload NEVER fails
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      resolve((e.target?.result as string) || null);
-    };
-    reader.onerror = () => resolve(null);
-    reader.readAsDataURL(file);
-  });
-}
-
-const IS_UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-/**
- * Upsert product (Add / Edit article) with Permanent Dual Persistence
+ * Upsert product (Add / Edit article) with Live Supabase & Instant Broadcast
  */
 export async function upsertProduct(product: Partial<Product>): Promise<Product | null> {
   const margin = (Number(product.retail_price) || 0) - (Number(product.wholesale_cost) || 0);
@@ -454,6 +353,10 @@ export async function upsertProduct(product: Partial<Product>): Promise<Product 
     ? Number(product.stock_quantity) 
     : 10;
   
+  const imagesArray = Array.isArray(product.images) && product.images.length > 0 
+    ? product.images 
+    : ['https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=800&q=80'];
+
   const savedProduct: Product = {
     id,
     article_no: product.article_no?.trim() || `CB-${Math.floor(100 + Math.random() * 900)}`,
@@ -465,24 +368,27 @@ export async function upsertProduct(product: Partial<Product>): Promise<Product 
     category: product.category || 'Ladies Wear',
     department: product.department || (product.category === 'Girls' || product.category === 'Kids Wear' ? 'Kids' : 'Ladies'),
     fabric_type: product.fabric_type || 'Pure Raw Silk 80g',
-    images: product.images && product.images.length > 0 ? product.images : ['/images/omnora.jpg'],
+    images: imagesArray,
     stock_quantity: stockQty,
     in_stock: stockQty > 0 ? (product.in_stock ?? true) : false,
     created_at: product.created_at || new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   };
 
   try {
-    const { data } = await supabase.from('products').upsert([savedProduct]).select().single();
-    if (data) {
+    const { data, error } = await supabase.from('products').upsert(savedProduct).select().single();
+    if (error) {
+      console.error('Supabase DB Error:', error.message);
+    } else if (data) {
       Object.assign(savedProduct, data);
     }
   } catch (e) {
-    console.warn('Supabase upsert fallback to local storage:', e);
+    console.warn('Supabase upsert fallback:', e);
   }
 
-  // Update permanent local cache
+  // Update local storage cache & notify all components immediately
   const local = getLocalProducts();
-  const index = local.findIndex(p => p.id === savedProduct.id || (product.id && p.id === product.id));
+  const index = local.findIndex(p => p.id === savedProduct.id);
   if (index > -1) {
     local[index] = savedProduct;
   } else {
@@ -493,9 +399,6 @@ export async function upsertProduct(product: Partial<Product>): Promise<Product 
   return savedProduct;
 }
 
-/**
- * Toggle Product Stock Status
- */
 export async function toggleProductStock(productId: string, inStock: boolean): Promise<boolean> {
   try {
     await supabase.from('products').update({ in_stock: inStock }).eq('id', productId);
@@ -515,26 +418,19 @@ export async function toggleProductStock(productId: string, inStock: boolean): P
   return true;
 }
 
-/**
- * Permanently delete product from Supabase DB and local storage
- */
 export async function deleteProduct(productId: string): Promise<boolean> {
   try {
     await supabase.from('products').delete().eq('id', productId);
   } catch (err) {
-    console.warn('Supabase delete product warning:', err);
+    console.warn('Supabase delete warning:', err);
   }
 
   const local = getLocalProducts();
   const filtered = local.filter(p => p.id !== productId);
   saveLocalProducts(filtered);
-  window.dispatchEvent(new Event('products-updated'));
   return true;
 }
 
-/**
- * Deduct purchased quantity from stock_quantity and auto-toggle in_stock when 0
- */
 export async function decrementProductStock(productId: string, quantityToDeduct: number): Promise<boolean> {
   const local = getLocalProducts();
   const product = local.find(p => p.id === productId);
@@ -559,13 +455,9 @@ export async function decrementProductStock(productId: string, quantityToDeduct:
     local[index] = product;
     saveLocalProducts(local);
   }
-  window.dispatchEvent(new Event('products-updated'));
   return true;
 }
 
-/**
- * Helper to generate pre-filled WhatsApp ordering link
- */
 export function generateWhatsAppLink(articleNo: string, title: string, price: number, phone = '923311498773'): string {
   const text = `Hi Candy Boutique! I want to order Article No: ${articleNo || 'N/A'} - ${title} (Rs. ${price}). Please confirm availability.`;
   return `https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(text)}`;
