@@ -4,8 +4,7 @@ import { fetchProducts, upsertProduct, toggleProductStock, deleteProduct, Produc
 import { useToast } from '../context/ToastContext';
 import { processAndUploadImage } from '../utils/imageUpload';
 import {
-    Plus, Edit3, Trash2, X, Upload, RefreshCw, Search,
-    GripVertical
+    Plus, Edit3, Trash2, X, Upload, RefreshCw, Search
 } from 'lucide-react';
 import './AdminProducts.css';
 
@@ -76,8 +75,14 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                 search_term: searchTerm,
                 department: selectedDepartment !== 'All' ? selectedDepartment : undefined,
             });
-            const safeData = Array.isArray(data) ? data : [];
-            safeData.sort((a: any, b: any) => (a.display_order || 0) - (b.display_order || 0));
+            const safeData = Array.isArray(data) ? [...data] : [];
+            // Safe sort: newest items first if display_order is 0/undefined
+            safeData.sort((a: any, b: any) => {
+                if (a.display_order !== b.display_order && a.display_order && b.display_order) {
+                    return a.display_order - b.display_order;
+                }
+                return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+            });
             setProducts(safeData);
         } catch (err) {
             console.error('Fetch products error:', err);
@@ -204,16 +209,16 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
 
     const handleOpenCreateModal = () => {
         setEditingId(null);
-        const isLadies = selectedDepartment === 'Ladies';
+        const isKids = selectedDepartment === 'Kids';
         setFormData({
-            article_no: isLadies ? `OMN-L-${Math.floor(100 + Math.random() * 900)}` : `OMN-K-${Math.floor(100 + Math.random() * 900)}`,
+            article_no: isKids ? `OMN-K-${Math.floor(100 + Math.random() * 900)}` : `OMN-L-${Math.floor(100 + Math.random() * 900)}`,
             title: '',
             description: '',
-            retail_price: isLadies ? 6500 : 3500,
+            retail_price: isKids ? 3500 : 6500,
             wholesale_cost: 0,
-            category: isLadies ? 'Ladies Wear' : 'Kids Wear',
+            category: isKids ? 'Girls' : 'Ladies Wear',
             department: selectedDepartment !== 'All' ? selectedDepartment : 'Ladies',
-            fabric_type: isLadies ? 'Plush Velvet & Silk' : 'Cotton Lawn',
+            fabric_type: isKids ? 'Cotton Lawn' : 'Plush Velvet & Silk',
             images: [],
             stock_quantity: 10,
             in_stock: true,
@@ -243,6 +248,8 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                 ? safeFinalImages 
                 : ['https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=800&q=80'];
 
+            const targetDepartment = formData.department || (selectedDepartment !== 'All' ? selectedDepartment : 'Ladies');
+
             const payload: Partial<Product> = {
                 ...(editingId ? { id: editingId } : {}),
                 article_no: formData.article_no?.trim() || `CB-${Math.floor(100 + Math.random() * 900)}`,
@@ -251,8 +258,8 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                 retail_price: Number(formData.retail_price),
                 wholesale_cost: Number(formData.wholesale_cost || 0),
                 margin: margin > 0 ? margin : 0,
-                category: formData.category || 'Ladies Wear',
-                department: formData.department || (selectedDepartment !== 'All' ? selectedDepartment : 'Ladies'),
+                category: formData.category || (targetDepartment === 'Kids' ? 'Girls' : 'Ladies Wear'),
+                department: targetDepartment,
                 fabric_type: formData.fabric_type || 'Pure Raw Silk',
                 images: fallbackImages, 
                 stock_quantity: stockQty,
@@ -262,11 +269,18 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
             const result = await upsertProduct(payload);
             if (result) {
                 showToast(editingId ? 'Article updated successfully!' : 'New article created!', 'success');
+                
+                // Direct Instant Local State Update (No blank screen/delay)
+                if (editingId) {
+                    setProducts((prev) => prev.map((p) => (p.id === result.id ? result : p)));
+                } else {
+                    setProducts((prev) => [result, ...prev]);
+                }
+
                 setIsModalOpen(false);
                 setEditingId(null);
                 setFormData(INITIAL_FORM_STATE);
                 window.dispatchEvent(new Event('products-updated'));
-                await loadProducts();
             } else {
                 showToast('Save failed. Check database console.', 'error');
             }
@@ -412,7 +426,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                 </div>
             )}
 
-            {/* ADD/EDIT ARTICLE MODAL (DIRECT ONCLICK - NO FORM BLOCKAGE) */}
+            {/* ADD/EDIT ARTICLE MODAL */}
             {isModalOpen && typeof document !== 'undefined' && createPortal(
                 <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(17, 24, 39, 0.6)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
                     <div style={{ background: '#FFFFFF', borderRadius: '12px', width: '100%', maxWidth: '520px', maxHeight: '90vh', overflowY: 'auto', padding: '24px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.15)' }}>
