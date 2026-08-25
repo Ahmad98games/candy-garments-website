@@ -1,536 +1,494 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { createPortal } from 'react-dom';
-import { fetchProducts, upsertProduct, toggleProductStock, deleteProduct, Product } from '../lib/supabase';
-import { useToast } from '../context/ToastContext';
-import { processAndUploadImage } from '../utils/imageUpload';
-import {
-    Plus, Edit3, Trash2, X, Upload, RefreshCw, Search
-} from 'lucide-react';
-import './AdminProducts.css';
+import { createClient } from '@supabase/supabase-js';
 
-const INITIAL_FORM_STATE: Partial<Product> = {
-    article_no: '',
-    title: '',
-    description: '',
-    retail_price: 0,
-    wholesale_cost: 0,
-    category: 'Ladies Wear',
-    department: 'Ladies',
-    fabric_type: 'Cotton Lawn',
-    images: [],
-    stock_quantity: 10,
-    in_stock: true,
+import collectionImg1 from '../collection/WhatsApp Image 2026-08-20 at 6.56.51 PM (1).jpeg';
+import collectionImg2 from '../collection/WhatsApp Image 2026-08-20 at 6.56.51 PM (2).jpeg';
+import collectionImg3 from '../collection/WhatsApp Image 2026-08-20 at 6.56.51 PM (3).jpeg';
+import collectionImg4 from '../collection/WhatsApp Image 2026-08-20 at 6.56.51 PM.jpeg';
+
+const getEnvVar = (viteKey: string, nextKey: string) => {
+  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[viteKey]) {
+    return import.meta.env[viteKey];
+  }
+  if (typeof process !== 'undefined' && process.env && process.env[nextKey]) {
+    return process.env[nextKey];
+  }
+  return undefined;
 };
 
-const getSafeImagesArray = (imgs: any): string[] => {
-    if (!imgs) return [];
-    if (Array.isArray(imgs)) return imgs;
-    if (typeof imgs === 'string') {
-        if (imgs.startsWith('[')) {
-            try { return JSON.parse(imgs); } catch { return [imgs]; }
-        }
-        return [imgs];
-    }
-    return [];
-};
+const supabaseUrl =
+  getEnvVar('VITE_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL') ||
+  'https://qlqowijkxmluakyzqqou.supabase.co';
 
-interface AdminProductsProps {
-    defaultDepartment?: 'Ladies' | 'Kids';
+const supabaseKey =
+  getEnvVar('VITE_SUPABASE_PUBLISHABLE_KEY', 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY') ||
+  'sb_publishable_EdpgC3Vi_2XyZ_CwrzC00w_SxD_xDKV';
+
+export const supabase = createClient(supabaseUrl, supabaseKey);
+
+export interface Product {
+  id: string;
+  article_no?: string;
+  title: string;
+  description?: string;
+  retail_price: number;
+  wholesale_cost?: number;
+  margin?: number;
+  category: string;
+  department?: 'Ladies' | 'Kids';
+  fabric_type?: string;
+  images: string[];
+  in_stock: boolean;
+  stock_quantity?: number;
+  display_order?: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
-const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
-    const [products, setProducts] = useState<Product[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [deleteId, setDeleteId] = useState<string | null>(null);
-    const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
+export interface OrderItem {
+  id: string;
+  title: string;
+  article_no?: string;
+  quantity: number;
+  price: number;
+  image?: string;
+}
 
-    const [editingId, setEditingId] = useState<string | null>(null);
-    const [selectedDepartment, setSelectedDepartment] = useState<'Ladies' | 'Kids' | 'All'>(
-        defaultDepartment || 'All'
+export interface Order {
+  id?: string;
+  customer_name: string;
+  customer_phone: string;
+  shipping_address: string;
+  city: string;
+  items: OrderItem[];
+  total_amount: number;
+  payment_method: string;
+  status: 'Pending' | 'Dispatched' | 'Delivered' | 'Cancelled';
+  created_at?: string;
+}
+
+export const FALLBACK_PRODUCTS: Product[] = [
+  {
+    id: 'omn-ladies-001',
+    article_no: 'OMN-L-101',
+    title: 'Omnora Signature Hand-Embroidered Velvet Suit',
+    description: 'Bespoke luxury velvet attire decorated with intricate tilla embroideries and zardozi needlework, paired with an organza dupatta.',
+    retail_price: 6500,
+    wholesale_cost: 3800,
+    margin: 2700,
+    category: 'Ladies Wear',
+    department: 'Ladies',
+    fabric_type: 'Plush Velvet & Raw Silk',
+    images: [collectionImg1],
+    in_stock: true,
+  },
+  {
+    id: 'omn-ladies-002',
+    article_no: 'OMN-L-102',
+    title: 'Omnora Royal Hand-Crafted Raw Silk Tunic',
+    description: 'Tailored 80g pure raw silk tunic with exquisite resham hand needlework, pearl accents, and flared trousers.',
+    retail_price: 6500,
+    wholesale_cost: 3800,
+    margin: 2700,
+    category: 'Ladies Wear',
+    department: 'Ladies',
+    fabric_type: 'Pure Raw Silk 80g',
+    images: [collectionImg2],
+    in_stock: true,
+  },
+  {
+    id: 'omn-ladies-003',
+    article_no: 'OMN-L-103',
+    title: 'Omnora Festive Chiffon Zardozi Ensemble',
+    description: 'Multi-panel embroidered chiffon outfit featuring gold sequin detailing and delicate floral hand craftsmanship.',
+    retail_price: 6500,
+    wholesale_cost: 3800,
+    margin: 2700,
+    category: 'Ladies Wear',
+    department: 'Ladies',
+    fabric_type: 'Pure Crinkle Chiffon & Silk',
+    images: [collectionImg3],
+    in_stock: true,
+  },
+  {
+    id: 'omn-ladies-004',
+    article_no: 'OMN-L-104',
+    title: 'Omnora Imperial Printed Silk Kurti Set',
+    description: 'Designer printed silk ensemble adorned with delicate mirrorwork on neckline and sleeves.',
+    retail_price: 6500,
+    wholesale_cost: 3800,
+    margin: 2700,
+    category: 'Ladies Wear',
+    department: 'Ladies',
+    fabric_type: 'Pure Lawn Silk',
+    images: [collectionImg4],
+    in_stock: true,
+  },
+  {
+    id: 'prod-001',
+    article_no: 'CB-101',
+    title: 'Noor-e-Zari Hand-Embroidered Velvet Suit',
+    description: 'Midnight black plush velvet shirt with intricate gold tilla and zardozi needlework, paired with a sheer organza dupatta.',
+    retail_price: 18500,
+    wholesale_cost: 9500,
+    margin: 9000,
+    category: 'Ladies Wear',
+    department: 'Ladies',
+    fabric_type: 'Plush Micro-Velvet & Raw Silk',
+    images: [
+      'https://images.unsplash.com/photo-1583391733956-6c78276477e2?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=800&q=80'
+    ],
+    in_stock: true,
+  },
+  {
+    id: 'prod-002',
+    article_no: 'CB-102',
+    title: 'Mah-ru Raw Silk Embroidered Co-ord Set',
+    description: 'Tailored 80g pure raw silk tunic featuring hand-set pearl embellishments, threadwork accents, and flared culottes.',
+    retail_price: 14200,
+    wholesale_cost: 7200,
+    margin: 7000,
+    category: 'Ladies Wear',
+    department: 'Ladies',
+    fabric_type: 'Pure Raw Silk 80g',
+    images: [
+      'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80'
+    ],
+    in_stock: true,
+  },
+  {
+    id: 'prod-003',
+    article_no: 'CB-103',
+    title: 'Candy Kids Princess Embroidered Frock Set',
+    description: 'Beautiful multi-panel embroidered frock for girls featuring resham floral motifs and sequin accents.',
+    retail_price: 4500,
+    wholesale_cost: 2200,
+    margin: 2300,
+    category: 'Girls',
+    department: 'Kids',
+    fabric_type: 'Soft Cotton & Chiffon',
+    images: [
+      'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=800&q=80'
+    ],
+    in_stock: true,
+  },
+];
+
+const LOCAL_STORAGE_PRODUCTS_KEY = 'candy_boutique_products_v10';
+
+function getLocalProducts(): Product[] {
+  try {
+    const cached = localStorage.getItem(LOCAL_STORAGE_PRODUCTS_KEY);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to parse local products cache', e);
+  }
+  return FALLBACK_PRODUCTS;
+}
+
+function saveLocalProducts(products: Product[]): void {
+  try {
+    localStorage.setItem(LOCAL_STORAGE_PRODUCTS_KEY, JSON.stringify(products));
+    window.dispatchEvent(new Event('products-updated'));
+  } catch (e) {
+    console.error('Failed to save products to localStorage', e);
+  }
+}
+
+export async function fetchProducts(filters?: {
+  category?: string;
+  department?: 'Ladies' | 'Kids';
+  fabric_type?: string;
+  in_stock_only?: boolean;
+  search_term?: string;
+}): Promise<Product[]> {
+  let allProducts: Product[] = [];
+
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (!error && data && data.length > 0) {
+      allProducts = data as Product[];
+      saveLocalProducts(allProducts);
+    } else {
+      allProducts = getLocalProducts();
+    }
+  } catch (err) {
+    console.warn('Supabase fetch failed, loading local cache:', err);
+    allProducts = getLocalProducts();
+  }
+
+  let filtered = [...allProducts];
+
+  if (filters?.department) {
+    filtered = filtered.filter(p => {
+      if (p.department) return p.department === filters.department;
+      if (filters.department === 'Ladies') {
+        return p.category === 'Ladies Wear' || p.category === 'Luxury Formals' || p.category === 'Pret / Ready-to-Wear';
+      } else {
+        return p.category === 'Kids Wear' || p.category === 'Girls';
+      }
+    });
+  }
+
+  if (filters?.category && filters.category !== 'All') {
+    filtered = filtered.filter(p => p.category === filters.category);
+  }
+  if (filters?.fabric_type && filters.fabric_type !== 'All') {
+    filtered = filtered.filter(p => p.fabric_type === filters.fabric_type);
+  }
+  if (filters?.in_stock_only) {
+    filtered = filtered.filter(p => p.in_stock);
+  }
+  if (filters?.search_term && filters.search_term.trim() !== '') {
+    const term = filters.search_term.toLowerCase();
+    filtered = filtered.filter(p =>
+      (p.title && p.title.toLowerCase().includes(term)) ||
+      (p.article_no && p.article_no.toLowerCase().includes(term)) ||
+      (p.description && p.description.toLowerCase().includes(term))
     );
-    const [formData, setFormData] = useState<Partial<Product>>(INITIAL_FORM_STATE);
-    const [uploadingImage, setUploadingImage] = useState(false);
-    const [searchTerm, setSearchTerm] = useState('');
+  }
 
-    const [pageSize] = useState<number>(24);
-    const [currentPage] = useState<number>(1);
+  return filtered;
+}
 
-    const [imageUrlInput, setImageUrlInput] = useState('');
-    const [uploadProgress, setUploadProgress] = useState<number>(0);
+export async function fetchProductById(idOrArticleNo: string): Promise<Product | null> {
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .or(`id.eq.${idOrArticleNo},article_no.eq.${idOrArticleNo}`)
+      .single();
 
-    const { showToast } = useToast();
+    if (!error && data) {
+      return data as Product;
+    }
+  } catch (err) {}
 
-    useEffect(() => {
-        if (defaultDepartment) {
-            setSelectedDepartment(defaultDepartment);
-        }
-    }, [defaultDepartment]);
+  const local = getLocalProducts();
+  return local.find(p => p.id === idOrArticleNo || p.article_no === idOrArticleNo) || FALLBACK_PRODUCTS[0];
+}
 
-    const loadProducts = useCallback(async () => {
-        setLoading(true);
-        try {
-            const data = await fetchProducts({
-                search_term: searchTerm,
-                department: selectedDepartment !== 'All' ? selectedDepartment : undefined,
-            });
-            const safeData = Array.isArray(data) ? [...data] : [];
-            // Safe sort: newest items first if display_order is 0/undefined
-            safeData.sort((a: any, b: any) => {
-                if (a.display_order !== b.display_order && a.display_order && b.display_order) {
-                    return a.display_order - b.display_order;
-                }
-                return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
-            });
-            setProducts(safeData);
-        } catch (err) {
-            console.error('Fetch products error:', err);
-            showToast('Failed to load products', 'error');
-            setProducts([]);
-        } finally {
-            setLoading(false);
-        }
-    }, [searchTerm, selectedDepartment, showToast]);
+export async function createOrder(order: Omit<Order, 'id' | 'created_at'>): Promise<Order | null> {
+  try {
+    const { data, error } = await supabase
+      .from('orders')
+      .insert([
+        {
+          customer_name: order.customer_name,
+          customer_phone: order.customer_phone,
+          shipping_address: order.shipping_address,
+          city: order.city,
+          items: order.items,
+          total_amount: order.total_amount,
+          payment_method: order.payment_method,
+          status: order.status || 'Pending',
+        },
+      ])
+      .select()
+      .single();
 
-    useEffect(() => {
-        loadProducts();
-    }, [loadProducts]);
-
-    const paginatedProducts = (products || []).slice((currentPage - 1) * pageSize, currentPage * pageSize);
-
-    const handleDeleteClick = (product: Product) => {
-        setDeletingProduct(product);
-        setDeleteId(product.id);
+    if (error) {
+      console.error('Supabase order creation error:', error);
+      return {
+        ...order,
+        id: 'ORD-' + Math.floor(100000 + Math.random() * 900000),
+        created_at: new Date().toISOString(),
+      };
+    }
+    return data as Order;
+  } catch (err) {
+    console.error('Supabase order creation failed:', err);
+    return {
+      ...order,
+      id: 'ORD-' + Math.floor(100000 + Math.random() * 900000),
+      created_at: new Date().toISOString(),
     };
+  }
+}
 
-    const handleConfirmDelete = async () => {
-        if (!deleteId) return;
-        const success = await deleteProduct(deleteId);
-        if (success) {
-            showToast(`Article deleted permanently!`, 'success');
-            setProducts((prev) => prev.filter((p) => p.id !== deleteId));
-        } else {
-            showToast('Failed to delete article.', 'error');
-        }
-        setDeleteId(null);
-        setDeletingProduct(null);
-    };
+export async function fetchOrders(): Promise<Order[]> {
+  try {
+    const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
+    if (error || !data) {
+      return [];
+    }
+    return data as Order[];
+  } catch (err) {
+    console.error('Fetch orders error:', err);
+    return [];
+  }
+}
 
-    const handleEdit = (product: Product) => {
-        setEditingId(product.id);
-        setFormData({
-            id: product.id,
-            article_no: product.article_no || '',
-            title: product.title || '',
-            description: product.description || '',
-            retail_price: product.retail_price || 0,
-            wholesale_cost: product.wholesale_cost || 0,
-            category: product.category || 'Ladies Wear',
-            department: product.department || 'Ladies',
-            fabric_type: product.fabric_type || '',
-            images: getSafeImagesArray(product.images),
-            in_stock: product.in_stock,
-            stock_quantity: product.stock_quantity !== undefined ? product.stock_quantity : 10,
-        });
-        setIsModalOpen(true);
-    };
+export async function updateOrderStatus(orderId: string, status: Order['status']): Promise<boolean> {
+  try {
+    const { error } = await supabase.from('orders').update({ status }).eq('id', orderId);
+    return !error;
+  } catch (err) {
+    console.error('Update order status error:', err);
+    return false;
+  }
+}
 
-    const handleToggleStock = async (product: Product) => {
-        const newStock = !product.in_stock;
-        const success = await toggleProductStock(product.id, newStock);
-        if (success) {
-            showToast(`Updated stock status for ${product.title}`, 'success');
-            setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, in_stock: newStock } : p)));
-        } else {
-            showToast('Stock status update failed', 'error');
-        }
-    };
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-    const handleAddImageUrl = (e?: React.MouseEvent) => {
-        if (e) e.preventDefault();
-        if (!imageUrlInput.trim()) return;
-        
-        setFormData((prev) => ({
-            ...prev,
-            images: [...getSafeImagesArray(prev.images), imageUrlInput.trim()],
-        }));
-        setImageUrlInput('');
-        showToast('Image URL added!', 'success');
-    };
+/**
+ * Universal upsert handler with direct verification
+ */
+export async function upsertProduct(product: Partial<Product>): Promise<Product | null> {
+  const margin = (Number(product.retail_price) || 0) - (Number(product.wholesale_cost) || 0);
+  const stockQty = product.stock_quantity !== undefined && !isNaN(Number(product.stock_quantity)) 
+    ? Number(product.stock_quantity) 
+    : 10;
+  
+  const imagesArray = Array.isArray(product.images) && product.images.length > 0 
+    ? product.images 
+    : (typeof product.images === 'string' ? [product.images] : ['https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=800&q=80']);
 
-    const handleRemoveImage = (indexToRemove: number) => {
-        setFormData((prev) => ({
-            ...prev,
-            images: getSafeImagesArray(prev.images).filter((_, idx) => idx !== indexToRemove),
-        }));
-        showToast('Image removed.', 'info');
-    };
+  const payload: any = {
+    article_no: product.article_no?.trim() || `CB-${Math.floor(100 + Math.random() * 900)}`,
+    title: product.title?.trim() || 'Untitled Article',
+    description: product.description || '',
+    retail_price: Number(product.retail_price) || 0,
+    wholesale_cost: Number(product.wholesale_cost) || 0,
+    margin: margin > 0 ? margin : 0,
+    category: product.category || 'Ladies Wear',
+    department: product.department || 'Ladies',
+    fabric_type: product.fabric_type || 'Pure Raw Silk 80g',
+    images: imagesArray,
+    stock_quantity: stockQty,
+    in_stock: stockQty > 0 ? (product.in_stock ?? true) : false,
+    updated_at: new Date().toISOString(),
+  };
 
-    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = Array.from(e.target.files || []);
-        if (files.length === 0) return;
+  const isExistingUuid = product.id && UUID_REGEX.test(product.id);
 
-        setUploadingImage(true);
-        setUploadProgress(5);
-        try {
-            const uploadedUrls: string[] = [];
-            let currentCount = 0;
+  try {
+    let savedRecord: Product | null = null;
 
-            for (const file of files) {
-                const publicUrl = await processAndUploadImage(file, 'products', (progress) => {
-                    const stepProgress = Math.round(((currentCount + (progress / 100)) / files.length) * 100);
-                    setUploadProgress(Math.max(5, stepProgress));
-                });
-                if (publicUrl) {
-                    uploadedUrls.push(publicUrl);
-                }
-                currentCount++;
-            }
+    if (isExistingUuid) {
+      // 1. UPDATE RECORD
+      const { data, error } = await supabase
+        .from('products')
+        .update(payload)
+        .eq('id', product.id)
+        .select();
 
-            if (uploadedUrls.length > 0) {
-                setFormData((prev) => ({
-                    ...prev,
-                    images: [...getSafeImagesArray(prev.images), ...uploadedUrls],
-                }));
-                showToast(`Uploaded ${uploadedUrls.length} image(s) successfully!`, 'success');
-            } else {
-                showToast('Image upload failed to return URL.', 'error');
-            }
-        } catch (err) {
-            console.error('Image upload error:', err);
-            showToast('Failed to process image.', 'error');
-        } finally {
-            setUploadingImage(false);
-            setUploadProgress(0);
-            e.target.value = '';
-        }
-    };
+      if (error) {
+        alert(`UPDATE FAILED:\n${error.message}\n(Code: ${error.code})`);
+        return null;
+      }
+      if (data && data.length > 0) {
+        savedRecord = data[0] as Product;
+      } else {
+        savedRecord = { ...payload, id: product.id } as Product;
+      }
+    } else {
+      // 2. INSERT RECORD
+      const { data, error } = await supabase
+        .from('products')
+        .insert([payload])
+        .select();
 
-    const handleOpenCreateModal = () => {
-        setEditingId(null);
-        const isKids = selectedDepartment === 'Kids';
-        setFormData({
-            article_no: isKids ? `OMN-K-${Math.floor(100 + Math.random() * 900)}` : `OMN-L-${Math.floor(100 + Math.random() * 900)}`,
-            title: '',
-            description: '',
-            retail_price: isKids ? 3500 : 6500,
-            wholesale_cost: 0,
-            category: isKids ? 'Girls' : 'Ladies Wear',
-            department: selectedDepartment !== 'All' ? selectedDepartment : 'Ladies',
-            fabric_type: isKids ? 'Cotton Lawn' : 'Plush Velvet & Silk',
-            images: [],
-            stock_quantity: 10,
-            in_stock: true,
-        });
-        setIsModalOpen(true);
-    };
+      if (error) {
+        alert(`INSERT FAILED:\n${error.message}\n(Code: ${error.code})`);
+        return null;
+      }
+      if (data && data.length > 0) {
+        savedRecord = data[0] as Product;
+      } else {
+        alert("Insert succeeded but Supabase returned 0 rows. Check SELECT RLS policy.");
+        return null;
+      }
+    }
 
-    const handleDirectSave = async () => {
-        if (!formData.title || !formData.title.trim()) {
-            alert('Title / Design Name is required.');
-            return;
-        }
-        if (formData.retail_price === undefined || formData.retail_price === null || isNaN(Number(formData.retail_price)) || Number(formData.retail_price) <= 0) {
-            alert('Please provide a valid Retail Price (> 0).');
-            return;
-        }
+    // Save directly to local cache
+    const local = getLocalProducts();
+    const index = local.findIndex(p => p.id === savedRecord!.id);
+    if (index > -1) {
+      local[index] = savedRecord;
+    } else {
+      local.unshift(savedRecord);
+    }
+    saveLocalProducts(local);
 
-        setSaving(true);
-        try {
-            const margin = (Number(formData.retail_price) || 0) - (Number(formData.wholesale_cost) || 0);
-            const stockQty = formData.stock_quantity !== undefined && !isNaN(Number(formData.stock_quantity)) 
-                ? Number(formData.stock_quantity) 
-                : 10;
+    return savedRecord;
+  } catch (err: any) {
+    alert(`UNEXPECTED ERROR:\n${err.message || err}`);
+    return null;
+  }
+}
 
-            const safeFinalImages = getSafeImagesArray(formData.images);
-            const fallbackImages = safeFinalImages.length > 0 
-                ? safeFinalImages 
-                : ['https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=800&q=80'];
+export async function toggleProductStock(productId: string, inStock: boolean): Promise<boolean> {
+  try {
+    await supabase.from('products').update({ in_stock: inStock }).eq('id', productId);
+  } catch (err) {}
 
-            const targetDepartment = formData.department || (selectedDepartment !== 'All' ? selectedDepartment : 'Ladies');
+  const local = getLocalProducts();
+  const index = local.findIndex(p => p.id === productId);
+  if (index > -1) {
+    local[index].in_stock = inStock;
+    if (!inStock) {
+      local[index].stock_quantity = 0;
+    } else if ((local[index].stock_quantity || 0) <= 0) {
+      local[index].stock_quantity = 10;
+    }
+    saveLocalProducts(local);
+  }
+  return true;
+}
 
-            const payload: Partial<Product> = {
-                ...(editingId ? { id: editingId } : {}),
-                article_no: formData.article_no?.trim() || `CB-${Math.floor(100 + Math.random() * 900)}`,
-                title: formData.title.trim(),
-                description: formData.description || '',
-                retail_price: Number(formData.retail_price),
-                wholesale_cost: Number(formData.wholesale_cost || 0),
-                margin: margin > 0 ? margin : 0,
-                category: formData.category || (targetDepartment === 'Kids' ? 'Girls' : 'Ladies Wear'),
-                department: targetDepartment,
-                fabric_type: formData.fabric_type || 'Pure Raw Silk',
-                images: fallbackImages, 
-                stock_quantity: stockQty,
-                in_stock: stockQty > 0 ? (formData.in_stock ?? true) : false,
-            };
+export async function deleteProduct(productId: string): Promise<boolean> {
+  try {
+    await supabase.from('products').delete().eq('id', productId);
+  } catch (err) {
+    console.warn('Supabase delete warning:', err);
+  }
 
-            const result = await upsertProduct(payload);
-            if (result) {
-                showToast(editingId ? 'Article updated successfully!' : 'New article created!', 'success');
-                
-                // Direct Instant Local State Update (No blank screen/delay)
-                if (editingId) {
-                    setProducts((prev) => prev.map((p) => (p.id === result.id ? result : p)));
-                } else {
-                    setProducts((prev) => [result, ...prev]);
-                }
+  const local = getLocalProducts();
+  const filtered = local.filter(p => p.id !== productId);
+  saveLocalProducts(filtered);
+  return true;
+}
 
-                setIsModalOpen(false);
-                setEditingId(null);
-                setFormData(INITIAL_FORM_STATE);
-                window.dispatchEvent(new Event('products-updated'));
-            } else {
-                showToast('Save failed. Check database console.', 'error');
-            }
-        } catch (err: any) {
-            console.error('Save error:', err);
-            alert(`Save Exception: ${err.message || err}`);
-        } finally {
-            setSaving(false);
-        }
-    };
+export async function decrementProductStock(productId: string, quantityToDeduct: number): Promise<boolean> {
+  const local = getLocalProducts();
+  const product = local.find(p => p.id === productId);
+  if (!product) return false;
 
-    const lightInputStyle: React.CSSProperties = {
-        width: '100%',
-        padding: '10px 12px',
-        borderRadius: '8px',
-        border: '1px solid #D1D5DB',
-        backgroundColor: '#FFFFFF',
-        color: '#111827',
-        fontSize: '14px',
-        marginTop: '4px',
-        outline: 'none',
-        boxSizing: 'border-box'
-    };
+  const currentQty = product.stock_quantity !== undefined ? product.stock_quantity : 10;
+  const newQty = Math.max(0, currentQty - quantityToDeduct);
+  const newInStock = newQty > 0;
 
-    return (
-        <div className="admin-products-container" style={{ padding: '16px', backgroundColor: '#F9FAFB', minHeight: '100vh' }}>
-            {/* DEPARTMENT TABS */}
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
-                <button 
-                    type="button"
-                    onClick={() => setSelectedDepartment('Ladies')} 
-                    style={{ backgroundColor: selectedDepartment === 'Ladies' ? '#111827' : '#FFFFFF', color: selectedDepartment === 'Ladies' ? '#F59E0B' : '#374151', fontWeight: 700, border: '1px solid #E5E7EB', padding: '10px 16px', cursor: 'pointer', borderRadius: '8px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
-                >
-                    ✨ Ladies Wear Admin
-                </button>
-                <button 
-                    type="button"
-                    onClick={() => setSelectedDepartment('Kids')} 
-                    style={{ backgroundColor: selectedDepartment === 'Kids' ? '#E52535' : '#FFFFFF', color: selectedDepartment === 'Kids' ? '#FFFFFF' : '#374151', fontWeight: 700, border: '1px solid #E5E7EB', padding: '10px 16px', cursor: 'pointer', borderRadius: '8px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
-                >
-                    👑 Kids Wear Admin
-                </button>
-                <button 
-                    type="button"
-                    onClick={() => setSelectedDepartment('All')} 
-                    style={{ backgroundColor: selectedDepartment === 'All' ? '#4F46E5' : '#FFFFFF', color: selectedDepartment === 'All' ? '#FFFFFF' : '#374151', fontWeight: 700, border: '1px solid #E5E7EB', padding: '10px 16px', cursor: 'pointer', borderRadius: '8px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
-                >
-                    📦 All Inventory
-                </button>
-            </div>
+  try {
+    await supabase.from('products').update({
+      stock_quantity: newQty,
+      in_stock: newInStock
+    }).eq('id', productId);
+  } catch (err) {}
 
-            {/* SEARCH & ACTIONS */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
-                <div style={{ position: 'relative', width: '100%' }}>
-                    <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} />
-                    <input 
-                        type="text" 
-                        placeholder="Search by title, article #..." 
-                        value={searchTerm} 
-                        onChange={(e) => setSearchTerm(e.target.value)} 
-                        style={{ ...lightInputStyle, paddingLeft: '40px', marginTop: 0 }} 
-                    />
-                </div>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                    <button 
-                        type="button" 
-                        onClick={handleOpenCreateModal} 
-                        style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: '#E52535', color: '#FFFFFF', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}
-                    >
-                        <Plus size={18} /> ADD ARTICLE
-                    </button>
-                    <button 
-                        type="button" 
-                        onClick={loadProducts} 
-                        style={{ border: '1px solid #D1D5DB', padding: '10px 14px', borderRadius: '8px', background: '#FFFFFF', color: '#374151', cursor: 'pointer' }}
-                    >
-                        <RefreshCw size={18} />
-                    </button>
-                </div>
-            </div>
+  product.stock_quantity = newQty;
+  product.in_stock = newInStock;
 
-            {/* CATALOG TABLE */}
-            {loading ? (
-                <div style={{ textAlign: 'center', padding: '40px', color: '#6B7280' }}>Loading catalog...</div>
-            ) : paginatedProducts.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px', background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E5E7EB', color: '#6B7280' }}>
-                    No products found in this category.
-                </div>
-            ) : (
-                <div style={{ overflowX: 'auto', background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                        <thead>
-                            <tr style={{ borderBottom: '1px solid #E5E7EB', background: '#F3F4F6' }}>
-                                <th style={{ padding: '12px 14px', color: '#374151', fontSize: '13px' }}>Image & Article</th>
-                                <th style={{ padding: '12px 14px', color: '#374151', fontSize: '13px' }}>Retail Price</th>
-                                <th style={{ padding: '12px 14px', color: '#374151', fontSize: '13px' }}>Stock</th>
-                                <th style={{ padding: '12px 14px', color: '#374151', fontSize: '13px', textAlign: 'right' }}>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {paginatedProducts.map((product) => {
-                                const safeImgs = getSafeImagesArray(product.images);
-                                const firstImg = safeImgs.length > 0 ? safeImgs[0] : 'https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=100&q=80';
-                                return (
-                                <tr key={product.id} style={{ borderBottom: '1px solid #F3F4F6' }}>
-                                    <td style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                        <img src={firstImg} alt={product.title} style={{ width: '40px', height: '40px', borderRadius: '6px', objectFit: 'cover', border: '1px solid #E5E7EB' }} />
-                                        <div>
-                                            <div style={{ fontWeight: 600, color: '#111827' }}>{product.title}</div>
-                                            <div style={{ fontSize: '12px', color: '#6B7280' }}>{product.category} ({product.article_no})</div>
-                                        </div>
-                                    </td>
-                                    <td style={{ padding: '12px 14px', fontWeight: 700, color: '#111827' }}>Rs {product.retail_price?.toLocaleString()}</td>
-                                    <td style={{ padding: '12px 14px' }}>
-                                        <button 
-                                            type="button" 
-                                            onClick={() => handleToggleStock(product)} 
-                                            style={{ padding: '5px 10px', borderRadius: '6px', border: 'none', cursor: 'pointer', background: product.in_stock ? '#D1FAE5' : '#FEE2E2', color: product.in_stock ? '#065F46' : '#991B1B', fontWeight: 600, fontSize: '12px' }}
-                                        >
-                                            {product.in_stock ? 'In Stock' : 'Out of Stock'}
-                                        </button>
-                                    </td>
-                                    <td style={{ padding: '12px 14px', textAlign: 'right' }}>
-                                        <button 
-                                            type="button" 
-                                            onClick={() => handleEdit(product)} 
-                                            style={{ marginRight: '10px', background: 'none', border: 'none', cursor: 'pointer', padding: '6px' }}
-                                        >
-                                            <Edit3 size={18} color="#374151" />
-                                        </button>
-                                        <button 
-                                            type="button" 
-                                            onClick={() => handleDeleteClick(product)} 
-                                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444', padding: '6px' }}
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
-                                    </td>
-                                </tr>
-                            )})}
-                        </tbody>
-                    </table>
-                </div>
-            )}
+  const index = local.findIndex(p => p.id === productId);
+  if (index > -1) {
+    local[index] = product;
+    saveLocalProducts(local);
+  }
+  return true;
+}
 
-            {/* ADD/EDIT ARTICLE MODAL */}
-            {isModalOpen && typeof document !== 'undefined' && createPortal(
-                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(17, 24, 39, 0.6)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-                    <div style={{ background: '#FFFFFF', borderRadius: '12px', width: '100%', maxWidth: '520px', maxHeight: '90vh', overflowY: 'auto', padding: '24px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.15)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #E5E7EB', paddingBottom: '12px' }}>
-                            <h3 style={{ margin: 0, fontSize: '18px', color: '#111827', fontWeight: 700 }}>{editingId ? 'Edit Article' : 'Add New Article'}</h3>
-                            <button type="button" onClick={() => setIsModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280' }}><X size={22} /></button>
-                        </div>
-                        
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                                <div>
-                                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Article #</label>
-                                    <input type="text" value={formData.article_no || ''} onChange={(e) => setFormData({ ...formData, article_no: e.target.value })} style={lightInputStyle} />
-                                </div>
-                                <div>
-                                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Department</label>
-                                    <select value={formData.department || 'Ladies'} onChange={(e) => setFormData({ ...formData, department: e.target.value as any })} style={lightInputStyle}>
-                                        <option value="Ladies">Ladies</option>
-                                        <option value="Kids">Kids</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Title / Design Name *</label>
-                                <input type="text" value={formData.title || ''} onChange={(e) => setFormData({ ...formData, title: e.target.value })} style={lightInputStyle} />
-                            </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                                <div>
-                                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Retail Price (Rs) *</label>
-                                    <input type="number" value={formData.retail_price || ''} onChange={(e) => setFormData({ ...formData, retail_price: Number(e.target.value) })} style={lightInputStyle} />
-                                </div>
-                                <div>
-                                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Wholesale Cost (Rs)</label>
-                                    <input type="number" value={formData.wholesale_cost || ''} onChange={(e) => setFormData({ ...formData, wholesale_cost: Number(e.target.value) })} style={lightInputStyle} />
-                                </div>
-                            </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                                <div>
-                                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Category</label>
-                                    <input type="text" value={formData.category || ''} onChange={(e) => setFormData({ ...formData, category: e.target.value })} style={lightInputStyle} />
-                                </div>
-                                <div>
-                                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Fabric Type</label>
-                                    <input type="text" value={formData.fabric_type || ''} onChange={(e) => setFormData({ ...formData, fabric_type: e.target.value })} style={lightInputStyle} />
-                                </div>
-                            </div>
-
-                            {/* DUAL IMAGE UPLOAD SYSTEM */}
-                            <div style={{ background: '#F9FAFB', padding: '12px', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
-                                <label style={{ fontSize: '13px', fontWeight: 700, color: '#111827', display: 'block', marginBottom: '8px' }}>Product Images</label>
-                                <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                                    <input type="text" placeholder="Paste image URL here..." value={imageUrlInput} onChange={(e) => setImageUrlInput(e.target.value)} style={{ ...lightInputStyle, marginTop: 0, flex: 1 }} />
-                                    <button type="button" onClick={handleAddImageUrl} style={{ padding: '8px 14px', borderRadius: '8px', border: '1px solid #D1D5DB', background: '#FFFFFF', color: '#374151', fontWeight: 600, cursor: 'pointer' }}>Add URL</button>
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <label style={{ padding: '8px 14px', borderRadius: '8px', border: '1px solid #D1D5DB', background: '#FFFFFF', color: '#374151', fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                                        <Upload size={16} /> Upload Image
-                                        <input type="file" multiple accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
-                                    </label>
-                                    {uploadingImage && <span style={{ fontSize: '12px', color: '#4F46E5', fontWeight: 600 }}>Uploading... {uploadProgress}%</span>}
-                                </div>
-                                {getSafeImagesArray(formData.images).length > 0 && (
-                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '12px' }}>
-                                        {getSafeImagesArray(formData.images).map((img, i) => (
-                                            <div key={i} style={{ position: 'relative', width: '64px', height: '64px', borderRadius: '6px', overflow: 'hidden', border: '1px solid #D1D5DB' }}>
-                                                <img src={img} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                <button type="button" onClick={() => handleRemoveImage(i)} style={{ position: 'absolute', top: 2, right: 2, background: 'rgba(239,68,68,0.9)', color: '#fff', border: 'none', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '12px' }}>×</button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '16px' }}>
-                                <button type="button" onClick={() => setIsModalOpen(false)} style={{ padding: '10px 18px', borderRadius: '8px', border: '1px solid #D1D5DB', background: '#FFFFFF', color: '#374151', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
-                                <button type="button" disabled={saving} onClick={handleDirectSave} style={{ padding: '10px 18px', borderRadius: '8px', border: 'none', background: '#E52535', color: '#FFFFFF', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}>
-                                    {saving ? 'Saving...' : (editingId ? 'Save Changes' : 'Create Article')}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>,
-                document.body
-            )}
-
-            {/* DELETE MODAL */}
-            {deleteId && typeof document !== 'undefined' && createPortal(
-                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(17, 24, 39, 0.6)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-                    <div style={{ background: '#FFFFFF', borderRadius: '12px', maxWidth: '400px', width: '100%', padding: '24px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.15)' }}>
-                        <h3 style={{ margin: 0, color: '#111827', fontWeight: 700 }}>Confirm Delete</h3>
-                        <p style={{ color: '#4B5563', margin: '12px 0 20px', fontSize: '14px' }}>Are you sure you want to delete "{deletingProduct?.title || 'this item'}"?</p>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                            <button type="button" onClick={() => setDeleteId(null)} style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid #D1D5DB', background: '#FFFFFF', color: '#374151', cursor: 'pointer' }}>Cancel</button>
-                            <button type="button" onClick={handleConfirmDelete} style={{ padding: '10px 16px', borderRadius: '8px', border: 'none', background: '#EF4444', color: '#FFFFFF', fontWeight: 700, cursor: 'pointer' }}>Delete</button>
-                        </div>
-                    </div>
-                </div>,
-                document.body
-            )}
-        </div>
-    );
-};
-
-export default AdminProducts;
+export function generateWhatsAppLink(articleNo: string, title: string, price: number, phone = '923311498773'): string {
+  const text = `Hi Candy Boutique! I want to order Article No: ${articleNo || 'N/A'} - ${title} (Rs. ${price}). Please confirm availability.`;
+  return `https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(text)}`;
+}
