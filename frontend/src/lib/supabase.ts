@@ -176,7 +176,7 @@ export const FALLBACK_PRODUCTS: Product[] = [
   },
 ];
 
-const LOCAL_STORAGE_PRODUCTS_KEY = 'candy_boutique_products_v8';
+const LOCAL_STORAGE_PRODUCTS_KEY = 'candy_boutique_products_v9';
 
 function getLocalProducts(): Product[] {
   try {
@@ -343,7 +343,7 @@ export async function updateOrderStatus(orderId: string, status: Order['status']
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
- * Upsert product with UUID validation for PostgreSQL schemas
+ * Universal Add & Edit handler with clean Postgres UUID support
  */
 export async function upsertProduct(product: Partial<Product>): Promise<Product | null> {
   const margin = (Number(product.retail_price) || 0) - (Number(product.wholesale_cost) || 0);
@@ -371,34 +371,51 @@ export async function upsertProduct(product: Partial<Product>): Promise<Product 
     updated_at: new Date().toISOString(),
   };
 
-  // Only attach ID if it is a valid UUID (Edit scenario)
-  if (product.id && UUID_REGEX.test(product.id)) {
-    payload.id = product.id;
-  }
+  const isExistingRecord = product.id && UUID_REGEX.test(product.id);
+  let savedRecord: Product | null = null;
 
-  const { data, error } = await supabase
-    .from('products')
-    .upsert(payload)
-    .select()
-    .single();
+  try {
+    if (isExistingRecord) {
+      // 1. UPDATE EXISTING RECORD
+      const { data, error } = await supabase
+        .from('products')
+        .update(payload)
+        .eq('id', product.id)
+        .select()
+        .single();
 
-  if (error) {
-    console.error('CRITICAL SUPABASE UPSERT ERROR:', error);
-    alert(`DATABASE SAVE ERROR:\n${error.message}\n(Code: ${error.code})`);
+      if (error) throw error;
+      savedRecord = data;
+    } else {
+      // 2. INSERT NEW RECORD (Supabase auto-assigns UUID)
+      const { data, error } = await supabase
+        .from('products')
+        .insert([payload])
+        .select()
+        .single();
+
+      if (error) throw error;
+      savedRecord = data;
+    }
+  } catch (dbError: any) {
+    console.error('Supabase DB Exception:', dbError);
+    alert(`DATABASE SAVE ERROR:\n${dbError.message || dbError}`);
     return null;
   }
 
-  const savedData = (data as Product) || payload;
-  const local = getLocalProducts();
-  const index = local.findIndex(p => p.id === savedData.id);
-  if (index > -1) {
-    local[index] = savedData;
-  } else {
-    local.unshift(savedData);
+  // Update local cache & broadcast update
+  if (savedRecord) {
+    const local = getLocalProducts();
+    const index = local.findIndex(p => p.id === savedRecord!.id);
+    if (index > -1) {
+      local[index] = savedRecord;
+    } else {
+      local.unshift(savedRecord);
+    }
+    saveLocalProducts(local);
   }
-  saveLocalProducts(local);
 
-  return savedData;
+  return savedRecord;
 }
 
 export async function toggleProductStock(productId: string, inStock: boolean): Promise<boolean> {
