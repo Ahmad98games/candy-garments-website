@@ -51,7 +51,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
     const [uploadingImage, setUploadingImage] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
 
-    const [pageSize, setPageSize] = useState<number>(24);
+    const [pageSize] = useState<number>(24);
     const [currentPage, setCurrentPage] = useState<number>(1);
 
     const [bulkResults, setBulkResults] = useState<BulkRowResult[]>([]);
@@ -140,6 +140,65 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
         }
     };
 
+    const handleAddImageUrl = (e?: React.MouseEvent) => {
+        if (e) e.preventDefault();
+        if (!imageUrlInput.trim()) return;
+        setFormData((prev) => ({
+            ...prev,
+            images: [...(prev.images || []), imageUrlInput.trim()],
+        }));
+        setImageUrlInput('');
+        showToast('Image URL added!', 'success');
+    };
+
+    const handleRemoveImage = (indexToRemove: number) => {
+        setFormData((prev) => ({
+            ...prev,
+            images: (prev.images || []).filter((_, idx) => idx !== indexToRemove),
+        }));
+        showToast('Image removed.', 'info');
+    };
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
+
+        setUploadingImage(true);
+        setUploadProgress(5);
+        try {
+            const uploadedUrls: string[] = [];
+            let currentCount = 0;
+
+            for (const file of files) {
+                const publicUrl = await processAndUploadImage(file, 'products', (progress) => {
+                    const stepProgress = Math.round(((currentCount + (progress / 100)) / files.length) * 100);
+                    setUploadProgress(Math.max(5, stepProgress));
+                });
+                if (publicUrl) {
+                    uploadedUrls.push(publicUrl);
+                }
+                currentCount++;
+            }
+
+            if (uploadedUrls.length > 0) {
+                setFormData((prev) => ({
+                    ...prev,
+                    images: [...(prev.images || []), ...uploadedUrls],
+                }));
+                showToast(`Uploaded ${uploadedUrls.length} file(s)!`, 'success');
+            } else {
+                showToast('Image upload failed.', 'error');
+            }
+        } catch (err) {
+            console.error('Image upload error:', err);
+            showToast('Failed to process image.', 'error');
+        } finally {
+            setUploadingImage(false);
+            setUploadProgress(0);
+            e.target.value = '';
+        }
+    };
+
     const handleOpenCreateModal = () => {
         setEditingId(null);
         const isLadies = selectedDepartment === 'Ladies';
@@ -193,6 +252,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
             setIsModalOpen(false);
             setEditingId(null);
             setFormData(INITIAL_FORM_STATE);
+            window.dispatchEvent(new Event('products-updated'));
             loadProducts();
         } else {
             showToast('Save failed. Check database logs.', 'error');
@@ -262,7 +322,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                 </button>
             </div>
 
-            {/* ACTION BAR: SEARCH & BUTTONS */}
+            {/* ACTION BAR */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
                 <div style={{ position: 'relative', width: '100%' }}>
                     <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} />
@@ -282,9 +342,6 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                     >
                         <Plus size={18} /> ADD ARTICLE
                     </button>
-                    <button type="button" onClick={() => setIsBulkModalOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', border: '1px solid #D1D5DB', padding: '10px 14px', borderRadius: '8px', background: '#FFFFFF', color: '#374151', fontWeight: 600, cursor: 'pointer' }}>
-                        <FileSpreadsheet size={18} /> Bulk CSV
-                    </button>
                     <button type="button" onClick={loadProducts} style={{ border: '1px solid #D1D5DB', padding: '10px 14px', borderRadius: '8px', background: '#FFFFFF', color: '#374151', cursor: 'pointer' }}>
                         <RefreshCw size={18} />
                     </button>
@@ -303,7 +360,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                     <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                         <thead>
                             <tr style={{ borderBottom: '1px solid #E5E7EB', background: '#F3F4F6' }}>
-                                <th style={{ padding: '12px 14px', color: '#374151', fontSize: '13px' }}>Category</th>
+                                <th style={{ padding: '12px 14px', color: '#374151', fontSize: '13px' }}>Image & Article</th>
                                 <th style={{ padding: '12px 14px', color: '#374151', fontSize: '13px' }}>Retail Price</th>
                                 <th style={{ padding: '12px 14px', color: '#374151', fontSize: '13px' }}>Stock</th>
                                 <th style={{ padding: '12px 14px', color: '#374151', fontSize: '13px', textAlign: 'right' }}>Actions</th>
@@ -312,9 +369,16 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                         <tbody>
                             {paginatedProducts.map((product) => (
                                 <tr key={product.id} style={{ borderBottom: '1px solid #F3F4F6' }}>
-                                    <td style={{ padding: '12px 14px' }}>
-                                        <div style={{ fontWeight: 600, color: '#111827' }}>{product.title}</div>
-                                        <div style={{ fontSize: '12px', color: '#6B7280' }}>{product.category} ({product.article_no})</div>
+                                    <td style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        <img 
+                                            src={product.images && product.images.length > 0 ? product.images[0] : 'https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=100&q=80'} 
+                                            alt={product.title} 
+                                            style={{ width: '40px', height: '40px', borderRadius: '6px', objectFit: 'cover', border: '1px solid #E5E7EB' }} 
+                                        />
+                                        <div>
+                                            <div style={{ fontWeight: 600, color: '#111827' }}>{product.title}</div>
+                                            <div style={{ fontSize: '12px', color: '#6B7280' }}>{product.category} ({product.article_no})</div>
+                                        </div>
                                     </td>
                                     <td style={{ padding: '12px 14px', fontWeight: 700, color: '#111827' }}>Rs {product.retail_price?.toLocaleString()}</td>
                                     <td style={{ padding: '12px 14px' }}>
@@ -358,25 +422,39 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                 </div>
             )}
 
-            {/* PORTAL: LIGHT-THEME ADD/EDIT MODAL */}
+            {/* PORTAL: LIGHT-THEME ADD/EDIT MODAL WITH IMAGE UPLOADER */}
             {isModalOpen && typeof document !== 'undefined' && createPortal(
                 <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(17, 24, 39, 0.6)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-                    <div style={{ background: '#FFFFFF', borderRadius: '12px', width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto', padding: '24px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.15)' }}>
+                    <div style={{ background: '#FFFFFF', borderRadius: '12px', width: '100%', maxWidth: '520px', maxHeight: '90vh', overflowY: 'auto', padding: '24px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.15)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #E5E7EB', paddingBottom: '12px' }}>
                             <h3 style={{ margin: 0, fontSize: '18px', color: '#111827', fontWeight: 700 }}>{editingId ? 'Edit Article' : 'Add New Article'}</h3>
                             <button type="button" onClick={() => setIsModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280' }}><X size={22} /></button>
                         </div>
                         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                            <div>
-                                <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Article #</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={formData.article_no || ''}
-                                    onChange={(e) => setFormData({ ...formData, article_no: e.target.value })}
-                                    style={lightInputStyle}
-                                />
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                <div>
+                                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Article #</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={formData.article_no || ''}
+                                        onChange={(e) => setFormData({ ...formData, article_no: e.target.value })}
+                                        style={lightInputStyle}
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Department</label>
+                                    <select
+                                        value={formData.department || 'Ladies'}
+                                        onChange={(e) => setFormData({ ...formData, department: e.target.value as any })}
+                                        style={lightInputStyle}
+                                    >
+                                        <option value="Ladies">Ladies</option>
+                                        <option value="Kids">Kids</option>
+                                    </select>
+                                </div>
                             </div>
+
                             <div>
                                 <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Title / Design Name</label>
                                 <input
@@ -387,6 +465,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                                     style={lightInputStyle}
                                 />
                             </div>
+
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                                 <div>
                                     <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Retail Price (Rs)</label>
@@ -408,6 +487,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                                     />
                                 </div>
                             </div>
+
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                                 <div>
                                     <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Category</label>
@@ -428,6 +508,42 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                                     />
                                 </div>
                             </div>
+
+                            {/* DUAL IMAGE UPLOAD SYSTEM (URL + FILE UPLOAD) */}
+                            <div style={{ background: '#F9FAFB', padding: '12px', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
+                                <label style={{ fontSize: '13px', fontWeight: 700, color: '#111827', display: 'block', marginBottom: '8px' }}>Product Images (Web & App)</label>
+                                
+                                <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                                    <input
+                                        type="text"
+                                        placeholder="Paste image URL here..."
+                                        value={imageUrlInput}
+                                        onChange={(e) => setImageUrlInput(e.target.value)}
+                                        style={{ ...lightInputStyle, marginTop: 0, flex: 1 }}
+                                    />
+                                    <button type="button" onClick={handleAddImageUrl} style={{ padding: '8px 14px', borderRadius: '8px', border: '1px solid #D1D5DB', background: '#FFFFFF', color: '#374151', fontWeight: 600, cursor: 'pointer' }}>Add URL</button>
+                                </div>
+
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <label style={{ padding: '8px 14px', borderRadius: '8px', border: '1px solid #D1D5DB', background: '#FFFFFF', color: '#374151', fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                        <Upload size={16} /> Upload WebP Image
+                                        <input type="file" multiple accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
+                                    </label>
+                                    {uploadingImage && <span style={{ fontSize: '12px', color: '#4F46E5', fontWeight: 600 }}>Uploading... {uploadProgress}%</span>}
+                                </div>
+
+                                {formData.images && formData.images.length > 0 && (
+                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '12px' }}>
+                                        {formData.images.map((img, i) => (
+                                            <div key={i} style={{ position: 'relative', width: '64px', height: '64px', borderRadius: '6px', overflow: 'hidden', border: '1px solid #D1D5DB' }}>
+                                                <img src={img} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                <button type="button" onClick={() => handleRemoveImage(i)} style={{ position: 'absolute', top: 2, right: 2, background: 'rgba(239,68,68,0.9)', color: '#fff', border: 'none', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '12px' }}>×</button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '16px' }}>
                                 <button type="button" onClick={() => setIsModalOpen(false)} style={{ padding: '10px 18px', borderRadius: '8px', border: '1px solid #D1D5DB', background: '#FFFFFF', color: '#374151', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
                                 <button type="submit" style={{ padding: '10px 18px', borderRadius: '8px', border: 'none', background: '#E52535', color: '#FFFFFF', fontWeight: 700, cursor: 'pointer' }}>{editingId ? 'Save Changes' : 'Create Article'}</button>
