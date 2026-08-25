@@ -492,3 +492,5 @@ export function generateWhatsAppLink(articleNo: string, title: string, price: nu
   const text = `Hi Candy Boutique! I want to order Article No: ${articleNo || 'N/A'} - ${title} (Rs. ${price}). Please confirm availability.`;
   return `https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(text)}`;
 }
+export default AdminProducts;
+ 
