@@ -269,7 +269,6 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
             if (result) {
                 showToast(editingId ? 'Article updated successfully!' : 'New article created!', 'success');
                 
-                // Immediate State Update
                 if (editingId) {
                     setProducts((prev) => prev.map((p) => (p.id === result.id ? result : p)));
                 } else {
