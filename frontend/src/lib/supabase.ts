@@ -176,7 +176,7 @@ export const FALLBACK_PRODUCTS: Product[] = [
   },
 ];
 
-const LOCAL_STORAGE_PRODUCTS_KEY = 'candy_boutique_products_v7';
+const LOCAL_STORAGE_PRODUCTS_KEY = 'candy_boutique_products_v8';
 
 function getLocalProducts(): Product[] {
   try {
@@ -340,12 +340,13 @@ export async function updateOrderStatus(orderId: string, status: Order['status']
   }
 }
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /**
- * Upsert product with direct verification & error diagnosis
+ * Upsert product with UUID validation for PostgreSQL schemas
  */
 export async function upsertProduct(product: Partial<Product>): Promise<Product | null> {
   const margin = (Number(product.retail_price) || 0) - (Number(product.wholesale_cost) || 0);
-  const id = product.id || `prod-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
   const stockQty = product.stock_quantity !== undefined && !isNaN(Number(product.stock_quantity)) 
     ? Number(product.stock_quantity) 
     : 10;
@@ -355,7 +356,6 @@ export async function upsertProduct(product: Partial<Product>): Promise<Product 
     : (typeof product.images === 'string' ? [product.images] : ['https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=800&q=80']);
 
   const payload: any = {
-    id,
     article_no: product.article_no?.trim() || `CB-${Math.floor(100 + Math.random() * 900)}`,
     title: product.title?.trim() || 'Untitled Article',
     description: product.description || '',
@@ -371,6 +371,11 @@ export async function upsertProduct(product: Partial<Product>): Promise<Product 
     updated_at: new Date().toISOString(),
   };
 
+  // Only attach ID if it is a valid UUID (Edit scenario)
+  if (product.id && UUID_REGEX.test(product.id)) {
+    payload.id = product.id;
+  }
+
   const { data, error } = await supabase
     .from('products')
     .upsert(payload)
@@ -383,7 +388,6 @@ export async function upsertProduct(product: Partial<Product>): Promise<Product 
     return null;
   }
 
-  // Update local cache on successful write
   const savedData = (data as Product) || payload;
   const local = getLocalProducts();
   const index = local.findIndex(p => p.id === savedData.id);
