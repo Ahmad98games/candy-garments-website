@@ -34,7 +34,6 @@ interface AdminProductsProps {
 }
 
 const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
-    // 1. ALL CORE STATES DECLARED AT THE VERY TOP
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -50,15 +49,11 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
     const [uploadingImage, setUploadingImage] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
 
-    // Pagination State
     const [pageSize, setPageSize] = useState<number>(24);
     const [currentPage, setCurrentPage] = useState<number>(1);
 
-    // Bulk Import Modal State
     const [bulkResults, setBulkResults] = useState<BulkRowResult[]>([]);
     const [bulkImporting, setBulkImporting] = useState(false);
-
-    // Drag and Drop reordering state
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
     const [imageUrlInput, setImageUrlInput] = useState('');
     const [uploadProgress, setUploadProgress] = useState<number>(0);
@@ -71,7 +66,6 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
         }
     }, [defaultDepartment]);
 
-    // Body scroll lock containment (Safe now because all states are declared above)
     useEffect(() => {
         const isAnyModalOpen = isModalOpen || isBulkModalOpen || !!deleteId;
         if (isAnyModalOpen) {
@@ -109,7 +103,6 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
         loadProducts();
     }, [loadProducts]);
 
-    // PAGINATION CALCULATIONS
     const totalPages = Math.ceil((products || []).length / pageSize) || 1;
     const paginatedProducts = (products || []).slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
@@ -205,12 +198,12 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                     ...prev,
                     images: [...(prev.images || []), ...uploadedUrls],
                 }));
-                showToast(`Converted to WebP (1200px max, ~100KB) & uploaded ${uploadedUrls.length} file(s)!`, 'success');
+                showToast(`Converted to WebP & uploaded ${uploadedUrls.length} file(s)!`, 'success');
             } else {
                 showToast('Image processing or upload failed.', 'error');
             }
         } catch (err) {
-            console.error('Image WebP conversion & upload error:', err);
+            console.error('Image upload error:', err);
             showToast('Failed to process or upload image.', 'error');
         } finally {
             setUploadingImage(false);
@@ -323,122 +316,6 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
             showToast('Product display order saved!', 'success');
         } catch (err) {
             console.error('Reorder error:', err);
-        }
-    };
-
-    const handleDownloadCsvTemplate = () => {
-        const csvContent =
-            'title,article_no,retail_price,wholesale_cost,category,fabric_type,description,in_stock,images\n' +
-            'Noor-e-Zari Velvet Suit,CB-201,18500,9500,Luxury Formals,Plush Micro-Velvet,Hand-embroidered zardozi velvet suit,true,https://images.unsplash.com/photo-1583391733956-6c78276477e2\n' +
-            'Mah-ru Raw Silk Co-ord,CB-202,14200,7200,Pret / Ready-to-Wear,Pure Raw Silk 80g,Tailored raw silk tunic with pearl embellishments,true,https://images.unsplash.com/photo-1610030469983-98e550d6193c';
-
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.setAttribute('href', url);
-        link.setAttribute('download', 'omnora_product_import_template.csv');
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
-
-    const handleCsvFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const text = event.target?.result as string;
-            if (!text) return;
-
-            const lines = text.split('\n').map((line) => line.trim()).filter(Boolean);
-            if (lines.length <= 1) {
-                showToast('CSV file is empty or missing data rows.', 'error');
-                return;
-            }
-
-            const headers = lines[0].split(',').map((h) => h.trim().toLowerCase());
-            const results: BulkRowResult[] = [];
-
-            for (let i = 1; i < lines.length; i++) {
-                const row = lines[i].split(',').map((cell) => cell.trim());
-                if (row.length === 0 || (row.length === 1 && !row[0])) continue;
-
-                const getVal = (headerName: string) => {
-                    const idx = headers.indexOf(headerName);
-                    return idx > -1 ? row[idx] : '';
-                };
-
-                const title = getVal('title');
-                const article_no = getVal('article_no');
-                const retailPriceStr = getVal('retail_price');
-                const wholesaleCostStr = getVal('wholesale_cost');
-                const category = getVal('category') || 'Unstitched Luxury';
-                const fabric_type = getVal('fabric_type') || 'Pure Raw Silk 80g';
-                const description = getVal('description');
-                const inStockStr = getVal('in_stock');
-                const imageStr = getVal('images');
-
-                const retail_price = Number(retailPriceStr);
-                const wholesale_cost = Number(wholesaleCostStr || 0);
-
-                if (!title) {
-                    results.push({ rowNumber: i, title: title || `Row ${i}`, valid: false, error: 'Missing required field: title' });
-                    continue;
-                }
-
-                if (isNaN(retail_price) || retail_price <= 0) {
-                    results.push({ rowNumber: i, title, valid: false, error: `Invalid retail_price: "${retailPriceStr}". Must be a number > 0.` });
-                    continue;
-                }
-
-                results.push({
-                    rowNumber: i,
-                    title,
-                    valid: true,
-                    data: {
-                        title,
-                        article_no,
-                        retail_price,
-                        wholesale_cost,
-                        margin: retail_price - wholesale_cost,
-                        category,
-                        fabric_type,
-                        description,
-                        in_stock: inStockStr.toLowerCase() !== 'false',
-                        images: imageStr ? [imageStr] : ['/images/omnora.jpg'],
-                    },
-                });
-            }
-
-            setBulkResults(results);
-        };
-        reader.readAsText(file);
-    };
-
-    const handleCommitBulkImport = async () => {
-        const validRows = bulkResults.filter((r) => r.valid && r.data).map((r) => r.data!);
-        if (validRows.length === 0) {
-            showToast('No valid rows available to import.', 'error');
-            return;
-        }
-
-        setBulkImporting(true);
-        try {
-            const { error } = await supabase.from('products').insert(validRows);
-            if (error) {
-                showToast(`Bulk insert failed: ${error.message}`, 'error');
-            } else {
-                showToast(`Successfully imported ${validRows.length} products!`, 'success');
-                setIsBulkModalOpen(false);
-                setBulkResults([]);
-                loadProducts();
-            }
-        } catch (err) {
-            console.error('Bulk insert error:', err);
-            showToast('Bulk import failed.', 'error');
-        } finally {
-            setBulkImporting(false);
         }
     };
 
