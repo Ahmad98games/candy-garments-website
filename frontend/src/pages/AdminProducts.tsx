@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { createPortal } from 'react-dom';
 import { fetchProducts, upsertProduct, toggleProductStock, deleteProduct, Product, supabase } from '../lib/supabase';
 import { useToast } from '../context/ToastContext';
 import { processAndUploadImage } from '../utils/imageUpload';
 import {
     Plus, Edit3, Trash2, X, Upload, CheckCircle, XCircle, RefreshCw, Search,
-    Download, FileSpreadsheet, GripVertical, ChevronLeft, ChevronRight, AlertTriangle
+    FileSpreadsheet, GripVertical, AlertTriangle
 } from 'lucide-react';
 import './AdminProducts.css';
 
@@ -16,8 +15,10 @@ const INITIAL_FORM_STATE: Partial<Product> = {
     retail_price: 0,
     wholesale_cost: 0,
     category: 'Girls',
+    department: 'Ladies',
     fabric_type: 'Cotton Lawn',
     images: [],
+    stock_quantity: 10,
     in_stock: true,
 };
 
@@ -134,6 +135,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
             retail_price: product.retail_price,
             wholesale_cost: product.wholesale_cost || 0,
             category: product.category || 'Girls',
+            department: product.department || 'Ladies',
             fabric_type: product.fabric_type || '',
             images: product.images || [],
             in_stock: product.in_stock,
@@ -198,7 +200,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                     ...prev,
                     images: [...(prev.images || []), ...uploadedUrls],
                 }));
-                showToast(`Converted to WebP & uploaded ${uploadedUrls.length} file(s)!`, 'success');
+                showToast(`Uploaded ${uploadedUrls.length} file(s)!`, 'success');
             } else {
                 showToast('Image processing or upload failed.', 'error');
             }
@@ -219,7 +221,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
             article_no: isLadies ? `OMN-L-${Math.floor(100 + Math.random() * 900)}` : `OMN-K-${Math.floor(100 + Math.random() * 900)}`,
             title: '',
             description: '',
-            retail_price: isLadies ? 6500 : undefined,
+            retail_price: isLadies ? 6500 : 3500,
             wholesale_cost: 0,
             category: isLadies ? 'Ladies Wear' : 'Girls',
             department: selectedDepartment !== 'All' ? selectedDepartment : 'Ladies',
@@ -261,7 +263,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
 
         const result = await upsertProduct(payload);
         if (result) {
-            showToast(editingId ? 'Article inventory updated successfully!' : 'New article created & auto-aligned at top!', 'success');
+            showToast(editingId ? 'Article updated successfully!' : 'New article created!', 'success');
             setIsModalOpen(false);
             setEditingId(null);
             setFormData(INITIAL_FORM_STATE);
@@ -316,6 +318,122 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
             showToast('Product display order saved!', 'success');
         } catch (err) {
             console.error('Reorder error:', err);
+        }
+    };
+
+    const handleDownloadCsvTemplate = () => {
+        const csvContent =
+            'title,article_no,retail_price,wholesale_cost,category,fabric_type,description,in_stock,images\n' +
+            'Noor-e-Zari Velvet Suit,CB-201,18500,9500,Luxury Formals,Plush Micro-Velvet,Hand-embroidered zardozi velvet suit,true,https://images.unsplash.com/photo-1583391733956-6c78276477e2\n' +
+            'Mah-ru Raw Silk Co-ord,CB-202,14200,7200,Pret / Ready-to-Wear,Pure Raw Silk 80g,Tailored raw silk tunic with pearl embellishments,true,https://images.unsplash.com/photo-1610030469983-98e550d6193c';
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'omnora_product_import_template.csv');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    const handleCsvFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const text = event.target?.result as string;
+            if (!text) return;
+
+            const lines = text.split('\n').map((line) => line.trim()).filter(Boolean);
+            if (lines.length <= 1) {
+                showToast('CSV file is empty or missing data rows.', 'error');
+                return;
+            }
+
+            const headers = lines[0].split(',').map((h) => h.trim().toLowerCase());
+            const results: BulkRowResult[] = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                const row = lines[i].split(',').map((cell) => cell.trim());
+                if (row.length === 0 || (row.length === 1 && !row[0])) continue;
+
+                const getVal = (headerName: string) => {
+                    const idx = headers.indexOf(headerName);
+                    return idx > -1 ? row[idx] : '';
+                };
+
+                const title = getVal('title');
+                const article_no = getVal('article_no');
+                const retailPriceStr = getVal('retail_price');
+                const wholesaleCostStr = getVal('wholesale_cost');
+                const category = getVal('category') || 'Ladies Wear';
+                const fabric_type = getVal('fabric_type') || 'Pure Raw Silk 80g';
+                const description = getVal('description');
+                const inStockStr = getVal('in_stock');
+                const imageStr = getVal('images');
+
+                const retail_price = Number(retailPriceStr);
+                const wholesale_cost = Number(wholesaleCostStr || 0);
+
+                if (!title) {
+                    results.push({ rowNumber: i, title: `Row ${i}`, valid: false, error: 'Missing title' });
+                    continue;
+                }
+
+                if (isNaN(retail_price) || retail_price <= 0) {
+                    results.push({ rowNumber: i, title, valid: false, error: 'Invalid retail price' });
+                    continue;
+                }
+
+                results.push({
+                    rowNumber: i,
+                    title,
+                    valid: true,
+                    data: {
+                        title,
+                        article_no,
+                        retail_price,
+                        wholesale_cost,
+                        margin: retail_price - wholesale_cost,
+                        category,
+                        fabric_type,
+                        description,
+                        in_stock: inStockStr.toLowerCase() !== 'false',
+                        images: imageStr ? [imageStr] : ['https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=800&q=80'],
+                    },
+                });
+            }
+
+            setBulkResults(results);
+        };
+        reader.readAsText(file);
+    };
+
+    const handleCommitBulkImport = async () => {
+        const validRows = bulkResults.filter((r) => r.valid && r.data).map((r) => r.data!);
+        if (validRows.length === 0) {
+            showToast('No valid rows available to import.', 'error');
+            return;
+        }
+
+        setBulkImporting(true);
+        try {
+            const { error } = await supabase.from('products').insert(validRows);
+            if (error) {
+                showToast(`Bulk insert failed: ${error.message}`, 'error');
+            } else {
+                showToast(`Successfully imported ${validRows.length} products!`, 'success');
+                setIsBulkModalOpen(false);
+                setBulkResults([]);
+                loadProducts();
+            }
+        } catch (err) {
+            console.error('Bulk insert error:', err);
+            showToast('Bulk import failed.', 'error');
+        } finally {
+            setBulkImporting(false);
         }
     };
 
@@ -466,9 +584,176 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                 </div>
             )}
 
+            {/* ADD / EDIT ARTICLE MODAL */}
+            {isModalOpen && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999, padding: '20px' }}>
+                    <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: 'var(--radius-md)', maxWidth: '600px', width: '100%', maxHeight: '90vh', overflowY: 'auto', border: '1px solid var(--border-subtle)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                            <h3 style={{ margin: 0 }}>{editingId ? 'Edit Article' : 'Create New Article'}</h3>
+                            <button onClick={() => setIsModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-main)' }}>
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                <div>
+                                    <label style={{ fontSize: '12px', opacity: 0.8 }}>Article #</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={formData.article_no || ''}
+                                        onChange={(e) => setFormData({ ...formData, article_no: e.target.value })}
+                                        style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid var(--border-subtle)', background: 'var(--bg-main)', color: 'var(--text-main)' }}
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{ fontSize: '12px', opacity: 0.8 }}>Department</label>
+                                    <select
+                                        value={formData.department || 'Ladies'}
+                                        onChange={(e) => setFormData({ ...formData, department: e.target.value as any })}
+                                        style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid var(--border-subtle)', background: 'var(--bg-main)', color: 'var(--text-main)' }}
+                                    >
+                                        <option value="Ladies">Ladies</option>
+                                        <option value="Kids">Kids</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label style={{ fontSize: '12px', opacity: 0.8 }}>Title / Design Name</label>
+                                <input
+                                    type="text"
+                                    required
+                                    placeholder="e.g. Royal Velvet Embroidered Suit"
+                                    value={formData.title || ''}
+                                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                    style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid var(--border-subtle)', background: 'var(--bg-main)', color: 'var(--text-main)' }}
+                                />
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                <div>
+                                    <label style={{ fontSize: '12px', opacity: 0.8 }}>Retail Price (Rs)</label>
+                                    <input
+                                        type="number"
+                                        required
+                                        value={formData.retail_price || ''}
+                                        onChange={(e) => setFormData({ ...formData, retail_price: Number(e.target.value) })}
+                                        style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid var(--border-subtle)', background: 'var(--bg-main)', color: 'var(--text-main)' }}
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{ fontSize: '12px', opacity: 0.8 }}>Wholesale Cost (Rs)</label>
+                                    <input
+                                        type="number"
+                                        value={formData.wholesale_cost || ''}
+                                        onChange={(e) => setFormData({ ...formData, wholesale_cost: Number(e.target.value) })}
+                                        style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid var(--border-subtle)', background: 'var(--bg-main)', color: 'var(--text-main)' }}
+                                    />
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                <div>
+                                    <label style={{ fontSize: '12px', opacity: 0.8 }}>Category</label>
+                                    <input
+                                        type="text"
+                                        value={formData.category || ''}
+                                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                        style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid var(--border-subtle)', background: 'var(--bg-main)', color: 'var(--text-main)' }}
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{ fontSize: '12px', opacity: 0.8 }}>Fabric Type</label>
+                                    <input
+                                        type="text"
+                                        value={formData.fabric_type || ''}
+                                        onChange={(e) => setFormData({ ...formData, fabric_type: e.target.value })}
+                                        style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid var(--border-subtle)', background: 'var(--bg-main)', color: 'var(--text-main)' }}
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label style={{ fontSize: '12px', opacity: 0.8 }}>Images</label>
+                                <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                                    <input
+                                        type="text"
+                                        placeholder="Paste image URL..."
+                                        value={imageUrlInput}
+                                        onChange={(e) => setImageUrlInput(e.target.value)}
+                                        style={{ flex: 1, padding: '8px', borderRadius: '6px', border: '1px solid var(--border-subtle)', background: 'var(--bg-main)', color: 'var(--text-main)' }}
+                                    />
+                                    <button type="button" onClick={handleAddImageUrl} className="btn" style={{ border: '1px solid var(--border-subtle)' }}>Add URL</button>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <label className="btn" style={{ border: '1px solid var(--border-subtle)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <Upload size={16} /> Upload Image
+                                        <input type="file" multiple accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
+                                    </label>
+                                    {uploadingImage && <span style={{ fontSize: '12px' }}>Uploading... {uploadProgress}%</span>}
+                                </div>
+
+                                {formData.images && formData.images.length > 0 && (
+                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '10px' }}>
+                                        {formData.images.map((img, i) => (
+                                            <div key={i} style={{ position: 'relative', width: '60px', height: '60px', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--border-subtle)' }}>
+                                                <img src={img} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                <button type="button" onClick={() => handleRemoveImage(i)} style={{ position: 'absolute', top: 2, right: 2, background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>×</button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
+                                <button type="button" className="btn" onClick={() => setIsModalOpen(false)}>Cancel</button>
+                                <button type="submit" className="btn btn-primary">{editingId ? 'Save Changes' : 'Create Article'}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* BULK CSV MODAL */}
+            {isBulkModalOpen && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999, padding: '20px' }}>
+                    <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: 'var(--radius-md)', maxWidth: '500px', width: '100%', border: '1px solid var(--border-subtle)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                            <h3 style={{ margin: 0 }}>Bulk Import Products</h3>
+                            <button onClick={() => setIsBulkModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-main)' }}>
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <p style={{ fontSize: '13px', opacity: 0.8 }}>Upload your CSV catalog file to import multiple articles at once.</p>
+                        <div style={{ display: 'flex', gap: '10px', margin: '20px 0' }}>
+                            <button onClick={handleDownloadCsvTemplate} className="btn" style={{ border: '1px solid var(--border-subtle)' }}>Download Template</button>
+                            <label className="btn btn-primary" style={{ cursor: 'pointer' }}>
+                                Select CSV File
+                                <input type="file" accept=".csv" onChange={handleCsvFileUpload} style={{ display: 'none' }} />
+                            </label>
+                        </div>
+                        {bulkResults.length > 0 && (
+                            <div style={{ marginBottom: '16px' }}>
+                                <p style={{ fontSize: '12px', fontWeight: 600 }}>Ready to import: {bulkResults.filter(r => r.valid).length} valid articles</p>
+                            </div>
+                        )}
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                            <button className="btn" onClick={() => setIsBulkModalOpen(false)}>Cancel</button>
+                            {bulkResults.length > 0 && (
+                                <button className="btn btn-primary" disabled={bulkImporting} onClick={handleCommitBulkImport}>
+                                    {bulkImporting ? 'Importing...' : 'Commit Import'}
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* DELETE MODAL */}
             {deleteId && (
-                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999 }}>
                     <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: 'var(--radius-md)', maxWidth: '400px', width: '90%' }}>
                         <h3>Confirm Delete</h3>
                         <p style={{ marginTop: '8px', opacity: 0.8 }}>Are you sure you want to delete "{deletingProduct?.title}"?</p>
