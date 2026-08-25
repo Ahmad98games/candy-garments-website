@@ -176,9 +176,10 @@ export const FALLBACK_PRODUCTS: Product[] = [
   },
 ];
 
-const LOCAL_STORAGE_PRODUCTS_KEY = 'candy_boutique_products_v11';
+const LOCAL_STORAGE_PRODUCTS_KEY = 'candy_boutique_products_v12';
 
 function getLocalProducts(): Product[] {
+  if (typeof window === 'undefined') return FALLBACK_PRODUCTS;
   try {
     const cached = localStorage.getItem(LOCAL_STORAGE_PRODUCTS_KEY);
     if (cached) {
@@ -194,6 +195,7 @@ function getLocalProducts(): Product[] {
 }
 
 function saveLocalProducts(products: Product[]): void {
+  if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(LOCAL_STORAGE_PRODUCTS_KEY, JSON.stringify(products));
     window.dispatchEvent(new Event('products-updated'));
@@ -365,6 +367,7 @@ export async function upsertProduct(product: Partial<Product>): Promise<Product 
     images: imagesArray,
     stock_quantity: stockQty,
     in_stock: stockQty > 0 ? (product.in_stock ?? true) : false,
+    display_order: 0,
     updated_at: new Date().toISOString(),
   };
 
@@ -374,6 +377,7 @@ export async function upsertProduct(product: Partial<Product>): Promise<Product 
     let savedRecord: Product | null = null;
 
     if (isExistingUuid) {
+      // 1. UPDATE EXISTING RECORD
       const { data, error } = await supabase
         .from('products')
         .update(payload)
@@ -386,6 +390,8 @@ export async function upsertProduct(product: Partial<Product>): Promise<Product 
       }
       savedRecord = data && data[0] ? (data[0] as Product) : ({ ...payload, id: product.id } as Product);
     } else {
+      // 2. INSERT NEW RECORD
+      payload.created_at = new Date().toISOString();
       const { data, error } = await supabase
         .from('products')
         .insert([payload])
@@ -402,6 +408,7 @@ export async function upsertProduct(product: Partial<Product>): Promise<Product 
       }
     }
 
+    // Save directly to local cache
     const local = getLocalProducts();
     const index = local.findIndex(p => p.id === savedRecord!.id);
     if (index > -1) {
