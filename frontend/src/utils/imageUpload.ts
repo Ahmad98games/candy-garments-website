@@ -1,5 +1,5 @@
 import imageCompression from 'browser-image-compression';
-import { createClient } from './supabase/client';
+import { supabase } from '../lib/supabase';
 
 export interface CompressionProgressCallback {
   (progress: number): void;
@@ -27,49 +27,65 @@ export async function processAndUploadImageDetailed(
   onProgress?: CompressionProgressCallback
 ): Promise<ProcessedUploadResult | null> {
   const originalSizeKb = Math.round(file.size / 1024);
+  const timestamp = Date.now();
+  const randomHash = Math.random().toString(36).substring(2, 9);
+  
+  let uploadFile: File | Blob = file;
+  let fileExt = file.name.split('.').pop() || 'jpg';
+  let mimeType = file.type || 'image/jpeg';
+  let compressedSizeKb = originalSizeKb;
 
-  const compressionOptions = {
-    maxSizeMB: 0.12,          // Target ~80 KB – 150 KB max
-    maxWidthOrHeight: 1200,   // Max dimension 1200px preserving aspect ratio
-    useWebWorker: true,
-    fileType: 'image/webp',
-    initialQuality: 0.85,
-    onProgress: onProgress ? (progress: number) => onProgress(Math.round(progress)) : undefined
-  };
-
+  // 1. Safe Image Compression Pipeline with WebWorker Fallback
   try {
-    // 1. Automatic WebP Conversion & Compression via Web Worker
+    if (onProgress) onProgress(15);
+
+    const compressionOptions = {
+      maxSizeMB: 0.25,          // ~150KB - 250KB safe high-quality range
+      maxWidthOrHeight: 1200,
+      useWebWorker: typeof Worker !== 'undefined', // Safe check
+      fileType: 'image/webp',
+      initialQuality: 0.82,
+      onProgress: onProgress ? (progress: number) => onProgress(Math.min(85, Math.round(progress))) : undefined
+    };
+
     const compressedBlob = await imageCompression(file, compressionOptions);
-    const compressedSizeKb = Math.round(compressedBlob.size / 1024);
+    compressedSizeKb = Math.round(compressedBlob.size / 1024);
     
-    const timestamp = Date.now();
-    const randomHash = Math.random().toString(36).substring(2, 9);
-    const fileName = `candy-kids-${timestamp}-${randomHash}.webp`;
-    
-    const optimizedFile = new File([compressedBlob], fileName, {
+    fileExt = 'webp';
+    mimeType = 'image/webp';
+    uploadFile = new File([compressedBlob], `item-${timestamp}-${randomHash}.webp`, {
       type: 'image/webp'
     });
+  } catch (compressionErr) {
+    console.warn('WebP compression skipped/fallback to raw image:', compressionErr);
+    uploadFile = file; // Fallback to raw file if mobile browser fails worker
+  }
 
-    // 2. Direct Supabase Storage Upload
-    const supabase = createClient();
+  // 2. Direct Supabase Storage Upload
+  try {
+    if (onProgress) onProgress(90);
+
+    const fileName = `item-${timestamp}-${randomHash}.${fileExt}`;
     const filePath = `uploads/${fileName}`;
 
-    const { error } = await supabase.storage
+    const { error: uploadError } = await supabase.storage
       .from(bucket)
-      .upload(filePath, optimizedFile, {
-        contentType: 'image/webp',
-        upsert: false
+      .upload(filePath, uploadFile, {
+        contentType: mimeType,
+        upsert: true
       });
 
-    if (error) {
-      console.error('Supabase storage upload error:', error);
-      throw error;
+    if (uploadError) {
+      console.error('Supabase storage upload error:', uploadError);
+      throw uploadError;
     }
 
-    // 3. Return Public URL String & Compression metadata
+    // 3. Retrieve Public URL
     const { data: publicUrlData } = supabase.storage
       .from(bucket)
       .getPublicUrl(filePath);
+
+    if (onProgress) onProgress(100);
 
     return {
       publicUrl: publicUrlData.publicUrl,
@@ -77,9 +93,8 @@ export async function processAndUploadImageDetailed(
       compressedSizeKb,
       fileName
     };
-  } catch (error) {
-    console.error('Image Processing/Upload Failed:', error);
-    throw error;
+  } catch (uploadError) {
+    console.error('Image Processing/Upload Fatal Error:', uploadError);
+    throw uploadError;
   }
 }
-
