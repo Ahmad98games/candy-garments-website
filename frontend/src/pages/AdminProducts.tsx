@@ -482,4 +482,128 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                     onClick={() => setSelectedDepartment('All')}
                     className="btn"
                     style={{
-   
+                        backgroundColor: selectedDepartment === 'All' ? 'var(--primary-color, #4F46E5)' : 'var(--bg-card)',
+                        color: '#FFFFFF',
+                        fontWeight: 700,
+                        border: '1px solid var(--border-subtle)',
+                        padding: '10px 18px',
+                        cursor: 'pointer',
+                        borderRadius: 'var(--radius-md)',
+                    }}
+                >
+                    📦 All Inventory
+                </button>
+            </div>
+
+            {/* ACTION BAR: SEARCH & BUTTONS */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '10px', flexWrap: 'wrap' }}>
+                <div style={{ position: 'relative', minWidth: '240px', flex: 1 }}>
+                    <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }} />
+                    <input
+                        type="text"
+                        placeholder="Search by title, article #..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        style={{ width: '100%', padding: '10px 10px 10px 38px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)', background: 'var(--bg-card)', color: 'var(--text-main)' }}
+                    />
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    <button onClick={handleOpenCreateModal} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Plus size={18} /> Add Article
+                    </button>
+                    <button onClick={() => setIsBulkModalOpen(true)} className="btn" style={{ display: 'flex', alignItems: 'center', gap: '6px', border: '1px solid var(--border-subtle)' }}>
+                        <FileSpreadsheet size={18} /> Bulk CSV
+                    </button>
+                    <button onClick={loadProducts} className="btn" style={{ border: '1px solid var(--border-subtle)' }}>
+                        <RefreshCw size={18} />
+                    </button>
+                </div>
+            </div>
+
+            {/* PRODUCT LISTING / TABLE */}
+            {loading ? (
+                <div style={{ textAlign: 'center', padding: '40px' }}>Loading catalog...</div>
+            ) : paginatedProducts.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px', background: 'var(--bg-card)', borderRadius: 'var(--radius-md)' }}>
+                    No products found in this category.
+                </div>
+            ) : (
+                <div className="product-table-wrapper" style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                        <thead>
+                            <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                                <th style={{ padding: '12px' }}>#</th>
+                                <th style={{ padding: '12px' }}>Article</th>
+                                <th style={{ padding: '12px' }}>Title</th>
+                                <th style={{ padding: '12px' }}>Category</th>
+                                <th style={{ padding: '12px' }}>Retail Price</th>
+                                <th style={{ padding: '12px' }}>Stock</th>
+                                <th style={{ padding: '12px', textAlign: 'right' }}>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {paginatedProducts.map((product, idx) => (
+                                <tr
+                                    key={product.id}
+                                    draggable
+                                    onDragStart={(e) => handleDragStart(e, idx)}
+                                    onDragOver={handleDragOver}
+                                    onDrop={(e) => handleDrop(e, idx)}
+                                    style={{ borderBottom: '1px solid var(--border-subtle)', cursor: 'grab' }}
+                                >
+                                    <td style={{ padding: '12px' }}>
+                                        <GripVertical size={16} style={{ opacity: 0.4 }} />
+                                    </td>
+                                    <td style={{ padding: '12px', fontWeight: 600 }}>{product.article_no || 'N/A'}</td>
+                                    <td style={{ padding: '12px' }}>{product.title}</td>
+                                    <td style={{ padding: '12px' }}>{product.category}</td>
+                                    <td style={{ padding: '12px', fontWeight: 600 }}>Rs {product.retail_price?.toLocaleString()}</td>
+                                    <td style={{ padding: '12px' }}>
+                                        <button
+                                            onClick={() => handleToggleStock(product)}
+                                            style={{
+                                                padding: '4px 8px',
+                                                borderRadius: '4px',
+                                                border: 'none',
+                                                cursor: 'pointer',
+                                                background: product.in_stock ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                                                color: product.in_stock ? '#10B981' : '#EF4444',
+                                                fontWeight: 600,
+                                            }}
+                                        >
+                                            {product.in_stock ? 'In Stock' : 'Out of Stock'}
+                                        </button>
+                                    </td>
+                                    <td style={{ padding: '12px', textAlign: 'right' }}>
+                                        <button onClick={() => handleEdit(product)} style={{ marginRight: '8px', background: 'none', border: 'none', cursor: 'pointer' }}>
+                                            <Edit3 size={16} />
+                                        </button>
+                                        <button onClick={() => handleDeleteClick(product)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444' }}>
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
+            {/* DELETE MODAL */}
+            {deleteId && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+                    <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: 'var(--radius-md)', maxWidth: '400px', width: '90%' }}>
+                        <h3>Confirm Delete</h3>
+                        <p style={{ marginTop: '8px', opacity: 0.8 }}>Are you sure you want to delete "{deletingProduct?.title}"?</p>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
+                            <button className="btn" onClick={() => setDeleteId(null)}>Cancel</button>
+                            <button className="btn btn-danger" onClick={handleConfirmDelete}>Delete</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default AdminProducts;
