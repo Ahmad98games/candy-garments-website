@@ -1,4 +1,5 @@
-Import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+
 import { Link } from 'react-router-dom';
 import { ArrowRight, ShoppingBag, MessageCircle, Truck, ShieldCheck, RefreshCw, PhoneCall } from 'lucide-react';
 import { fetchProducts, Product, generateWhatsAppLink } from '../lib/supabase';
