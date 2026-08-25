@@ -1,84 +1,37 @@
-import React, { useState, useEffect, useCallback } from 'react';
+Import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ShoppingBag, MessageCircle, Truck, ShieldCheck, RefreshCw, PhoneCall } from 'lucide-react';
-import { fetchProducts, Product, generateWhatsAppLink, supabase } from '../lib/supabase';
+import { fetchProducts, Product, generateWhatsAppLink } from '../lib/supabase';
 import { useToast } from '../context/ToastContext';
+import Carousel from '../components/Carousel';
 import './OmnoraFinal.css';
-
-// Safe image parser to handle arrays, JSON strings, or single string URLs
-const resolveProductImage = (imgs: any, fallbackIndex = 0): string => {
-  const fallback = 'https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=800&q=80';
-  if (!imgs) return fallback;
-  
-  let list: string[] = [];
-  if (Array.isArray(imgs)) {
-    list = imgs;
-  } else if (typeof imgs === 'string') {
-    if (imgs.startsWith('[') || imgs.startsWith('{')) {
-      try {
-        const parsed = JSON.parse(imgs);
-        list = Array.isArray(parsed) ? parsed : [imgs];
-      } catch {
-        list = [imgs];
-      }
-    } else {
-      list = [imgs];
-    }
-  }
-
-  const validUrls = list.filter((url) => typeof url === 'string' && url.trim().length > 0);
-  if (validUrls.length === 0) return fallback;
-  return validUrls[fallbackIndex] || validUrls[0] || fallback;
-};
 
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
   const { showToast } = useToast();
 
-  const loadArrivals = useCallback(async () => {
-    try {
+  useEffect(() => {
+    async function loadArrivals() {
       const data = await fetchProducts({ in_stock_only: true });
       setProducts(data.slice(0, 8));
-    } catch (err) {
-      console.error('Failed to load arrivals:', err);
     }
-  }, []);
-
-  useEffect(() => {
     loadArrivals();
 
-    // 1. Listen to Local Custom & Storage Events
     const handleProductsUpdated = () => {
       loadArrivals();
     };
 
     window.addEventListener('products-updated', handleProductsUpdated);
     window.addEventListener('storage', handleProductsUpdated);
-
-    // 2. Real-time Supabase Database Change Subscription
-    const channel = supabase
-      .channel('public:products:home')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'products' },
-        () => {
-          loadArrivals();
-        }
-      )
-      .subscribe();
-
     return () => {
       window.removeEventListener('products-updated', handleProductsUpdated);
       window.removeEventListener('storage', handleProductsUpdated);
-      supabase.removeChannel(channel);
     };
-  }, [loadArrivals]);
+  }, []);
 
   const handleAddToCart = (product: Product) => {
     const existing = JSON.parse(localStorage.getItem('cart') || '[]');
     const index = existing.findIndex((item: any) => item.id === product.id);
-    const primaryImg = resolveProductImage(product.images, 0);
-
     if (index > -1) {
       existing[index].quantity += 1;
     } else {
@@ -86,9 +39,9 @@ export default function Home() {
         id: product.id,
         name: product.title,
         price: product.retail_price,
-        image: primaryImg,
+        image: product.images?.[0] || 'https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=800&q=80',
         quantity: 1,
-        articleNo: product.article_no || 'CK-01',
+        articleNo: product.article_no || 'CK-01'
       });
     }
     localStorage.setItem('cart', JSON.stringify(existing));
@@ -107,6 +60,7 @@ export default function Home() {
 
   return (
     <div className="home-magnum">
+
       {/* 1. HERO SHOWCASE SLIDER */}
       <section className="hero-magnum">
         <div className="hero-backdrop">
@@ -123,7 +77,9 @@ export default function Home() {
             Luxury Fashion <br />
             For Girls & Kids Wear
           </h1>
-          <div className="hero-slogan">"Change Your LifeStyle with Candy Kids"</div>
+          <div className="hero-slogan">
+            "Change Your LifeStyle with Candy Kids"
+          </div>
           <p className="hero-subtitle">
             Premium quality fabrics, elegant designs, and vibrant couture for Girls, Kids, and Ladies Wear. Handcrafted with care for every special occasion.
           </p>
@@ -138,7 +94,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 2. CATEGORY QUICK ACCESS */}
+      {/* --- CATEGORY QUICK ACCESS --- */}
       <section className="container section">
         <h2 className="section-title">Shop by Category</h2>
         <p className="section-subtitle">Explore handcrafted couture designed for comfort and elegance</p>
@@ -156,7 +112,7 @@ export default function Home() {
             </div>
           </Link>
 
-          <Link to="/collection" className="category-card">
+          <Link to="/collection/ladies" className="category-card">
             <img
               src="https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80"
               alt="Ladies Collection"
@@ -168,7 +124,7 @@ export default function Home() {
             </div>
           </Link>
 
-          <Link to="/collection" className="category-card">
+          <Link to="/collection/kids" className="category-card">
             <img
               src="https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=800&q=80"
               alt="Girls & Kids Collection"
@@ -194,7 +150,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 3. FEATURED / TRENDING ARRIVALS */}
+      {/* 3. FEATURED / TRENDING CAROUSEL */}
       <section className="section-pad" style={{ backgroundColor: '#FFFFFF' }}>
         <div className="container">
           <div className="header-row">
@@ -209,8 +165,8 @@ export default function Home() {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(270px, 1fr))', gap: '1.5rem', marginTop: '1.5rem' }}>
             {products.map((p) => {
-              const primaryImg = resolveProductImage(p.images, 0);
-              const secondaryImg = resolveProductImage(p.images, 1);
+              const primaryImg = p.images?.[0] || 'https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=800&q=80';
+              const secondaryImg = p.images?.[1] || primaryImg;
               const originalPrice = Math.round(p.retail_price * 1.25);
               const discountPercent = 20;
 
@@ -268,7 +224,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. INSTAGRAM VISUAL FEED */}
+      {/* 4. INSTAGRAM VISUAL FEED (6-column square grid) */}
       <section className="section-pad container">
         <div className="header-row" style={{ alignItems: 'center' }}>
           <div>
@@ -304,7 +260,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. TRUST BADGES */}
+      {/* 5. TRUST BADGES (4 Clean Columns) */}
       <section className="section-pad container" style={{ paddingTop: '0' }}>
         <div className="trust-badges-grid">
           <div className="trust-badge-card">
