@@ -176,7 +176,7 @@ export const FALLBACK_PRODUCTS: Product[] = [
   },
 ];
 
-const LOCAL_STORAGE_PRODUCTS_KEY = 'candy_boutique_products_v6';
+const LOCAL_STORAGE_PRODUCTS_KEY = 'candy_boutique_products_v7';
 
 function getLocalProducts(): Product[] {
   try {
@@ -202,9 +202,6 @@ function saveLocalProducts(products: Product[]): void {
   }
 }
 
-/**
- * Fetch products directly from Supabase (Live Database is strictly authoritative)
- */
 export async function fetchProducts(filters?: {
   category?: string;
   department?: 'Ladies' | 'Kids';
@@ -344,7 +341,7 @@ export async function updateOrderStatus(orderId: string, status: Order['status']
 }
 
 /**
- * Upsert product (Add / Edit article) with Live Supabase & Instant Broadcast
+ * Upsert product with direct verification & error diagnosis
  */
 export async function upsertProduct(product: Partial<Product>): Promise<Product | null> {
   const margin = (Number(product.retail_price) || 0) - (Number(product.wholesale_cost) || 0);
@@ -355,9 +352,9 @@ export async function upsertProduct(product: Partial<Product>): Promise<Product 
   
   const imagesArray = Array.isArray(product.images) && product.images.length > 0 
     ? product.images 
-    : ['https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=800&q=80'];
+    : (typeof product.images === 'string' ? [product.images] : ['https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=800&q=80']);
 
-  const savedProduct: Product = {
+  const payload: any = {
     id,
     article_no: product.article_no?.trim() || `CB-${Math.floor(100 + Math.random() * 900)}`,
     title: product.title?.trim() || 'Untitled Article',
@@ -371,32 +368,33 @@ export async function upsertProduct(product: Partial<Product>): Promise<Product 
     images: imagesArray,
     stock_quantity: stockQty,
     in_stock: stockQty > 0 ? (product.in_stock ?? true) : false,
-    created_at: product.created_at || new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
 
-  try {
-    const { data, error } = await supabase.from('products').upsert(savedProduct).select().single();
-    if (error) {
-      console.error('Supabase DB Error:', error.message);
-    } else if (data) {
-      Object.assign(savedProduct, data);
-    }
-  } catch (e) {
-    console.warn('Supabase upsert fallback:', e);
+  const { data, error } = await supabase
+    .from('products')
+    .upsert(payload)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('CRITICAL SUPABASE UPSERT ERROR:', error);
+    alert(`DATABASE SAVE ERROR:\n${error.message}\n(Code: ${error.code})`);
+    return null;
   }
 
-  // Update local storage cache & notify all components immediately
+  // Update local cache on successful write
+  const savedData = (data as Product) || payload;
   const local = getLocalProducts();
-  const index = local.findIndex(p => p.id === savedProduct.id);
+  const index = local.findIndex(p => p.id === savedData.id);
   if (index > -1) {
-    local[index] = savedProduct;
+    local[index] = savedData;
   } else {
-    local.unshift(savedProduct);
+    local.unshift(savedData);
   }
   saveLocalProducts(local);
 
-  return savedProduct;
+  return savedData;
 }
 
 export async function toggleProductStock(productId: string, inStock: boolean): Promise<boolean> {
