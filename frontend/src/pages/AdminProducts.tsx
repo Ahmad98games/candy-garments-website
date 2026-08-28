@@ -1,12 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-<<<<<<< HEAD
-import { fetchProducts, upsertProduct, toggleProductStock, deleteProduct, Product } from '../lib/supabase';
-import { useToast } from '../context/ToastContext';
-import { processAndUploadImage } from '../utils/imageUpload';
-import {
-    Plus, Edit3, Trash2, X, Upload, RefreshCw, Search
-=======
 import { fetchProducts, upsertProduct, toggleProductStock, updateStockQuantity, deleteProduct, Product, supabase } from '../lib/supabase';
 import { useToast } from '../context/ToastContext';
 import { processAndUploadImage } from '../utils/imageUpload';
@@ -14,7 +7,6 @@ import {
     Plus, Edit3, Trash2, X, Upload, CheckCircle, XCircle, RefreshCw, Search,
     Download, FileSpreadsheet, GripVertical, ChevronLeft, ChevronRight, AlertTriangle,
     Package, PackageX, Minus, Layers
->>>>>>> a6e2b54 (feat(admin): stock-out metrics, stock status filters, quick inline quantity controls and mobile responsiveness)
 } from 'lucide-react';
 import './AdminProducts.css';
 
@@ -107,9 +99,6 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
         loadProducts();
     }, [loadProducts]);
 
-<<<<<<< HEAD
-    const paginatedProducts = (products || []).slice((currentPage - 1) * pageSize, currentPage * pageSize);
-=======
     // FILTER PRODUCTS BY STOCK STATUS AND SEARCH
     const filteredProducts = React.useMemo(() => {
         return products.filter((p) => {
@@ -148,11 +137,6 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
     // PAGINATION CALCULATIONS
     const totalPages = Math.ceil(filteredProducts.length / pageSize) || 1;
     const paginatedProducts = filteredProducts.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-
-    // Delete Article state
-    const [deleteId, setDeleteId] = useState<string | null>(null);
-    const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
->>>>>>> a6e2b54 (feat(admin): stock-out metrics, stock status filters, quick inline quantity controls and mobile responsiveness)
 
     const handleDeleteClick = (product: Product) => {
         setDeletingProduct(product);
@@ -202,8 +186,6 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
         }
     };
 
-<<<<<<< HEAD
-=======
     const handleQuickQtyChange = async (product: Product, delta: number) => {
         const currentQty = product.stock_quantity !== undefined ? product.stock_quantity : (product.in_stock ? 10 : 0);
         const targetQty = Math.max(0, currentQty + delta);
@@ -221,10 +203,6 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
             showToast('Stock quantity update failed', 'error');
         }
     };
-
-    const [imageUrlInput, setImageUrlInput] = useState('');
-
->>>>>>> a6e2b54 (feat(admin): stock-out metrics, stock status filters, quick inline quantity controls and mobile responsiveness)
     const handleAddImageUrl = (e?: React.MouseEvent) => {
         if (e) e.preventDefault();
         if (!imageUrlInput.trim()) return;
@@ -381,15 +359,6 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
     };
 
     return (
-<<<<<<< HEAD
-        <div className="admin-products-container" style={{ padding: '16px', backgroundColor: '#F9FAFB', minHeight: '100vh' }}>
-            {/* DEPARTMENT TABS */}
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
-                <button 
-                    type="button"
-                    onClick={() => setSelectedDepartment('Ladies')} 
-                    style={{ backgroundColor: selectedDepartment === 'Ladies' ? '#111827' : '#FFFFFF', color: selectedDepartment === 'Ladies' ? '#F59E0B' : '#374151', fontWeight: 700, border: '1px solid #E5E7EB', padding: '10px 16px', cursor: 'pointer', borderRadius: '8px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
-=======
         <div className="admin-products-container">
             {/* INVENTORY SUMMARY METRICS BAR */}
             <div className="stock-metrics-grid">
@@ -461,55 +430,42 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                         borderRadius: 'var(--radius-md)',
                         boxShadow: selectedDepartment === 'Ladies' ? '0 4px 12px rgba(17,24,39,0.15)' : 'none',
                     }}
->>>>>>> a6e2b54 (feat(admin): stock-out metrics, stock status filters, quick inline quantity controls and mobile responsiveness)
                 >
                     ✨ Ladies Wear Admin
                 </button>
-                <button 
-                    type="button"
-                    onClick={() => setSelectedDepartment('Kids')} 
-                    style={{ backgroundColor: selectedDepartment === 'Kids' ? '#E52535' : '#FFFFFF', color: selectedDepartment === 'Kids' ? '#FFFFFF' : '#374151', fontWeight: 700, border: '1px solid #E5E7EB', padding: '10px 16px', cursor: 'pointer', borderRadius: '8px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
+                <button
+                    onClick={() => setSelectedDepartment('Kids')}
+                    className="btn"
+                    style={{
+                        backgroundColor: selectedDepartment === 'Kids' ? '#E52535' : 'var(--bg-card)',
+                        color: selectedDepartment === 'Kids' ? '#FFFFFF' : 'var(--text-main)',
+                        fontWeight: 700,
+                        border: '1px solid var(--border-subtle)',
+                        padding: '10px 18px',
+                        cursor: 'pointer',
+                        borderRadius: 'var(--radius-md)',
+                        boxShadow: selectedDepartment === 'Kids' ? '0 4px 12px rgba(229,37,53,0.2)' : 'none',
+                    }}
                 >
                     👑 Kids Wear Admin
                 </button>
-                <button 
-                    type="button"
-                    onClick={() => setSelectedDepartment('All')} 
-                    style={{ backgroundColor: selectedDepartment === 'All' ? '#4F46E5' : '#FFFFFF', color: selectedDepartment === 'All' ? '#FFFFFF' : '#374151', fontWeight: 700, border: '1px solid #E5E7EB', padding: '10px 16px', cursor: 'pointer', borderRadius: '8px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
+                <button
+                    onClick={() => setSelectedDepartment('All')}
+                    className="btn"
+                    style={{
+                        backgroundColor: selectedDepartment === 'All' ? 'var(--bg-surface)' : 'var(--bg-card)',
+                        color: 'var(--text-main)',
+                        fontWeight: 600,
+                        border: '1px solid var(--border-subtle)',
+                        padding: '10px 16px',
+                        cursor: 'pointer',
+                        borderRadius: 'var(--radius-md)',
+                    }}
                 >
-                    📦 All Inventory
+                    All Inventory
                 </button>
             </div>
 
-<<<<<<< HEAD
-            {/* SEARCH & ACTIONS */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
-                <div style={{ position: 'relative', width: '100%' }}>
-                    <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} />
-                    <input 
-                        type="text" 
-                        placeholder="Search by title, article #..." 
-                        value={searchTerm} 
-                        onChange={(e) => setSearchTerm(e.target.value)} 
-                        style={{ ...lightInputStyle, paddingLeft: '40px', marginTop: 0 }} 
-                    />
-                </div>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                    <button 
-                        type="button" 
-                        onClick={handleOpenCreateModal} 
-                        style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: '#E52535', color: '#FFFFFF', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}
-                    >
-                        <Plus size={18} /> ADD ARTICLE
-                    </button>
-                    <button 
-                        type="button" 
-                        onClick={loadProducts} 
-                        style={{ border: '1px solid #D1D5DB', padding: '10px 14px', borderRadius: '8px', background: '#FFFFFF', color: '#374151', cursor: 'pointer' }}
-                    >
-                        <RefreshCw size={18} />
-                    </button>
-=======
             {/* HEADER */}
             <header className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
                 <div>
@@ -657,73 +613,52 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                     <div className="font-mono text-muted" style={{ fontSize: '12px' }}>
                         Showing: {filteredProducts.length} Products
                     </div>
->>>>>>> a6e2b54 (feat(admin): stock-out metrics, stock status filters, quick inline quantity controls and mobile responsiveness)
                 </div>
             </div>
 
-            {/* CATALOG TABLE */}
+            {/* PRODUCTS DATA TABLE WITH DRAG & DROP REORDERING */}
             {loading ? (
-                <div style={{ textAlign: 'center', padding: '40px', color: '#6B7280' }}>Loading catalog...</div>
+                <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-muted)' }}>
+                    <RefreshCw size={24} className="spin" style={{ marginBottom: '10px' }} />
+                    <p style={{ fontSize: '13px' }}>Fetching article inventory...</p>
+                </div>
             ) : paginatedProducts.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px', background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E5E7EB', color: '#6B7280' }}>
-                    No products found in this category.
+                <div style={{ textAlign: 'center', padding: '40px', background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)', color: 'var(--text-muted)' }}>
+                    No products found in this category/stock filter.
                 </div>
             ) : (
-                <div style={{ overflowX: 'auto', background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                        <thead>
-                            <tr style={{ borderBottom: '1px solid #E5E7EB', background: '#F3F4F6' }}>
-                                <th style={{ padding: '12px 14px', color: '#374151', fontSize: '13px' }}>Image & Article</th>
-                                <th style={{ padding: '12px 14px', color: '#374151', fontSize: '13px' }}>Retail Price</th>
-                                <th style={{ padding: '12px 14px', color: '#374151', fontSize: '13px' }}>Stock</th>
-                                <th style={{ padding: '12px 14px', color: '#374151', fontSize: '13px', textAlign: 'right' }}>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {paginatedProducts.map((product) => {
-                                const safeImgs = getSafeImagesArray(product.images);
-                                const firstImg = safeImgs.length > 0 ? safeImgs[0] : 'https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=100&q=80';
-                                return (
-                                <tr key={product.id} style={{ borderBottom: '1px solid #F3F4F6' }}>
-                                    <td style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                        <img src={firstImg} alt={product.title} style={{ width: '40px', height: '40px', borderRadius: '6px', objectFit: 'cover', border: '1px solid #E5E7EB' }} />
-                                        <div>
-                                            <div style={{ fontWeight: 600, color: '#111827' }}>{product.title}</div>
-                                            <div style={{ fontSize: '12px', color: '#6B7280' }}>{product.category} ({product.article_no})</div>
-                                        </div>
-                                    </td>
-                                    <td style={{ padding: '12px 14px', fontWeight: 700, color: '#111827' }}>Rs {product.retail_price?.toLocaleString()}</td>
-                                    <td style={{ padding: '12px 14px' }}>
-                                        <button 
-                                            type="button" 
-                                            onClick={() => handleToggleStock(product)} 
-                                            style={{ padding: '5px 10px', borderRadius: '6px', border: 'none', cursor: 'pointer', background: product.in_stock ? '#D1FAE5' : '#FEE2E2', color: product.in_stock ? '#065F46' : '#991B1B', fontWeight: 600, fontSize: '12px' }}
-                                        >
-<<<<<<< HEAD
-                                            {product.in_stock ? 'In Stock' : 'Out of Stock'}
-                                        </button>
-                                    </td>
-                                    <td style={{ padding: '12px 14px', textAlign: 'right' }}>
-                                        <button 
-                                            type="button" 
-                                            onClick={() => handleEdit(product)} 
-                                            style={{ marginRight: '10px', background: 'none', border: 'none', cursor: 'pointer', padding: '6px' }}
-                                        >
-                                            <Edit3 size={18} color="#374151" />
-                                        </button>
-                                        <button 
-                                            type="button" 
-                                            onClick={() => handleDeleteClick(product)} 
-                                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444', padding: '6px' }}
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
-                                    </td>
+                <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)', overflow: 'hidden' }}>
+                    <div style={{ overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
+                            <thead>
+                                <tr style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)' }}>
+                                    <th style={{ padding: '12px 16px', width: '40px' }}>Rank</th>
+                                    <th style={{ padding: '12px 16px' }}>Image (3:4 Aspect)</th>
+                                    <th style={{ padding: '12px 16px' }}>Article No</th>
+                                    <th style={{ padding: '12px 16px' }}>Title</th>
+                                    <th style={{ padding: '12px 16px' }}>Category / Blend</th>
+                                    <th style={{ padding: '12px 16px' }}>Retail Price</th>
+                                    <th style={{ padding: '12px 16px' }}>Wholesale Cost</th>
+                                    <th style={{ padding: '12px 16px' }}>Stock</th>
+                                    <th style={{ padding: '12px 16px', textAlign: 'right' }}>Actions</th>
                                 </tr>
-                            )})}
-                        </tbody>
-                    </table>
-=======
+                            </thead>
+                            <tbody>
+                                {paginatedProducts.map((p, index) => {
+                                    const globalIndex = (currentPage - 1) * pageSize + index;
+                                    return (
+                                        <tr
+                                            key={p.id}
+                                            draggable
+                                            onDragStart={(e) => handleDragStart(e, globalIndex)}
+                                            onDragOver={handleDragOver}
+                                            onDrop={(e) => handleDrop(e, globalIndex)}
+                                            style={{
+                                                borderBottom: '1px solid var(--border-subtle)',
+                                                transition: 'background 0.15s ease',
+                                                cursor: 'grab',
+                                            }}
+                                        >
                                             <td style={{ padding: '12px 16px', color: 'var(--text-muted)' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                     <GripVertical size={16} />
@@ -873,7 +808,6 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                             </div>
                         </div>
                     )}
->>>>>>> a6e2b54 (feat(admin): stock-out metrics, stock status filters, quick inline quantity controls and mobile responsiveness)
                 </div>
             )}
 
