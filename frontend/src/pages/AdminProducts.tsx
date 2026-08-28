@@ -1,10 +1,20 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+<<<<<<< HEAD
 import { fetchProducts, upsertProduct, toggleProductStock, deleteProduct, Product } from '../lib/supabase';
 import { useToast } from '../context/ToastContext';
 import { processAndUploadImage } from '../utils/imageUpload';
 import {
     Plus, Edit3, Trash2, X, Upload, RefreshCw, Search
+=======
+import { fetchProducts, upsertProduct, toggleProductStock, updateStockQuantity, deleteProduct, Product, supabase } from '../lib/supabase';
+import { useToast } from '../context/ToastContext';
+import { processAndUploadImage } from '../utils/imageUpload';
+import {
+    Plus, Edit3, Trash2, X, Upload, CheckCircle, XCircle, RefreshCw, Search,
+    Download, FileSpreadsheet, GripVertical, ChevronLeft, ChevronRight, AlertTriangle,
+    Package, PackageX, Minus, Layers
+>>>>>>> a6e2b54 (feat(admin): stock-out metrics, stock status filters, quick inline quantity controls and mobile responsiveness)
 } from 'lucide-react';
 import './AdminProducts.css';
 
@@ -53,6 +63,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
     const [formData, setFormData] = useState<Partial<Product>>(INITIAL_FORM_STATE);
     const [uploadingImage, setUploadingImage] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [stockFilter, setStockFilter] = useState<'all' | 'in_stock' | 'out_of_stock' | 'low_stock'>('all');
 
     const [pageSize] = useState<number>(24);
     const [currentPage] = useState<number>(1);
@@ -96,7 +107,52 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
         loadProducts();
     }, [loadProducts]);
 
+<<<<<<< HEAD
     const paginatedProducts = (products || []).slice((currentPage - 1) * pageSize, currentPage * pageSize);
+=======
+    // FILTER PRODUCTS BY STOCK STATUS AND SEARCH
+    const filteredProducts = React.useMemo(() => {
+        return products.filter((p) => {
+            const qty = p.stock_quantity !== undefined ? p.stock_quantity : (p.in_stock ? 10 : 0);
+            const isInStock = p.in_stock && qty > 0;
+            const isLowStock = isInStock && qty <= 3;
+
+            if (stockFilter === 'in_stock' && !isInStock) return false;
+            if (stockFilter === 'out_of_stock' && isInStock) return false;
+            if (stockFilter === 'low_stock' && !isLowStock) return false;
+            return true;
+        });
+    }, [products, stockFilter]);
+
+    // INVENTORY STOCK METRICS
+    const metrics = React.useMemo(() => {
+        let total = products.length;
+        let inStock = 0;
+        let lowStock = 0;
+        let outOfStock = 0;
+
+        products.forEach((p) => {
+            const qty = p.stock_quantity !== undefined ? p.stock_quantity : (p.in_stock ? 10 : 0);
+            const isInStock = p.in_stock && qty > 0;
+            if (!isInStock) {
+                outOfStock++;
+            } else {
+                inStock++;
+                if (qty <= 3) lowStock++;
+            }
+        });
+
+        return { total, inStock, lowStock, outOfStock };
+    }, [products]);
+
+    // PAGINATION CALCULATIONS
+    const totalPages = Math.ceil(filteredProducts.length / pageSize) || 1;
+    const paginatedProducts = filteredProducts.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+    // Delete Article state
+    const [deleteId, setDeleteId] = useState<string | null>(null);
+    const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
+>>>>>>> a6e2b54 (feat(admin): stock-out metrics, stock status filters, quick inline quantity controls and mobile responsiveness)
 
     const handleDeleteClick = (product: Product) => {
         setDeletingProduct(product);
@@ -146,6 +202,29 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
         }
     };
 
+<<<<<<< HEAD
+=======
+    const handleQuickQtyChange = async (product: Product, delta: number) => {
+        const currentQty = product.stock_quantity !== undefined ? product.stock_quantity : (product.in_stock ? 10 : 0);
+        const targetQty = Math.max(0, currentQty + delta);
+        const updated = await updateStockQuantity(product.id, targetQty);
+        if (updated) {
+            setProducts((prev) =>
+                prev.map((p) =>
+                    p.id === product.id
+                        ? { ...p, stock_quantity: targetQty, in_stock: targetQty > 0 }
+                        : p
+                )
+            );
+            showToast(`Updated stock for "${product.title}" to ${targetQty} units`, 'success');
+        } else {
+            showToast('Stock quantity update failed', 'error');
+        }
+    };
+
+    const [imageUrlInput, setImageUrlInput] = useState('');
+
+>>>>>>> a6e2b54 (feat(admin): stock-out metrics, stock status filters, quick inline quantity controls and mobile responsiveness)
     const handleAddImageUrl = (e?: React.MouseEvent) => {
         if (e) e.preventDefault();
         if (!imageUrlInput.trim()) return;
@@ -302,6 +381,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
     };
 
     return (
+<<<<<<< HEAD
         <div className="admin-products-container" style={{ padding: '16px', backgroundColor: '#F9FAFB', minHeight: '100vh' }}>
             {/* DEPARTMENT TABS */}
             <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
@@ -309,6 +389,79 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                     type="button"
                     onClick={() => setSelectedDepartment('Ladies')} 
                     style={{ backgroundColor: selectedDepartment === 'Ladies' ? '#111827' : '#FFFFFF', color: selectedDepartment === 'Ladies' ? '#F59E0B' : '#374151', fontWeight: 700, border: '1px solid #E5E7EB', padding: '10px 16px', cursor: 'pointer', borderRadius: '8px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
+=======
+        <div className="admin-products-container">
+            {/* INVENTORY SUMMARY METRICS BAR */}
+            <div className="stock-metrics-grid">
+                <div
+                    className={`stock-metric-card ${stockFilter === 'all' ? 'active' : ''}`}
+                    onClick={() => { setStockFilter('all'); setCurrentPage(1); }}
+                >
+                    <div className="stock-metric-info">
+                        <span className="stock-metric-label">Total Articles</span>
+                        <span className="stock-metric-value">{metrics.total}</span>
+                    </div>
+                    <div className="stock-metric-icon" style={{ background: '#f1f5f9', color: '#475569' }}>
+                        <Layers size={20} />
+                    </div>
+                </div>
+
+                <div
+                    className={`stock-metric-card ${stockFilter === 'in_stock' ? 'active' : ''}`}
+                    onClick={() => { setStockFilter('in_stock'); setCurrentPage(1); }}
+                >
+                    <div className="stock-metric-info">
+                        <span className="stock-metric-label">In Stock</span>
+                        <span className="stock-metric-value" style={{ color: '#059669' }}>{metrics.inStock}</span>
+                    </div>
+                    <div className="stock-metric-icon" style={{ background: '#ecfdf5', color: '#059669' }}>
+                        <Package size={20} />
+                    </div>
+                </div>
+
+                <div
+                    className={`stock-metric-card ${stockFilter === 'low_stock' ? 'active' : ''}`}
+                    onClick={() => { setStockFilter('low_stock'); setCurrentPage(1); }}
+                >
+                    <div className="stock-metric-info">
+                        <span className="stock-metric-label">Low Stock (≤3)</span>
+                        <span className="stock-metric-value" style={{ color: '#d97706' }}>{metrics.lowStock}</span>
+                    </div>
+                    <div className="stock-metric-icon" style={{ background: '#fffbeb', color: '#d97706' }}>
+                        <AlertTriangle size={20} />
+                    </div>
+                </div>
+
+                <div
+                    className={`stock-metric-card ${stockFilter === 'out_of_stock' ? 'active' : ''}`}
+                    onClick={() => { setStockFilter('out_of_stock'); setCurrentPage(1); }}
+                >
+                    <div className="stock-metric-info">
+                        <span className="stock-metric-label">Out of Stock</span>
+                        <span className="stock-metric-value" style={{ color: '#dc2626' }}>{metrics.outOfStock}</span>
+                    </div>
+                    <div className="stock-metric-icon" style={{ background: '#fef2f2', color: '#dc2626' }}>
+                        <PackageX size={20} />
+                    </div>
+                </div>
+            </div>
+
+            {/* DEPARTMENT SELECTION TABS */}
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                <button
+                    onClick={() => setSelectedDepartment('Ladies')}
+                    className="btn"
+                    style={{
+                        backgroundColor: selectedDepartment === 'Ladies' ? '#111827' : 'var(--bg-card)',
+                        color: selectedDepartment === 'Ladies' ? '#F59E0B' : 'var(--text-main)',
+                        fontWeight: 700,
+                        border: '1px solid var(--border-subtle)',
+                        padding: '10px 18px',
+                        cursor: 'pointer',
+                        borderRadius: 'var(--radius-md)',
+                        boxShadow: selectedDepartment === 'Ladies' ? '0 4px 12px rgba(17,24,39,0.15)' : 'none',
+                    }}
+>>>>>>> a6e2b54 (feat(admin): stock-out metrics, stock status filters, quick inline quantity controls and mobile responsiveness)
                 >
                     ✨ Ladies Wear Admin
                 </button>
@@ -328,6 +481,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                 </button>
             </div>
 
+<<<<<<< HEAD
             {/* SEARCH & ACTIONS */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
                 <div style={{ position: 'relative', width: '100%' }}>
@@ -355,6 +509,155 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                     >
                         <RefreshCw size={18} />
                     </button>
+=======
+            {/* HEADER */}
+            <header className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
+                <div>
+                    <h1 style={{ fontSize: '24px', fontWeight: 700, margin: 0 }}>
+                        {selectedDepartment === 'Ladies' ? 'Omnora Ladies Wear Collection Management' : selectedDepartment === 'Kids' ? 'Candy Kids Wear Collection Management' : 'All Article Inventory Catalog'}
+                    </h1>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '13px', margin: '4px 0 0 0' }}>
+                        {selectedDepartment === 'Ladies'
+                            ? 'Manage, add, and edit hand-crafted velvet suits, raw silk tunics & luxury formals for Ladies.'
+                            : selectedDepartment === 'Kids'
+                                ? 'Manage, add, and edit handcrafted frocks, kurtas & garments for Kids.'
+                                : 'Manage overall store product listings, drag-and-drop display ranking, bulk CSV imports, and image aspect locks.'}
+                    </p>
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    <button
+                        className="btn btn-outline"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            setIsBulkModalOpen(true);
+                        }}
+                        style={{ height: '38px', fontSize: '13px', cursor: 'pointer' }}
+                    >
+                        <FileSpreadsheet size={16} /> Bulk Import CSV
+                    </button>
+
+                    <button
+                        type="button"
+                        className="btn btn-emerald"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleOpenCreateModal();
+                        }}
+                        style={{ height: '38px', fontSize: '13px', cursor: 'pointer', zIndex: 10 }}
+                    >
+                        <Plus size={16} /> New Article
+                    </button>
+                </div>
+            </header>
+
+            {/* CONTROLS BAR: SEARCH, STOCK STATUS FILTER & PAGINATION SELECTOR */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px', background: 'var(--bg-card)', padding: '12px 16px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)' }}>
+                {/* SEARCH */}
+                <div style={{ position: 'relative', width: '280px' }}>
+                    <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                    <input
+                        type="text"
+                        placeholder="Search by title, article no..."
+                        value={searchTerm}
+                        onChange={(e) => {
+                            setSearchTerm(e.target.value);
+                            setCurrentPage(1);
+                        }}
+                        className="form-input"
+                        style={{ paddingLeft: '36px', width: '100%', height: '36px', fontSize: '13px' }}
+                    />
+                </div>
+
+                {/* STOCK STATUS FILTER TABS */}
+                <div className="stock-filter-mobile-wrap" style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <button
+                        onClick={() => { setStockFilter('all'); setCurrentPage(1); }}
+                        style={{
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            fontSize: '12px',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            border: '1px solid var(--border-subtle)',
+                            background: stockFilter === 'all' ? '#1e293b' : 'transparent',
+                            color: stockFilter === 'all' ? '#ffffff' : 'var(--text-main)',
+                        }}
+                    >
+                        All Stock ({metrics.total})
+                    </button>
+
+                    <button
+                        onClick={() => { setStockFilter('in_stock'); setCurrentPage(1); }}
+                        style={{
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            fontSize: '12px',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            border: '1px solid #a7f3d0',
+                            background: stockFilter === 'in_stock' ? '#059669' : '#ecfdf5',
+                            color: stockFilter === 'in_stock' ? '#ffffff' : '#047857',
+                        }}
+                    >
+                        In Stock ({metrics.inStock})
+                    </button>
+
+                    <button
+                        onClick={() => { setStockFilter('low_stock'); setCurrentPage(1); }}
+                        style={{
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            fontSize: '12px',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            border: '1px solid #fde68a',
+                            background: stockFilter === 'low_stock' ? '#d97706' : '#fffbeb',
+                            color: stockFilter === 'low_stock' ? '#ffffff' : '#b45309',
+                        }}
+                    >
+                        Low Stock ({metrics.lowStock})
+                    </button>
+
+                    <button
+                        onClick={() => { setStockFilter('out_of_stock'); setCurrentPage(1); }}
+                        style={{
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            fontSize: '12px',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            border: '1px solid #fca5a5',
+                            background: stockFilter === 'out_of_stock' ? '#dc2626' : '#fef2f2',
+                            color: stockFilter === 'out_of_stock' ? '#ffffff' : '#dc2626',
+                        }}
+                    >
+                        Out of Stock ({metrics.outOfStock})
+                    </button>
+                </div>
+
+                {/* PAGINATION PAGE SIZE SELECTOR */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13px' }}>
+                    <span className="text-muted">Items per page:</span>
+                    <select
+                        value={pageSize}
+                        onChange={(e) => {
+                            setPageSize(Number(e.target.value));
+                            setCurrentPage(1);
+                        }}
+                        className="form-input"
+                        style={{ height: '34px', padding: '0 8px', fontSize: '12px' }}
+                    >
+                        <option value={24}>24 per page</option>
+                        <option value={48}>48 per page</option>
+                        <option value={96}>96 per page</option>
+                    </select>
+
+                    <div className="font-mono text-muted" style={{ fontSize: '12px' }}>
+                        Showing: {filteredProducts.length} Products
+                    </div>
+>>>>>>> a6e2b54 (feat(admin): stock-out metrics, stock status filters, quick inline quantity controls and mobile responsiveness)
                 </div>
             </div>
 
@@ -396,6 +699,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                                             onClick={() => handleToggleStock(product)} 
                                             style={{ padding: '5px 10px', borderRadius: '6px', border: 'none', cursor: 'pointer', background: product.in_stock ? '#D1FAE5' : '#FEE2E2', color: product.in_stock ? '#065F46' : '#991B1B', fontWeight: 600, fontSize: '12px' }}
                                         >
+<<<<<<< HEAD
                                             {product.in_stock ? 'In Stock' : 'Out of Stock'}
                                         </button>
                                     </td>
@@ -419,6 +723,157 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                             )})}
                         </tbody>
                     </table>
+=======
+                                            <td style={{ padding: '12px 16px', color: 'var(--text-muted)' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    <GripVertical size={16} />
+                                                    <span className="font-mono">{globalIndex + 1}</span>
+                                                </div>
+                                            </td>
+
+                                            <td style={{ padding: '12px 16px' }}>
+                                                <div style={{ width: '45px', height: '60px', borderRadius: 'var(--radius-sm)', overflow: 'hidden', border: '1px solid var(--border-subtle)' }}>
+                                                    <img src={p.images?.[0] || '/images/omnora.jpg'} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                </div>
+                                            </td>
+
+                                            <td style={{ padding: '12px 16px' }}>
+                                                <span className="article-no-badge">
+                                                    {p.article_no || 'N/A'}
+                                                </span>
+                                            </td>
+
+                                            <td style={{ padding: '12px 16px' }}>
+                                                <span className="product-title-text">{p.title}</span>
+                                            </td>
+
+                                            <td style={{ padding: '12px 16px', color: '#9CA3AF' }}>
+                                                {p.fabric_type || p.category}
+                                            </td>
+
+                                            <td style={{ padding: '12px 16px', fontWeight: 700, color: '#10B981' }} className="font-mono">
+                                                PKR {p.retail_price.toLocaleString()}
+                                            </td>
+
+                                            <td style={{ padding: '12px 16px', color: '#9CA3AF' }} className="font-mono">
+                                                PKR {(p.wholesale_cost || 0).toLocaleString()}
+                                            </td>
+
+                                            <td style={{ padding: '12px 16px' }}>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                    {/* STOCK STATUS TOGGLE BUTTON */}
+                                                    <button
+                                                        onClick={() => handleToggleStock(p)}
+                                                        style={{
+                                                            background: 'none',
+                                                            border: 'none',
+                                                            cursor: 'pointer',
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            gap: '4px',
+                                                            color: p.in_stock && (p.stock_quantity === undefined || p.stock_quantity > 0) ? '#10B981' : '#EF4444',
+                                                            fontWeight: 700,
+                                                            fontSize: '12px',
+                                                        }}
+                                                    >
+                                                        {p.in_stock && (p.stock_quantity === undefined || p.stock_quantity > 0) ? <CheckCircle size={15} /> : <XCircle size={15} />}
+                                                        {p.in_stock && (p.stock_quantity === undefined || p.stock_quantity > 0) ? 'In Stock' : 'Out of Stock'}
+                                                    </button>
+
+                                                    {/* INLINE QUICK STOCK QUANTITY ADJUSTER */}
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        <div className="stock-quick-adjuster">
+                                                            <button
+                                                                type="button"
+                                                                className="stock-qty-btn"
+                                                                onClick={(e) => { e.stopPropagation(); handleQuickQtyChange(p, -1); }}
+                                                                title="Decrease Stock Quantity (-1)"
+                                                            >
+                                                                <Minus size={12} />
+                                                            </button>
+                                                            <span className="stock-qty-val font-mono">
+                                                                {p.stock_quantity !== undefined ? p.stock_quantity : (p.in_stock ? 10 : 0)}
+                                                            </span>
+                                                            <button
+                                                                type="button"
+                                                                className="stock-qty-btn"
+                                                                onClick={(e) => { e.stopPropagation(); handleQuickQtyChange(p, 1); }}
+                                                                title="Increase Stock Quantity (+1)"
+                                                            >
+                                                                <Plus size={12} />
+                                                            </button>
+                                                        </div>
+
+                                                        {/* STOCK STATUS PILL */}
+                                                        {(() => {
+                                                            const qty = p.stock_quantity !== undefined ? p.stock_quantity : (p.in_stock ? 10 : 0);
+                                                            const isOut = !p.in_stock || qty <= 0;
+                                                            const isLow = !isOut && qty <= 3;
+                                                            return (
+                                                                <span className={`stock-qty-pill ${isOut ? 'out-of-stock' : isLow ? 'low-stock' : ''}`}>
+                                                                    {isOut ? 'Out of Stock' : isLow ? 'Low Stock' : 'In Stock'}
+                                                                </span>
+                                                            );
+                                                        })()}
+                                                    </div>
+                                                </div>
+                                            </td>
+
+                                            <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                                                <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                                                    <button
+                                                        className="btn btn-outline"
+                                                        onClick={() => handleEdit(p)}
+                                                        style={{ height: '32px', fontSize: '12px', padding: '0 10px' }}
+                                                        title="Edit Article"
+                                                    >
+                                                        <Edit3 size={14} /> Edit
+                                                    </button>
+                                                    <button
+                                                        className="btn btn-delete-danger"
+                                                        onClick={() => handleDeleteClick(p)}
+                                                        style={{ height: '32px', fontSize: '12px', padding: '0 10px', background: 'transparent' }}
+                                                        title="Delete Article"
+                                                    >
+                                                        <Trash2 size={14} /> Delete
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* PAGINATION CONTROLS FOOTER */}
+                    {totalPages > 1 && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: 'var(--bg-surface)', borderTop: '1px solid var(--border-subtle)' }}>
+                            <span className="font-mono text-muted" style={{ fontSize: '12px' }}>
+                                Showing Page {currentPage} of {totalPages}
+                            </span>
+
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                <button
+                                    className="btn btn-outline"
+                                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                                    disabled={currentPage === 1}
+                                    style={{ height: '32px', fontSize: '12px' }}
+                                >
+                                    <ChevronLeft size={16} /> Prev
+                                </button>
+                                <button
+                                    className="btn btn-outline"
+                                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                                    disabled={currentPage === totalPages}
+                                    style={{ height: '32px', fontSize: '12px' }}
+                                >
+                                    Next <ChevronRight size={16} />
+                                </button>
+                            </div>
+                        </div>
+                    )}
+>>>>>>> a6e2b54 (feat(admin): stock-out metrics, stock status filters, quick inline quantity controls and mobile responsiveness)
                 </div>
             )}
 

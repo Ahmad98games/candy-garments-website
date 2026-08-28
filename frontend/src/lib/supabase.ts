@@ -484,6 +484,37 @@ export async function decrementProductStock(productId: string, quantityToDeduct:
   return true;
 }
 
+/**
+ * Directly update stock_quantity for a product and auto-sync in_stock boolean status
+ */
+export async function updateStockQuantity(productId: string, newQty: number): Promise<boolean> {
+  const sanitizedQty = Math.max(0, Math.floor(newQty));
+  const newInStock = sanitizedQty > 0;
+
+  try {
+    await supabase.from('products').update({
+      stock_quantity: sanitizedQty,
+      in_stock: newInStock
+    }).eq('id', productId);
+  } catch (err) {
+    console.warn('Supabase stock quantity update warning:', err);
+  }
+
+  const local = getLocalProducts();
+  const index = local.findIndex(p => p.id === productId);
+  if (index > -1) {
+    local[index].stock_quantity = sanitizedQty;
+    local[index].in_stock = newInStock;
+    saveLocalProducts(local);
+  }
+
+  window.dispatchEvent(new Event('products-updated'));
+  return true;
+}
+
+/**
+ * Helper to generate pre-filled WhatsApp ordering link
+ */
 export function generateWhatsAppLink(articleNo: string, title: string, price: number, phone = '923311498773'): string {
   const text = `Hi Candy Boutique! I want to order Article No: ${articleNo || 'N/A'} - ${title} (Rs. ${price}). Please confirm availability.`;
   return `https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(text)}`;
