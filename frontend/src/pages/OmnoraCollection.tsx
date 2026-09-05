@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
-import { fetchProducts, Product, generateWhatsAppLink } from '../lib/supabase';
+import { fetchProducts, Product, ProductVariant, generateWhatsAppLink } from '../lib/supabase';
+import { batchFetchVariantsForProducts, isProductWholeSoldOut, isSizeAvailableForProduct } from '../lib/availability';
 import { useToast } from '../context/ToastContext';
 import { ShoppingBag, Search, Filter, MessageCircle } from 'lucide-react';
 import SkeletonProductCard from '../components/SkeletonProductCard';
@@ -37,10 +38,11 @@ const resolveProductImage = (imgs: any): string => {
   return validUrls.length > 0 ? validUrls[0] : fallback;
 };
 
-export default function Collection({ defaultDepartment }: CollectionProps) {
+export default function OmnoraCollection({ defaultDepartment }: { defaultDepartment?: 'Ladies' | 'Kids' }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
+  const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
   const [activeDepartment, setActiveDepartment] = useState<'Ladies' | 'Kids' | 'All'>(
@@ -48,6 +50,7 @@ export default function Collection({ defaultDepartment }: CollectionProps) {
   );
   const [selectedGender, setSelectedGender] = useState(searchParams.get('gender') || 'All');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'All');
+  const [selectedSizeFilter, setSelectedSizeFilter] = useState<number | 'All'>('All');
   const [inStockOnly, setInStockOnly] = useState(false);
   const [saleOnly, setSaleOnly] = useState(searchParams.get('sale') === 'true');
   const [priceRange, setPriceRange] = useState<number>(30000);
@@ -82,6 +85,11 @@ export default function Collection({ defaultDepartment }: CollectionProps) {
         search_term: searchTerm,
       });
       setProducts(data);
+      if (data && data.length > 0) {
+        const pIds = data.map((p) => p.id);
+        const vData = await batchFetchVariantsForProducts(pIds);
+        setVariants(vData);
+      }
     } catch (err) {
       console.error('Error fetching products:', err);
     } finally {
@@ -116,6 +124,16 @@ export default function Collection({ defaultDepartment }: CollectionProps) {
       if (selectedCategory !== 'All' && p.category !== selectedCategory) {
         return false;
       }
+      if (selectedSizeFilter !== 'All') {
+        if (!isSizeAvailableForProduct(p, variants, selectedSizeFilter)) {
+          return false;
+        }
+      }
+      if (inStockOnly) {
+        if (isProductWholeSoldOut(p, variants)) {
+          return false;
+        }
+      }
       if (selectedGender !== 'All') {
         const titleCat = (p.title + ' ' + (p.category || '')).toLowerCase();
         if (selectedGender === 'Girls' && !titleCat.includes('girl') && !titleCat.includes('frock') && !titleCat.includes('dress')) {
@@ -124,7 +142,7 @@ export default function Collection({ defaultDepartment }: CollectionProps) {
       }
       return p.retail_price <= priceRange;
     });
-  }, [products, selectedCategory, selectedGender, priceRange, saleOnly]);
+  }, [products, variants, selectedCategory, selectedGender, selectedSizeFilter, inStockOnly, priceRange, saleOnly]);
 
   const handleAddToCart = (product: Product) => {
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
@@ -312,7 +330,7 @@ export default function Collection({ defaultDepartment }: CollectionProps) {
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: '1.25rem', width: '100%', minWidth: 0 }}>
                 {filteredProducts.map((p) => {
-                  const isOutOfStock = !p.in_stock || (p.stock_quantity !== undefined && p.stock_quantity <= 0);
+                  const isOutOfStock = isProductWholeSoldOut(p, variants);
                   const whatsappUrl = generateWhatsAppLink(p.article_no || '', p.title, p.retail_price);
                   const primaryImg = resolveProductImage(p.images);
 

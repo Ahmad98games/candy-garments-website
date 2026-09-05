@@ -1,9 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { fetchProductById, Product as SupabaseProduct } from '../lib/supabase';
+import {
+  fetchProductById, Product as SupabaseProduct,
+  fetchProductColors, fetchProductVariants, ProductColor, ProductVariant,
+  STANDARD_SIZES, supabase
+} from '../lib/supabase';
 import { useToast } from '../context/ToastContext';
 import SmartImage from '../components/SmartImage';
-import { ShoppingBag, Minus, Plus, ArrowLeft, ShieldCheck, Truck, MessageCircle, CheckCircle, ChevronDown, ChevronUp, Ruler } from 'lucide-react';
+import { ShoppingBag, Minus, Plus, ArrowLeft, ShieldCheck, Truck, MessageCircle, CheckCircle, XCircle, ChevronDown, ChevronUp, Ruler } from 'lucide-react';
 import './Product.css';
 
 export default function Product() {
@@ -12,21 +16,43 @@ export default function Product() {
   const { showToast } = useToast();
 
   const [product, setProduct] = useState<SupabaseProduct | null>(null);
+  const [colors, setColors] = useState<ProductColor[]>([]);
+  const [variants, setVariants] = useState<ProductVariant[]>([]);
+  const [selectedColorId, setSelectedColorId] = useState<string | null>(null);
+  const [selectedSizeValue, setSelectedSizeValue] = useState<number | null>(null);
+
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
-  const [selectedSize, setSelectedSize] = useState<string>('3-4Y');
   const [activeTab, setActiveTab] = useState<'fabric' | 'sizechart' | 'delivery'>('fabric');
 
-  const ageSizes = [
-    { label: '1-2Y', inStock: true },
-    { label: '2-3Y', inStock: true },
-    { label: '3-4Y', inStock: true },
-    { label: '4-5Y', inStock: true },
-    { label: '5-6Y', inStock: true },
-    { label: '6-7Y', inStock: false },
-    { label: '7-8Y', inStock: true },
-  ];
+  const loadStockData = useCallback(async (productId: string) => {
+    try {
+      const colData = await fetchProductColors(productId);
+      const varData = await fetchProductVariants(productId);
+      setColors(colData);
+      setVariants(varData);
+
+      // Auto-select first available color
+      if (colData.length > 0) {
+        const initialColor = colData[0];
+        setSelectedColorId(initialColor.id);
+
+        // Auto-select first available size for that color
+        const firstAvailSize = STANDARD_SIZES.find((sz) => {
+          const matching = varData.find((v) => v.color_id === initialColor.id && Number(v.size_value) === sz);
+          return matching ? matching.in_stock : true;
+        });
+        if (firstAvailSize) {
+          setSelectedSizeValue(firstAvailSize);
+        } else {
+          setSelectedSizeValue(STANDARD_SIZES[0]);
+        }
+      }
+    } catch (err) {
+      console.error('Error loading variant stock:', err);
+    }
+  }, []);
 
   useEffect(() => {
     async function loadProduct() {
@@ -35,6 +61,9 @@ export default function Product() {
       try {
         const data = await fetchProductById(id);
         setProduct(data);
+        if (data?.id) {
+          await loadStockData(data.id);
+        }
       } catch (err) {
         console.error('Error fetching product:', err);
       } finally {
@@ -42,16 +71,77 @@ export default function Product() {
       }
     }
     loadProduct();
-  }, [id]);
+  }, [id, loadStockData]);
+
+  // SUPABASE REALTIME SUBSCRIPTION FOR LIVE VARIANT STOCK UPDATES (~1s SYNC)
+  useEffect(() => {
+    if (!product?.id) return;
+
+    const channel = supabase
+      .channel(`realtime-product-variants-${product.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'product_variants', filter: `product_id=eq.${product.id}` },
+        () => {
+          loadStockData(product.id);
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'product_colors', filter: `product_id=eq.${product.id}` },
+        () => {
+          loadStockData(product.id);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [product?.id, loadStockData]);
+
+  // STOCK AVAILABILITY HELPER FUNCTIONS
+  const isColorInStock = useCallback((colorId: string) => {
+    return STANDARD_SIZES.some((sz) => {
+      const matching = variants.find((v) => v.color_id === colorId && Number(v.size_value) === sz);
+      return matching ? matching.in_stock : true;
+    });
+  }, [variants]);
+
+  const isSizeInStockForColor = useCallback((sz: number, colorId: string | null) => {
+    if (!colorId) return false;
+    const matching = variants.find((v) => v.color_id === colorId && Number(v.size_value) === sz);
+    return matching ? matching.in_stock : true;
+  }, [variants]);
+
+  const isWholeProductOut = useMemo(() => {
+    if (!colors || colors.length === 0) return !product?.in_stock;
+    return !colors.some((c) => isColorInStock(c.id));
+  }, [colors, isColorInStock, product?.in_stock]);
+
+  const selectedColorObj = useMemo(() => {
+    return colors.find((c) => c.id === selectedColorId) || colors[0];
+  }, [colors, selectedColorId]);
 
   const handleQuantityUpdate = (delta: number) => {
     setQuantity((prev) => Math.max(1, prev + delta));
   };
 
   const handleAddToCart = () => {
-    if (!product) return;
+    if (!product || !selectedColorId || !selectedSizeValue) return;
+
+    if (!isSizeInStockForColor(selectedSizeValue, selectedColorId)) {
+      showToast(`Size ${selectedSizeValue} in ${selectedColorObj?.color_name || 'color'} is sold out.`, 'error');
+      return;
+    }
+
+    const matchingVariant = variants.find((v) => v.color_id === selectedColorId && Number(v.size_value) === selectedSizeValue);
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    const existingIndex = cart.findIndex((item: any) => item.id === product.id && item.size === selectedSize);
+
+    const existingIndex = cart.findIndex(
+      (item: any) => item.id === product.id && item.color_id === selectedColorId && Number(item.size) === selectedSizeValue
+    );
+
     if (existingIndex > -1) {
       cart[existingIndex].quantity += quantity;
     } else {
@@ -59,15 +149,18 @@ export default function Product() {
         id: product.id,
         name: product.title,
         price: product.retail_price,
-        image: product.images?.[0] || 'https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=800&q=80',
+        image: selectedColorObj?.image_url || product.images?.[0] || 'https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=800&q=80',
         quantity: quantity,
         articleNo: product.article_no || 'CK-01',
-        size: selectedSize,
+        size: selectedSizeValue,
+        color: selectedColorObj?.color_name || 'Standard',
+        color_id: selectedColorId,
+        variant_id: matchingVariant?.id,
       });
     }
     localStorage.setItem('cart', JSON.stringify(cart));
     window.dispatchEvent(new Event('cart-updated'));
-    showToast(`Added ${quantity} x ${product.title} (Size: ${selectedSize}) to Bag!`, 'success');
+    showToast(`Added ${quantity} × ${product.title} (${selectedColorObj?.color_name || ''}, Size: ${selectedSizeValue}) to Bag!`, 'success');
   };
 
   if (loading) {
@@ -94,14 +187,13 @@ export default function Product() {
 
   // WhatsApp Pre-filled message protocol
   const encodedText = encodeURIComponent(
-    `Assalamu Alaikum Candy Kids, I want to order ${product.title} - Price: Rs. ${product.retail_price}, Size: ${selectedSize}. Product Link: ${currentUrl}`
+    `Assalamu Alaikum Candy Kids, I want to order ${product.title} - Price: Rs. ${product.retail_price}, Color: ${selectedColorObj?.color_name || 'Standard'}, Size: ${selectedSizeValue}. Product Link: ${currentUrl}`
   );
   const whatsappNativeUrl = `whatsapp://send?phone=923311498773&text=${encodedText}`;
   const whatsappWebUrl = `https://wa.me/923311498773?text=${encodedText}`;
 
   const handleWhatsAppOrder = (e: React.MouseEvent) => {
     e.preventDefault();
-    // Try launching native whatsapp scheme first, with web fallback
     window.location.href = whatsappNativeUrl;
     setTimeout(() => {
       window.open(whatsappWebUrl, '_blank');
@@ -161,13 +253,13 @@ export default function Product() {
               <span className="font-mono" style={{ backgroundColor: '#FEF2F2', color: '#E52535', fontSize: '0.78rem', fontWeight: 700, padding: '4px 10px', borderRadius: '4px' }}>
                 Article: {product.article_no || 'CK-01'}
               </span>
-              {(!product.in_stock || (product.stock_quantity !== undefined && product.stock_quantity <= 0)) ? (
+              {isWholeProductOut ? (
                 <span style={{ fontSize: '0.78rem', color: '#DC2626', backgroundColor: '#FEF2F2', padding: '4px 10px', borderRadius: '4px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                   <XCircle size={14} /> Out of Stock
                 </span>
               ) : (
                 <span style={{ fontSize: '0.78rem', color: '#0F9D58', backgroundColor: '#ECFDF5', padding: '4px 10px', borderRadius: '4px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                  <CheckCircle size={14} /> Ready to Ship ({product.stock_quantity !== undefined ? product.stock_quantity : 10} Left)
+                  <CheckCircle size={14} /> Ready to Ship
                 </span>
               )}
             </div>
@@ -189,11 +281,65 @@ export default function Product() {
               </span>
             </div>
 
-            {/* AGE/SIZE SELECTOR PILLS WITH REAL-TIME STOCK INDICATORS */}
+            {/* COLOR SELECTOR SWATCHES */}
+            {colors.length > 0 && (
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ fontSize: '0.88rem', fontWeight: 700, color: '#111827', display: 'block', marginBottom: '8px' }}>
+                  Select Color: <span style={{ color: '#E52535' }}>{selectedColorObj?.color_name || 'Standard'}</span>
+                </label>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+                  {colors.map((col) => {
+                    const colorAvailable = isColorInStock(col.id);
+                    const isSelected = selectedColorId === col.id;
+
+                    return (
+                      <button
+                        key={col.id}
+                        type="button"
+                        disabled={!colorAvailable}
+                        onClick={() => {
+                          if (colorAvailable) {
+                            setSelectedColorId(col.id);
+                            const firstSize = STANDARD_SIZES.find((sz) => isSizeInStockForColor(sz, col.id)) || STANDARD_SIZES[0];
+                            setSelectedSizeValue(firstSize);
+                          }
+                        }}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '6px 12px',
+                          borderRadius: '20px',
+                          border: isSelected ? '2px solid #E52535' : '1px solid #E5E7EB',
+                          backgroundColor: isSelected ? '#FEF2F2' : colorAvailable ? '#FFFFFF' : '#F3F4F6',
+                          cursor: colorAvailable ? 'pointer' : 'not-allowed',
+                          opacity: colorAvailable ? 1 : 0.4,
+                          boxShadow: isSelected ? '0 2px 8px rgba(229, 37, 53, 0.15)' : 'none',
+                          transition: 'all 0.15s ease',
+                        }}
+                        title={!colorAvailable ? `${col.color_name} - Sold Out` : col.color_name}
+                      >
+                        {col.image_url ? (
+                          <img src={col.image_url} alt={col.color_name} style={{ width: '18px', height: '18px', borderRadius: '50%', objectFit: 'cover' }} />
+                        ) : (
+                          <span style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: col.color_hex || '#E52535', border: '1px solid rgba(0,0,0,0.15)' }} />
+                        )}
+                        <span style={{ fontSize: '0.82rem', fontWeight: 700, color: isSelected ? '#E52535' : colorAvailable ? '#111827' : '#9CA3AF' }}>
+                          {col.color_name}
+                        </span>
+                        {!colorAvailable && <span style={{ fontSize: '0.65rem', color: '#DC2626', fontWeight: 600 }}>(Sold Out)</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* SIZE SELECTOR CHIPS FILTERED PER SELECTED COLOR */}
             <div style={{ marginBottom: '1.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                 <label style={{ fontSize: '0.88rem', fontWeight: 700, color: '#111827' }}>
-                  Select Age / Size: <span style={{ color: '#E52535' }}>{selectedSize}</span>
+                  Select Size: <span style={{ color: '#E52535' }}>{selectedSizeValue ? `Size ${selectedSizeValue}` : 'Select a size'}</span>
                 </label>
                 <span style={{ fontSize: '0.78rem', color: '#1A73E8', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }} onClick={() => setActiveTab('sizechart')}>
                   <Ruler size={14} /> Size Guide
@@ -201,30 +347,32 @@ export default function Product() {
               </div>
 
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                {ageSizes.map((item) => {
-                  const isItemInStock = item.inStock && product.in_stock && (product.stock_quantity === undefined || product.stock_quantity > 0);
+                {STANDARD_SIZES.map((sz) => {
+                  const isSizeInStock = isSizeInStockForColor(sz, selectedColorId);
+                  const isSelected = selectedSizeValue === sz;
+
                   return (
                     <button
-                      key={item.label}
-                      onClick={() => isItemInStock && setSelectedSize(item.label)}
-                      disabled={!isItemInStock}
+                      key={sz}
+                      onClick={() => isSizeInStock && setSelectedSizeValue(sz)}
+                      disabled={!isSizeInStock}
                       style={{
                         padding: '8px 14px',
                         borderRadius: '8px',
                         border: '1.5px solid',
-                        borderColor: selectedSize === item.label ? '#E52535' : isItemInStock ? '#E5E7EB' : '#F3F4F6',
-                        backgroundColor: selectedSize === item.label ? '#E52535' : isItemInStock ? '#FFFFFF' : '#F9FAFB',
-                        color: selectedSize === item.label ? '#FFFFFF' : isItemInStock ? '#111827' : '#9CA3AF',
+                        borderColor: isSelected ? '#E52535' : isSizeInStock ? '#E5E7EB' : '#F3F4F6',
+                        backgroundColor: isSelected ? '#E52535' : isSizeInStock ? '#FFFFFF' : '#F9FAFB',
+                        color: isSelected ? '#FFFFFF' : isSizeInStock ? '#111827' : '#9CA3AF',
                         fontWeight: 700,
                         fontSize: '0.82rem',
-                        cursor: isItemInStock ? 'pointer' : 'not-allowed',
+                        cursor: isSizeInStock ? 'pointer' : 'not-allowed',
                         position: 'relative',
-                        opacity: isItemInStock ? 1 : 0.6
+                        opacity: isSizeInStock ? 1 : 0.65
                       }}
                     >
-                      {item.label}
-                      {!isItemInStock && (
-                        <span style={{ display: 'block', fontSize: '0.62rem', fontWeight: 500, color: '#DC2626' }}>Sold Out</span>
+                      {sz}
+                      {!isSizeInStock && (
+                        <span style={{ display: 'block', fontSize: '0.60rem', fontWeight: 500, color: '#DC2626', textDecoration: 'line-through' }}>Sold Out</span>
                       )}
                     </button>
                   );
@@ -251,19 +399,23 @@ export default function Product() {
               {/* BRANDED RED BUTTON (#E52535) - ADD TO BAG */}
               <button
                 onClick={handleAddToCart}
-                disabled={!product.in_stock || (product.stock_quantity !== undefined && product.stock_quantity <= 0)}
+                disabled={isWholeProductOut || !selectedColorId || !selectedSizeValue || !isSizeInStockForColor(selectedSizeValue, selectedColorId)}
                 className="btn btn-primary"
                 style={{
                   height: '48px',
                   width: '100%',
                   fontWeight: 700,
                   fontSize: '0.9rem',
-                  backgroundColor: (!product.in_stock || (product.stock_quantity !== undefined && product.stock_quantity <= 0)) ? '#9CA3AF' : '#E52535',
-                  borderColor: (!product.in_stock || (product.stock_quantity !== undefined && product.stock_quantity <= 0)) ? '#9CA3AF' : '#E52535',
-                  cursor: (!product.in_stock || (product.stock_quantity !== undefined && product.stock_quantity <= 0)) ? 'not-allowed' : 'pointer'
+                  backgroundColor: (isWholeProductOut || !selectedColorId || !selectedSizeValue || !isSizeInStockForColor(selectedSizeValue, selectedColorId)) ? '#9CA3AF' : '#E52535',
+                  borderColor: (isWholeProductOut || !selectedColorId || !selectedSizeValue || !isSizeInStockForColor(selectedSizeValue, selectedColorId)) ? '#9CA3AF' : '#E52535',
+                  cursor: (isWholeProductOut || !selectedColorId || !selectedSizeValue || !isSizeInStockForColor(selectedSizeValue, selectedColorId)) ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
                 }}
               >
-                <ShoppingBag size={18} /> {(!product.in_stock || (product.stock_quantity !== undefined && product.stock_quantity <= 0)) ? 'Out of Stock' : 'Add to Bag'}
+                <ShoppingBag size={18} /> {(isWholeProductOut || !selectedColorId || !selectedSizeValue || !isSizeInStockForColor(selectedSizeValue, selectedColorId)) ? 'Variant Sold Out' : 'Add to Bag'}
               </button>
 
               {/* WHATSAPP GREEN BUTTON (#0F9D58) - INSTANT WHATSAPP ORDER */}
@@ -361,10 +513,22 @@ export default function Product() {
                         </tr>
                       </thead>
                       <tbody>
-                        <tr style={{ borderBottom: '1px solid #E5E7EB' }}><td>1-2 Years</td><td>22"</td><td>18"</td></tr>
-                        <tr style={{ borderBottom: '1px solid #E5E7EB' }}><td>2-3 Years</td><td>23"</td><td>20"</td></tr>
-                        <tr style={{ borderBottom: '1px solid #E5E7EB' }}><td>3-4 Years</td><td>24"</td><td>22"</td></tr>
-                        <tr style={{ borderBottom: '1px solid #E5E7EB' }}><td>5-6 Years</td><td>26"</td><td>26"</td></tr>
+                    <tr style={{ borderBottom: '1px solid #E5E7EB' }}><td>1-2 Years (Size 18)</td><td>18"</td><td>22"</td></tr>
+                    <tr style={{ borderBottom: '1px solid #E5E7EB' }}><td>2-3 Years (Size 20)</td><td>20"</td><td>23"</td></tr>
+                    <tr style={{ borderBottom: '1px solid #E5E7EB' }}><td>3-4 Years (Size 22)</td><td>22"</td><td>24"</td></tr>
+                    <tr style={{ borderBottom: '1px solid #E5E7EB' }}><td>4-5 Years (Size 24)</td><td>24"</td><td>25"</td></tr>
+                    <tr style={{ borderBottom: '1px solid #E5E7EB' }}><td>5-6 Years (Size 26)</td><td>26"</td><td>26"</td></tr>
+                    <tr style={{ borderBottom: '1px solid #E5E7EB' }}><td>6-7 Years (Size 28)</td><td>28"</td><td>28"</td></tr>
+                    <tr style={{ borderBottom: '1px solid #E5E7EB' }}><td>7-8 Years (Size 30)</td><td>30"</td><td>30"</td></tr>
+                    <tr style={{ borderBottom: '1px solid #E5E7EB' }}><td>9-10 Years (Size 32)</td><td>32"</td><td>32"</td></tr>
+                    <tr style={{ borderBottom: '1px solid #E5E7EB' }}><td>11-12 Years (Size 34)</td><td>34"</td><td>34"</td></tr>
+                    <tr style={{ borderBottom: '1px solid #E5E7EB' }}><td>Teen / XS (Size 36)</td><td>36"</td><td>36"</td></tr>
+                    <tr style={{ borderBottom: '1px solid #E5E7EB' }}><td>Small / S (Size 38)</td><td>38"</td><td>38"</td></tr>
+                    <tr style={{ borderBottom: '1px solid #E5E7EB' }}><td>Medium / M (Size 40)</td><td>40"</td><td>40"</td></tr>
+                    <tr style={{ borderBottom: '1px solid #E5E7EB' }}><td>Large / L (Size 42)</td><td>42"</td><td>42"</td></tr>
+                    <tr style={{ borderBottom: '1px solid #E5E7EB' }}><td>X-Large / XL (Size 44)</td><td>44"</td><td>44"</td></tr>
+                    <tr style={{ borderBottom: '1px solid #E5E7EB' }}><td>2X-Large / XXL (Size 46)</td><td>46"</td><td>46"</td></tr>
+                    <tr style={{ borderBottom: '1px solid #E5E7EB' }}><td>3X-Large / 3XL (Size 48)</td><td>48"</td><td>48"</td></tr>
                       </tbody>
                     </table>
                   </div>

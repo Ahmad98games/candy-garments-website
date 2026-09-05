@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { createOrder, Order } from '../lib/supabase';
+import { createOrder, Order, validateCartVariants } from '../lib/supabase';
 import { useToast } from '../context/ToastContext';
 import { useScrollReveal } from '../hooks/useScrollReveal';
 import { ShoppingBag, Copy, Check, AlertTriangle, Building2, Send, Truck, ArrowLeft } from 'lucide-react';
@@ -8,7 +8,7 @@ import './Checkout.css';
 import { calculateOrderTotal } from '../utils/currencyEngine';
 import { FALLBACK_IMAGE } from '../constants';
 
-type CartItem = { id: string; name: string; price: number; image?: string; quantity: number; articleNo?: string; size?: string };
+type CartItem = { id: string; name: string; price: number; image?: string; quantity: number; articleNo?: string; size?: string | number; color?: string; color_id?: string; variant_id?: string };
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -40,12 +40,22 @@ export default function Checkout() {
   };
 
   useEffect(() => {
-    const data = JSON.parse(localStorage.getItem('cart') || '[]') as CartItem[];
-    setItems(data);
-    if (data.length === 0) {
-      navigate('/cart');
+    async function initCheckout() {
+      const data = JSON.parse(localStorage.getItem('cart') || '[]') as CartItem[];
+      setItems(data);
+      if (data.length === 0) {
+        navigate('/cart');
+        return;
+      }
+      const validation = await validateCartVariants(data);
+      if (!validation.valid) {
+        validation.invalidItems.forEach((inv) => {
+          showToast(inv.reason, 'warning');
+        });
+      }
     }
-  }, [navigate]);
+    initCheckout();
+  }, [navigate, showToast]);
 
   const orderCalculations = useMemo(() => {
     return calculateOrderTotal({
@@ -97,6 +107,17 @@ export default function Checkout() {
     setSubmitting(true);
 
     try {
+      // LIVE VALIDATION AGAINST SUPABASE PRODUCT_VARIANTS BEFORE ORDER PLACEMENT
+      const validation = await validateCartVariants(items);
+      if (!validation.valid) {
+        validation.invalidItems.forEach((inv) => {
+          showToast(inv.reason, 'error');
+        });
+        setSubmitting(false);
+        navigate('/cart');
+        return;
+      }
+
       const orderPayload: Omit<Order, 'id' | 'created_at'> = {
         customer_name: form.customerName,
         customer_phone: form.customerPhone,
@@ -109,6 +130,10 @@ export default function Checkout() {
           quantity: i.quantity,
           price: i.price,
           image: i.image,
+          size: i.size,
+          color: i.color,
+          color_id: i.color_id,
+          variant_id: i.variant_id,
         })),
         total_amount: totalAmount,
         payment_method: 'WhatsApp (Advance Bank Transfer)',
@@ -330,7 +355,7 @@ export default function Checkout() {
                   <div className="summary-item-info">
                     <div className="summary-item-title">{item.name}</div>
                     <div className="summary-item-meta">
-                      Art: {item.articleNo || 'CK-01'} {item.size ? `• Size: ${item.size}` : ''} • Qty: {item.quantity}
+                      Art: {item.articleNo || 'CK-01'} {item.color ? `• Color: ${item.color}` : ''} {item.size ? `• Size: ${item.size}` : ''} • Qty: {item.quantity}
                     </div>
                   </div>
                   <div className="summary-item-price">

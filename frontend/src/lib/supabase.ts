@@ -25,6 +25,27 @@ const supabaseKey =
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
+export interface ProductColor {
+  id: string;
+  product_id: string;
+  color_name: string;
+  color_hex: string;
+  image_url?: string | null;
+  display_order?: number;
+  created_at?: string;
+}
+
+export interface ProductVariant {
+  id: string;
+  product_id: string;
+  size_value: number;
+  color_id: string;
+  in_stock: boolean;
+  stock_quantity?: number | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface Product {
   id: string;
   article_no?: string;
@@ -51,6 +72,10 @@ export interface OrderItem {
   quantity: number;
   price: number;
   image?: string;
+  size?: number | string;
+  color?: string;
+  color_id?: string;
+  variant_id?: string;
 }
 
 export interface Order {
@@ -65,6 +90,7 @@ export interface Order {
   status: 'Pending' | 'Dispatched' | 'Delivered' | 'Cancelled';
   created_at?: string;
 }
+
 
 export const FALLBACK_PRODUCTS: Product[] = [
   {
@@ -519,3 +545,276 @@ export function generateWhatsAppLink(articleNo: string, title: string, price: nu
   const text = `Hi Candy Boutique! I want to order Article No: ${articleNo || 'N/A'} - ${title} (Rs. ${price}). Please confirm availability.`;
   return `https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(text)}`;
 }
+
+export const STANDARD_SIZES = [22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48];
+
+const LOCAL_COLORS_KEY = 'omnora_product_colors_v1';
+const LOCAL_VARIANTS_KEY = 'omnora_product_variants_v1';
+
+function getLocalColors(productId: string): ProductColor[] {
+  try {
+    const raw = localStorage.getItem(`${LOCAL_COLORS_KEY}_${productId}`);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+
+  // Initial default colors for demo fallback
+  const defaults: ProductColor[] = [
+    { id: `c-red-${productId}`, product_id: productId, color_name: 'Red', color_hex: '#E52535', display_order: 1 },
+    { id: `c-blue-${productId}`, product_id: productId, color_name: 'Royal Blue', color_hex: '#1D4ED8', display_order: 2 },
+    { id: `c-black-${productId}`, product_id: productId, color_name: 'Midnight Black', color_hex: '#111827', display_order: 3 },
+  ];
+  saveLocalColors(productId, defaults);
+  return defaults;
+}
+
+function saveLocalColors(productId: string, colors: ProductColor[]): void {
+  try {
+    localStorage.setItem(`${LOCAL_COLORS_KEY}_${productId}`, JSON.stringify(colors));
+  } catch (e) {}
+}
+
+function getLocalVariants(productId: string, colors: ProductColor[]): ProductVariant[] {
+  try {
+    const raw = localStorage.getItem(`${LOCAL_VARIANTS_KEY}_${productId}`);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+
+  // Generate initial fallback variants for all sizes x colors
+  const defaults: ProductVariant[] = [];
+  colors.forEach(c => {
+    STANDARD_SIZES.forEach(sz => {
+      defaults.push({
+        id: `v-${productId}-${c.id}-${sz}`,
+        product_id: productId,
+        color_id: c.id,
+        size_value: sz,
+        in_stock: true,
+      });
+    });
+  });
+  saveLocalVariants(productId, defaults);
+  return defaults;
+}
+
+function saveLocalVariants(productId: string, variants: ProductVariant[]): void {
+  try {
+    localStorage.setItem(`${LOCAL_VARIANTS_KEY}_${productId}`, JSON.stringify(variants));
+  } catch (e) {}
+}
+
+export async function fetchProductColors(productId: string): Promise<ProductColor[]> {
+  try {
+    const { data, error } = await supabase
+      .from('product_colors')
+      .select('*')
+      .eq('product_id', productId)
+      .order('display_order', { ascending: true });
+
+    if (!error && data && data.length > 0) {
+      saveLocalColors(productId, data as ProductColor[]);
+      return data as ProductColor[];
+    }
+  } catch (err) {}
+
+  return getLocalColors(productId);
+}
+
+export async function fetchProductVariants(productId: string): Promise<ProductVariant[]> {
+  const colors = await fetchProductColors(productId);
+  try {
+    const { data, error } = await supabase
+      .from('product_variants')
+      .select('*')
+      .eq('product_id', productId);
+
+    if (!error && data && data.length > 0) {
+      saveLocalVariants(productId, data as ProductVariant[]);
+      return data as ProductVariant[];
+    }
+  } catch (err) {}
+
+  return getLocalVariants(productId, colors);
+}
+
+export async function addProductColor(color: {
+  product_id: string;
+  color_name: string;
+  color_hex: string;
+  image_url?: string | null;
+}): Promise<{ color: ProductColor; variants: ProductVariant[] } | null> {
+  const payload = {
+    product_id: color.product_id,
+    color_name: color.color_name.trim(),
+    color_hex: color.color_hex.trim(),
+    image_url: color.image_url?.trim() || null,
+    display_order: Date.now(),
+  };
+
+  try {
+    const { data, error } = await supabase
+      .from('product_colors')
+      .insert([payload])
+      .select()
+      .single();
+
+    if (!error && data) {
+      const insertedColor = data as ProductColor;
+      
+      // Auto-insert variants if trigger didn't run or to guarantee client state sync
+      const variantInserts = STANDARD_SIZES.map(sz => ({
+        product_id: color.product_id,
+        color_id: insertedColor.id,
+        size_value: sz,
+        in_stock: true,
+      }));
+
+      const { data: variantsData } = await supabase
+        .from('product_variants')
+        .insert(variantInserts)
+        .select();
+
+      const createdVariants = (variantsData as ProductVariant[]) || variantInserts.map(v => ({ ...v, id: `v-${Date.now()}-${v.size_value}` }));
+
+      // Sync local cache
+      const currentColors = getLocalColors(color.product_id);
+      currentColors.push(insertedColor);
+      saveLocalColors(color.product_id, currentColors);
+
+      const currentVariants = getLocalVariants(color.product_id, currentColors);
+      const updatedVariants = [...currentVariants, ...createdVariants];
+      saveLocalVariants(color.product_id, updatedVariants);
+
+      return { color: insertedColor, variants: createdVariants };
+    }
+  } catch (err) {
+    console.warn('Supabase add color warning:', err);
+  }
+
+  // Fallback for offline/local state
+  const fallbackColor: ProductColor = {
+    id: `col-${Date.now()}`,
+    ...payload,
+  };
+  const fallbackVariants: ProductVariant[] = STANDARD_SIZES.map(sz => ({
+    id: `v-${Date.now()}-${sz}`,
+    product_id: color.product_id,
+    color_id: fallbackColor.id,
+    size_value: sz,
+    in_stock: true,
+  }));
+
+  const localColors = getLocalColors(color.product_id);
+  localColors.push(fallbackColor);
+  saveLocalColors(color.product_id, localColors);
+
+  const localVariants = getLocalVariants(color.product_id, localColors);
+  const nextVariants = [...localVariants, ...fallbackVariants];
+  saveLocalVariants(color.product_id, nextVariants);
+
+  return { color: fallbackColor, variants: fallbackVariants };
+}
+
+export async function deleteProductColor(colorId: string, productId: string): Promise<boolean> {
+  try {
+    await supabase.from('product_colors').delete().eq('id', colorId);
+  } catch (err) {
+    console.warn('Supabase delete color warning:', err);
+  }
+
+  const colors = getLocalColors(productId).filter(c => c.id !== colorId);
+  saveLocalColors(productId, colors);
+
+  const variants = getLocalVariants(productId, colors).filter(v => v.color_id !== colorId);
+  saveLocalVariants(productId, variants);
+
+  return true;
+}
+
+export async function toggleVariantStock(
+  productId: string,
+  sizeValue: number,
+  colorId: string,
+  inStock: boolean
+): Promise<boolean> {
+  try {
+    const { data } = await supabase
+      .from('product_variants')
+      .upsert(
+        {
+          product_id: productId,
+          size_value: sizeValue,
+          color_id: colorId,
+          in_stock: inStock,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'product_id,size_value,color_id' }
+      )
+      .select();
+  } catch (err) {
+    console.warn('Supabase toggle variant warning:', err);
+  }
+
+  const colors = getLocalColors(productId);
+  const variants = getLocalVariants(productId, colors);
+  const idx = variants.findIndex(v => v.product_id === productId && v.color_id === colorId && Number(v.size_value) === Number(sizeValue));
+  
+  if (idx > -1) {
+    variants[idx].in_stock = inStock;
+  } else {
+    variants.push({
+      id: `v-${productId}-${colorId}-${sizeValue}`,
+      product_id: productId,
+      color_id: colorId,
+      size_value: sizeValue,
+      in_stock: inStock,
+    });
+  }
+  saveLocalVariants(productId, variants);
+  return true;
+}
+
+export async function validateCartVariants(items: any[]): Promise<{
+  valid: boolean;
+  invalidItems: { item: any; reason: string }[];
+}> {
+  if (!items || items.length === 0) return { valid: true, invalidItems: [] };
+
+  const invalidItems: { item: any; reason: string }[] = [];
+
+  for (const item of items) {
+    if (!item.id || !item.color_id || item.size === undefined) continue;
+
+    const sizeNum = parseInt(String(item.size).replace(/[^0-9]/g, ''), 10);
+    if (isNaN(sizeNum)) continue;
+
+    const colors = await fetchProductColors(item.id);
+    const colorExists = colors.some(c => c.id === item.color_id || c.color_name.toLowerCase() === (item.color || '').toLowerCase());
+    
+    if (!colorExists) {
+      invalidItems.push({
+        item,
+        reason: `Color "${item.color || 'selected color'}" for "${item.name}" is no longer available.`,
+      });
+      continue;
+    }
+
+    const variants = await fetchProductVariants(item.id);
+    const matchingVariant = variants.find(
+      v => (v.color_id === item.color_id || colors.find(c => c.id === v.color_id)?.color_name.toLowerCase() === (item.color || '').toLowerCase()) &&
+           Number(v.size_value) === sizeNum
+    );
+
+    if (!matchingVariant || !matchingVariant.in_stock) {
+      invalidItems.push({
+        item,
+        reason: `Size ${item.size} in ${item.color || 'selected color'} for "${item.name}" is sold out.`,
+      });
+    }
+  }
+
+  return {
+    valid: invalidItems.length === 0,
+    invalidItems,
+  };
+}
+

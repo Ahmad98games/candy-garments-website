@@ -1,12 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { fetchProducts, upsertProduct, toggleProductStock, updateStockQuantity, deleteProduct, Product, supabase } from '../lib/supabase';
+import {
+    fetchProducts, upsertProduct, toggleProductStock, updateStockQuantity, deleteProduct, Product, supabase,
+    fetchProductColors, fetchProductVariants, addProductColor, deleteProductColor, toggleVariantStock,
+    ProductColor, ProductVariant, STANDARD_SIZES
+} from '../lib/supabase';
 import { useToast } from '../context/ToastContext';
 import { processAndUploadImage } from '../utils/imageUpload';
 import {
     Plus, Edit3, Trash2, X, Upload, CheckCircle, XCircle, RefreshCw, Search,
     Download, FileSpreadsheet, GripVertical, ChevronLeft, ChevronRight, AlertTriangle,
-    Package, PackageX, Minus, Layers
+    Package, PackageX, Minus, Layers, Grid, Palette, Sliders
 } from 'lucide-react';
 import './AdminProducts.css';
 
@@ -57,8 +61,23 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [stockFilter, setStockFilter] = useState<'all' | 'in_stock' | 'out_of_stock' | 'low_stock'>('all');
 
-    const [pageSize] = useState<number>(24);
-    const [currentPage] = useState<number>(1);
+    const [pageSize, setPageSize] = useState<number>(24);
+    const [currentPage, setCurrentPage] = useState<number>(1);
+    const [isBulkModalOpen, setIsBulkModalOpen] = useState<boolean>(false);
+    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+
+    // STOCK MATRIX STATE
+    const [isMatrixModalOpen, setIsMatrixModalOpen] = useState<boolean>(false);
+    const [matrixProduct, setMatrixProduct] = useState<Product | null>(null);
+    const [productColors, setProductColors] = useState<ProductColor[]>([]);
+    const [productVariants, setProductVariants] = useState<ProductVariant[]>([]);
+    const [loadingMatrix, setLoadingMatrix] = useState<boolean>(false);
+
+    // NEW COLOR FORM STATE
+    const [newColorName, setNewColorName] = useState<string>('');
+    const [newColorHex, setNewColorHex] = useState<string>('#E52535');
+    const [newColorImage, setNewColorImage] = useState<string>('');
+    const [deletingColor, setDeletingColor] = useState<ProductColor | null>(null);
 
     const [imageUrlInput, setImageUrlInput] = useState('');
     const [uploadProgress, setUploadProgress] = useState<number>(0);
@@ -154,6 +173,146 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
         }
         setDeleteId(null);
         setDeletingProduct(null);
+    };
+
+    // DRAG AND DROP REORDER HANDLERS
+    const handleDragStart = (e: React.DragEvent, index: number) => {
+        setDraggedIndex(index);
+        e.dataTransfer.effectAllowed = 'move';
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+    };
+
+    const handleDrop = async (e: React.DragEvent, dropIndex: number) => {
+        e.preventDefault();
+        if (draggedIndex === null || draggedIndex === dropIndex) return;
+
+        const reordered = [...products];
+        const [removed] = reordered.splice(draggedIndex, 1);
+        reordered.splice(dropIndex, 0, removed);
+
+        setProducts(reordered);
+        setDraggedIndex(null);
+
+        try {
+            for (let i = 0; i < reordered.length; i++) {
+                if (reordered[i].id) {
+                    await supabase.from('products').update({ display_order: i + 1 }).eq('id', reordered[i].id);
+                }
+            }
+            showToast('Product order updated successfully!', 'success');
+        } catch (err) {}
+    };
+
+    // STOCK MATRIX METHODS
+    const openStockMatrix = async (product: Product) => {
+        setMatrixProduct(product);
+        setIsMatrixModalOpen(true);
+        setLoadingMatrix(true);
+        try {
+            const colors = await fetchProductColors(product.id);
+            const variants = await fetchProductVariants(product.id);
+            setProductColors(colors);
+            setProductVariants(variants);
+        } catch (err) {
+            console.error('Error fetching matrix:', err);
+            showToast('Failed to load size x color matrix', 'error');
+        } finally {
+            setLoadingMatrix(false);
+        }
+    };
+
+    const handleAddColorSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!matrixProduct || !newColorName.trim()) {
+            showToast('Please enter a valid color name', 'error');
+            return;
+        }
+
+        const res = await addProductColor({
+            product_id: matrixProduct.id,
+            color_name: newColorName.trim(),
+            color_hex: newColorHex || '#E52535',
+            image_url: newColorImage.trim() || null,
+        });
+
+        if (res) {
+            setProductColors((prev) => [...prev, res.color]);
+            setProductVariants((prev) => [...prev, ...res.variants]);
+            setNewColorName('');
+            setNewColorImage('');
+            showToast(`Added color "${res.color.color_name}" with auto-generated variants!`, 'success');
+        }
+    };
+
+    const handleConfirmDeleteColor = async () => {
+        if (!deletingColor || !matrixProduct) return;
+        const colorId = deletingColor.id;
+        const colorName = deletingColor.color_name;
+
+        const success = await deleteProductColor(colorId, matrixProduct.id);
+        if (success) {
+            setProductColors((prev) => prev.filter((c) => c.id !== colorId));
+            setProductVariants((prev) => prev.filter((v) => v.color_id !== colorId));
+            showToast(`Color "${colorName}" and its variants removed.`, 'info');
+        }
+        setDeletingColor(null);
+    };
+
+    const handleMatrixCellToggle = async (sizeVal: number, colorId: string) => {
+        if (!matrixProduct) return;
+
+        const existing = productVariants.find(
+            (v) => v.color_id === colorId && Number(v.size_value) === Number(sizeVal)
+        );
+        const currentInStock = existing ? existing.in_stock : true;
+        const nextInStock = !currentInStock;
+
+        // Optimistic UI update
+        setProductVariants((prev) => {
+            const idx = prev.findIndex(
+                (v) => v.color_id === colorId && Number(v.size_value) === Number(sizeVal)
+            );
+            if (idx > -1) {
+                const updated = [...prev];
+                updated[idx] = { ...updated[idx], in_stock: nextInStock };
+                return updated;
+            }
+            return [
+                ...prev,
+                {
+                    id: `v-${matrixProduct.id}-${colorId}-${sizeVal}`,
+                    product_id: matrixProduct.id,
+                    color_id: colorId,
+                    size_value: sizeVal,
+                    in_stock: nextInStock,
+                },
+            ];
+        });
+
+        // Supabase write
+        await toggleVariantStock(matrixProduct.id, sizeVal, colorId, nextInStock);
+    };
+
+    const handleBatchColumnToggle = async (colorId: string, setInStock: boolean) => {
+        if (!matrixProduct) return;
+        
+        // Optimistic UI update
+        setProductVariants((prev) =>
+            prev.map((v) => (v.color_id === colorId ? { ...v, in_stock: setInStock } : v))
+        );
+
+        try {
+            for (const sz of STANDARD_SIZES) {
+                await toggleVariantStock(matrixProduct.id, sz, colorId, setInStock);
+            }
+            showToast(`Updated all sizes for column to ${setInStock ? 'In Stock' : 'Sold Out'}`, 'success');
+        } catch (e) {
+            showToast('Failed to update all sizes for column', 'error');
+        }
     };
 
     const handleEdit = (product: Product) => {
@@ -349,9 +508,9 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
         width: '100%',
         padding: '10px 12px',
         borderRadius: '8px',
-        border: '1px solid #D1D5DB',
+        border: '1px solid #CBD5E1',
         backgroundColor: '#FFFFFF',
-        color: '#111827',
+        color: '#0F172A',
         fontSize: '14px',
         marginTop: '4px',
         outline: 'none',
@@ -755,7 +914,15 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                                             </td>
 
                                             <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                                                <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                                                <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                                                    <button
+                                                        className="btn btn-outline"
+                                                        onClick={() => openStockMatrix(p)}
+                                                        style={{ height: '32px', fontSize: '12px', padding: '0 10px', backgroundColor: '#FEF2F2', color: '#E52535', borderColor: '#FECACA' }}
+                                                        title="Manage Size x Color Stock Matrix"
+                                                    >
+                                                        <Grid size={14} /> Stock Matrix
+                                                    </button>
                                                     <button
                                                         className="btn btn-outline"
                                                         onClick={() => handleEdit(p)}
@@ -814,20 +981,20 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
             {/* ADD/EDIT ARTICLE MODAL */}
             {isModalOpen && typeof document !== 'undefined' && createPortal(
                 <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(17, 24, 39, 0.6)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-                    <div style={{ background: '#FFFFFF', borderRadius: '12px', width: '100%', maxWidth: '520px', maxHeight: '90vh', overflowY: 'auto', padding: '24px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.15)' }}>
+                    <div style={{ background: '#FFFFFF', borderRadius: '12px', width: '100%', maxWidth: '520px', maxHeight: '90vh', overflowY: 'auto', padding: '24px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.15)', border: '1px solid #E2E8F0' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #E5E7EB', paddingBottom: '12px' }}>
-                            <h3 style={{ margin: 0, fontSize: '18px', color: '#111827', fontWeight: 700 }}>{editingId ? 'Edit Article' : 'Add New Article'}</h3>
-                            <button type="button" onClick={() => setIsModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280' }}><X size={22} /></button>
+                            <h3 style={{ margin: 0, fontSize: '18px', color: '#0F172A', fontWeight: 700 }}>{editingId ? 'Edit Article' : 'Add New Article'}</h3>
+                            <button type="button" onClick={() => setIsModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748B' }}><X size={22} /></button>
                         </div>
                         
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                                 <div>
-                                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Article #</label>
+                                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>Article #</label>
                                     <input type="text" value={formData.article_no || ''} onChange={(e) => setFormData({ ...formData, article_no: e.target.value })} style={lightInputStyle} />
                                 </div>
                                 <div>
-                                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Department</label>
+                                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>Department</label>
                                     <select value={formData.department || 'Ladies'} onChange={(e) => setFormData({ ...formData, department: e.target.value as any })} style={lightInputStyle}>
                                         <option value="Ladies">Ladies</option>
                                         <option value="Kids">Kids</option>
@@ -836,50 +1003,50 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                             </div>
 
                             <div>
-                                <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Title / Design Name *</label>
+                                <label style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>Title / Design Name *</label>
                                 <input type="text" value={formData.title || ''} onChange={(e) => setFormData({ ...formData, title: e.target.value })} style={lightInputStyle} />
                             </div>
 
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                                 <div>
-                                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Retail Price (Rs) *</label>
+                                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>Retail Price (Rs) *</label>
                                     <input type="number" value={formData.retail_price || ''} onChange={(e) => setFormData({ ...formData, retail_price: Number(e.target.value) })} style={lightInputStyle} />
                                 </div>
                                 <div>
-                                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Wholesale Cost (Rs)</label>
+                                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>Wholesale Cost (Rs)</label>
                                     <input type="number" value={formData.wholesale_cost || ''} onChange={(e) => setFormData({ ...formData, wholesale_cost: Number(e.target.value) })} style={lightInputStyle} />
                                 </div>
                             </div>
 
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                                 <div>
-                                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Category</label>
+                                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>Category</label>
                                     <input type="text" value={formData.category || ''} onChange={(e) => setFormData({ ...formData, category: e.target.value })} style={lightInputStyle} />
                                 </div>
                                 <div>
-                                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Fabric Type</label>
+                                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>Fabric Type</label>
                                     <input type="text" value={formData.fabric_type || ''} onChange={(e) => setFormData({ ...formData, fabric_type: e.target.value })} style={lightInputStyle} />
                                 </div>
                             </div>
 
                             {/* DUAL IMAGE UPLOAD SYSTEM */}
-                            <div style={{ background: '#F9FAFB', padding: '12px', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
-                                <label style={{ fontSize: '13px', fontWeight: 700, color: '#111827', display: 'block', marginBottom: '8px' }}>Product Images</label>
+                            <div style={{ background: '#F8FAFC', padding: '12px', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
+                                <label style={{ fontSize: '13px', fontWeight: 700, color: '#0F172A', display: 'block', marginBottom: '8px' }}>Product Images</label>
                                 <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
                                     <input type="text" placeholder="Paste image URL here..." value={imageUrlInput} onChange={(e) => setImageUrlInput(e.target.value)} style={{ ...lightInputStyle, marginTop: 0, flex: 1 }} />
-                                    <button type="button" onClick={handleAddImageUrl} style={{ padding: '8px 14px', borderRadius: '8px', border: '1px solid #D1D5DB', background: '#FFFFFF', color: '#374151', fontWeight: 600, cursor: 'pointer' }}>Add URL</button>
+                                    <button type="button" onClick={handleAddImageUrl} style={{ padding: '8px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', background: '#FFFFFF', color: '#334155', fontWeight: 600, cursor: 'pointer' }}>Add URL</button>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <label style={{ padding: '8px 14px', borderRadius: '8px', border: '1px solid #D1D5DB', background: '#FFFFFF', color: '#374151', fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                    <label style={{ padding: '8px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', background: '#FFFFFF', color: '#334155', fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                                         <Upload size={16} /> Upload Image
                                         <input type="file" multiple accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
                                     </label>
-                                    {uploadingImage && <span style={{ fontSize: '12px', color: '#4F46E5', fontWeight: 600 }}>Uploading... {uploadProgress}%</span>}
+                                    {uploadingImage && <span style={{ fontSize: '12px', color: '#2563EB', fontWeight: 600 }}>Uploading... {uploadProgress}%</span>}
                                 </div>
                                 {getSafeImagesArray(formData.images).length > 0 && (
                                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '12px' }}>
                                         {getSafeImagesArray(formData.images).map((img, i) => (
-                                            <div key={i} style={{ position: 'relative', width: '64px', height: '64px', borderRadius: '6px', overflow: 'hidden', border: '1px solid #D1D5DB' }}>
+                                            <div key={i} style={{ position: 'relative', width: '64px', height: '64px', borderRadius: '6px', overflow: 'hidden', border: '1px solid #CBD5E1' }}>
                                                 <img src={img} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                                 <button type="button" onClick={() => handleRemoveImage(i)} style={{ position: 'absolute', top: 2, right: 2, background: 'rgba(239,68,68,0.9)', color: '#fff', border: 'none', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '12px' }}>×</button>
                                             </div>
@@ -889,7 +1056,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                             </div>
 
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '16px' }}>
-                                <button type="button" onClick={() => setIsModalOpen(false)} style={{ padding: '10px 18px', borderRadius: '8px', border: '1px solid #D1D5DB', background: '#FFFFFF', color: '#374151', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+                                <button type="button" onClick={() => setIsModalOpen(false)} style={{ padding: '10px 18px', borderRadius: '8px', border: '1px solid #CBD5E1', background: '#FFFFFF', color: '#334155', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
                                 <button type="button" disabled={saving} onClick={handleDirectSave} style={{ padding: '10px 18px', borderRadius: '8px', border: 'none', background: '#E52535', color: '#FFFFFF', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}>
                                     {saving ? 'Saving...' : (editingId ? 'Save Changes' : 'Create Article')}
                                 </button>
@@ -903,12 +1070,228 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
             {/* DELETE MODAL */}
             {deleteId && typeof document !== 'undefined' && createPortal(
                 <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(17, 24, 39, 0.6)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-                    <div style={{ background: '#FFFFFF', borderRadius: '12px', maxWidth: '400px', width: '100%', padding: '24px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.15)' }}>
-                        <h3 style={{ margin: 0, color: '#111827', fontWeight: 700 }}>Confirm Delete</h3>
-                        <p style={{ color: '#4B5563', margin: '12px 0 20px', fontSize: '14px' }}>Are you sure you want to delete "{deletingProduct?.title || 'this item'}"?</p>
+                    <div style={{ background: '#FFFFFF', borderRadius: '12px', maxWidth: '400px', width: '100%', padding: '24px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.15)', border: '1px solid #E2E8F0' }}>
+                        <h3 style={{ margin: 0, color: '#0F172A', fontWeight: 700 }}>Confirm Delete</h3>
+                        <p style={{ color: '#475569', margin: '12px 0 20px', fontSize: '14px' }}>Are you sure you want to delete "{deletingProduct?.title || 'this item'}"?</p>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                            <button type="button" onClick={() => setDeleteId(null)} style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid #D1D5DB', background: '#FFFFFF', color: '#374151', cursor: 'pointer' }}>Cancel</button>
+                            <button type="button" onClick={() => setDeleteId(null)} style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid #CBD5E1', background: '#FFFFFF', color: '#334155', cursor: 'pointer' }}>Cancel</button>
                             <button type="button" onClick={handleConfirmDelete} style={{ padding: '10px 16px', borderRadius: '8px', border: 'none', background: '#EF4444', color: '#FFFFFF', fontWeight: 700, cursor: 'pointer' }}>Delete</button>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
+
+            {/* STOCK MATRIX MANAGEMENT MODAL */}
+            {isMatrixModalOpen && matrixProduct && typeof document !== 'undefined' && createPortal(
+                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(17, 24, 39, 0.6)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+                    <div style={{ background: '#FFFFFF', borderRadius: '16px', width: '100%', maxWidth: '960px', maxHeight: '92vh', overflowY: 'auto', padding: '24px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', border: '1px solid #E2E8F0' }}>
+                        
+                        {/* Modal Header */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #E5E7EB', paddingBottom: '12px' }}>
+                            <div>
+                                <h3 style={{ margin: 0, fontSize: '18px', color: '#0F172A', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <Grid size={20} style={{ color: '#E52535' }} /> Size × Color Stock Matrix
+                                </h3>
+                                <span style={{ fontSize: '13px', color: '#64748B' }}>
+                                    Article: <strong style={{ color: '#0F172A' }}>{matrixProduct.article_no || 'CK-01'}</strong> — {matrixProduct.title}
+                                </span>
+                            </div>
+                            <button type="button" onClick={() => setIsMatrixModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748B' }}><X size={22} /></button>
+                        </div>
+
+                        {/* Add New Color Form */}
+                        <form onSubmit={handleAddColorSubmit} className="add-color-form">
+                            <span style={{ fontSize: '13px', fontWeight: 700, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <Palette size={16} style={{ color: '#E52535' }} /> Add Color Column:
+                            </span>
+
+                            <input
+                                type="text"
+                                placeholder="Color Name (e.g. Red, Emerald)"
+                                value={newColorName}
+                                onChange={(e) => setNewColorName(e.target.value)}
+                                style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #CBD5E1', background: '#FFFFFF', color: '#0F172A', fontSize: '13px', minWidth: '180px' }}
+                            />
+
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>Swatch Hex:</label>
+                                <input
+                                    type="color"
+                                    value={newColorHex}
+                                    onChange={(e) => setNewColorHex(e.target.value)}
+                                    style={{ width: '36px', height: '36px', padding: 0, border: 'none', background: 'none', cursor: 'pointer' }}
+                                />
+                                <input
+                                    type="text"
+                                    value={newColorHex}
+                                    onChange={(e) => setNewColorHex(e.target.value)}
+                                    style={{ padding: '8px', borderRadius: '6px', border: '1px solid #CBD5E1', background: '#FFFFFF', color: '#0F172A', fontSize: '12px', width: '80px', fontFamily: 'monospace' }}
+                                />
+                            </div>
+
+                            <input
+                                type="text"
+                                placeholder="Optional Swatch Photo URL..."
+                                value={newColorImage}
+                                onChange={(e) => setNewColorImage(e.target.value)}
+                                style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #CBD5E1', background: '#FFFFFF', color: '#0F172A', fontSize: '13px', flex: 1, minWidth: '200px' }}
+                            />
+
+                            <button
+                                type="submit"
+                                className="btn btn-primary"
+                                style={{ height: '36px', padding: '0 16px', fontSize: '13px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: '#E52535', color: '#FFF', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+                            >
+                                <Plus size={16} /> Add Color Column
+                            </button>
+                        </form>
+
+                        {/* Stock Matrix Table */}
+                        {loadingMatrix ? (
+                            <div style={{ textAlign: 'center', padding: '40px', color: '#64748B' }}>
+                                <RefreshCw size={24} className="animate-spin" style={{ color: '#E52535' }} />
+                                <p style={{ marginTop: '8px', fontSize: '14px' }}>Loading stock matrix...</p>
+                            </div>
+                        ) : productColors.length === 0 ? (
+                            <div style={{ textAlign: 'center', padding: '40px', background: '#F8FAFC', borderRadius: '12px', border: '1px dashed #CBD5E1' }}>
+                                <AlertTriangle size={28} style={{ color: '#D97706', marginBottom: '8px' }} />
+                                <h4 style={{ margin: 0, color: '#0F172A' }}>No Colors Added Yet</h4>
+                                <p style={{ fontSize: '13px', color: '#64748B', marginTop: '4px' }}>
+                                    Use the form above to add a color column (e.g. Red). Variants for all 14 standard sizes (Size 22 to Size 48) will be auto-generated instantly!
+                                </p>
+                            </div>
+                        ) : (
+                            <div>
+                                {/* SIZING INFO & MOBILE RESPONSIVE INDICATOR BAR */}
+                                <div className="matrix-info-bar">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                        <span className="size-badge-pill">Size Range: 22 — 48</span>
+                                        <span className="size-subtext">
+                                            Supported Sizes: <strong>22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48</strong>
+                                        </span>
+                                    </div>
+                                    <span className="mobile-scroll-hint">Swipe horizontally &rarr;</span>
+                                </div>
+
+                                <div className="stock-matrix-scroll-wrapper">
+                                    <table className="stock-matrix-table">
+                                        <thead>
+                                            <tr>
+                                                <th className="sticky-size-col" style={{ width: '130px' }}>Size</th>
+                                                {productColors.map((col) => (
+                                                    <th key={col.id} style={{ minWidth: '140px' }}>
+                                                        <div className="color-header-cell">
+                                                            {col.image_url ? (
+                                                                <img
+                                                                    src={col.image_url}
+                                                                    alt={col.color_name}
+                                                                    style={{ width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #CBD5E1' }}
+                                                                />
+                                                            ) : (
+                                                                <span
+                                                                    className="color-swatch-badge"
+                                                                    style={{ backgroundColor: col.color_hex || '#E52535' }}
+                                                                />
+                                                            )}
+                                                            <span style={{ fontSize: '13px', fontWeight: 800, color: '#0F172A' }}>{col.color_name}</span>
+                                                            
+                                                            <div className="column-batch-actions">
+                                                                <button
+                                                                    type="button"
+                                                                    className="batch-btn all-in"
+                                                                    onClick={() => handleBatchColumnToggle(col.id, true)}
+                                                                    title="Set all sizes in stock for this color"
+                                                                >
+                                                                    All In
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    className="batch-btn all-out"
+                                                                    onClick={() => handleBatchColumnToggle(col.id, false)}
+                                                                    title="Set all sizes sold out for this color"
+                                                                >
+                                                                    All Out
+                                                                </button>
+                                                            </div>
+
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setDeletingColor(col)}
+                                                                style={{ background: 'none', border: 'none', color: '#DC2626', cursor: 'pointer', padding: '2px', marginTop: '2px' }}
+                                                                title={`Remove ${col.color_name} Column`}
+                                                            >
+                                                                <Trash2 size={13} />
+                                                            </button>
+                                                        </div>
+                                                    </th>
+                                                ))}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {STANDARD_SIZES.map((sz) => (
+                                                <tr key={sz}>
+                                                    <td className="sticky-size-col font-mono" style={{ fontSize: '13px', whiteSpace: 'nowrap' }}>
+                                                        <span>Size {sz}</span>
+                                                        <span className={`size-group-badge ${sz <= 34 ? 'kids' : 'adult'}`}>
+                                                            {sz <= 34 ? 'Junior' : 'Adult'}
+                                                        </span>
+                                                    </td>
+                                                    {productColors.map((col) => {
+                                                        const matching = productVariants.find(
+                                                            (v) => v.color_id === col.id && Number(v.size_value) === sz
+                                                        );
+                                                        const isInStock = matching ? matching.in_stock : true;
+
+                                                        return (
+                                                            <td key={col.id}>
+                                                                <button
+                                                                    type="button"
+                                                                    className={`variant-cell-btn ${isInStock ? 'in-stock' : 'sold-out'}`}
+                                                                    onClick={() => handleMatrixCellToggle(sz, col.id)}
+                                                                >
+                                                                    {isInStock ? <CheckCircle size={13} /> : <XCircle size={13} />}
+                                                                    {isInStock ? 'In Stock' : 'Sold Out'}
+                                                                </button>
+                                                            </td>
+                                                        );
+                                                    })}
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
+                            <button
+                                type="button"
+                                onClick={() => setIsMatrixModalOpen(false)}
+                                style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid #CBD5E1', background: '#0F172A', color: '#FFFFFF', fontWeight: 700, cursor: 'pointer' }}
+                            >
+                                Done & Close Matrix
+                            </button>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
+
+            {/* COLOR DELETION CONFIRMATION MODAL */}
+            {deletingColor && typeof document !== 'undefined' && createPortal(
+                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(17, 24, 39, 0.6)', zIndex: 9999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+                    <div style={{ background: '#FFFFFF', borderRadius: '12px', maxWidth: '420px', width: '100%', padding: '24px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.15)', border: '1px solid #E2E8F0' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#DC2626', marginBottom: '10px' }}>
+                            <AlertTriangle size={24} />
+                            <h3 style={{ margin: 0, fontWeight: 800, color: '#0F172A' }}>Confirm Color Removal</h3>
+                        </div>
+                        <p style={{ color: '#475569', margin: '12px 0 20px', fontSize: '14px', lineHeight: 1.5 }}>
+                            Are you sure you want to remove <strong style={{ color: '#0F172A' }}>"{deletingColor.color_name}"</strong> from this article? This will remove all variant stock rows for this color across all sizes.
+                        </p>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                            <button type="button" onClick={() => setDeletingColor(null)} style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid #CBD5E1', background: '#FFFFFF', color: '#334155', cursor: 'pointer' }}>Cancel</button>
+                            <button type="button" onClick={handleConfirmDeleteColor} style={{ padding: '10px 16px', borderRadius: '8px', border: 'none', background: '#EF4444', color: '#FFFFFF', fontWeight: 700, cursor: 'pointer' }}>Delete Color</button>
                         </div>
                     </div>
                 </div>,

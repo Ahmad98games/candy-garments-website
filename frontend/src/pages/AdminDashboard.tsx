@@ -138,27 +138,27 @@ export default function AdminDashboard() {
     <div className="dashboard-container animate-fade-in" style={{ padding: '24px' }}>
       
       {/* HEADER */}
-      <header className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px', borderBottom: '1px solid rgba(212, 175, 55, 0.2)', paddingBottom: '20px' }}>
+      <header className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px', borderBottom: '1px solid #E2E8F0', paddingBottom: '20px' }}>
         <div className="header-left">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-            <Crown size={18} style={{ color: '#D4AF37' }} />
-            <span style={{ fontSize: '11px', letterSpacing: '0.15em', color: '#D4AF37', fontWeight: 700, fontFamily: 'Cinzel, serif' }}>
+            <Crown size={18} style={{ color: '#E52535' }} />
+            <span style={{ fontSize: '11px', letterSpacing: '0.15em', color: '#E52535', fontWeight: 700, fontFamily: 'Cinzel, serif' }}>
               CANDY BOUTIQUE · AHMAD MAHBOOB
             </span>
           </div>
-          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#F9F6F0', margin: 0, fontFamily: 'Cinzel, serif', letterSpacing: '0.04em' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#0F172A', margin: 0, fontFamily: 'Cinzel, serif', letterSpacing: '0.04em' }}>
             CANDY BOUTIQUE COMMAND DECK
           </h1>
-          <div className="live-badge font-mono" style={{ fontSize: '11px', color: '#10B981', marginTop: '6px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '4px 10px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+          <div className="live-badge font-mono" style={{ fontSize: '11px', color: '#059669', marginTop: '6px', background: '#ECFDF5', border: '1px solid #A7F3D0', padding: '4px 10px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
             <span className="pulse-dot"></span> LIVE TELEMETRY • {lastUpdated.toLocaleTimeString()}
           </div>
         </div>
 
         <div className="header-right" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', background: 'rgba(212, 175, 55, 0.1)', border: '1px solid rgba(212, 175, 55, 0.3)', borderRadius: '6px', fontSize: '12px', color: '#D4AF37', fontWeight: 600 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', background: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: '6px', fontSize: '12px', color: '#E52535', fontWeight: 700 }}>
             <ShieldCheck size={16} /> OWNER: AHMAD MAHBOOB
           </div>
-          <button className="btn btn-outline" onClick={fetchData} disabled={loading} style={{ height: '36px', fontSize: '12px', borderColor: 'rgba(212, 175, 55, 0.3)', color: '#F9F6F0' }}>
+          <button className="btn btn-outline" onClick={fetchData} disabled={loading} style={{ height: '36px', fontSize: '12px', borderColor: '#CBD5E1', color: '#0F172A', background: '#FFFFFF', fontWeight: 700 }}>
             <RefreshCw size={14} className={loading ? 'spin' : ''} />
             {loading ? 'SYNCING...' : 'SYNC SYSTEM'}
           </button>
@@ -168,52 +168,52 @@ export default function AdminDashboard() {
       {/* KPI CARDS */}
       <div className="kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '18px', marginBottom: '28px' }}>
         
-        <div className="industrial-card" style={{ background: '#161B22', padding: '20px', borderRadius: '10px', border: '1px solid rgba(212, 175, 55, 0.25)', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+        <div className="industrial-card" style={{ background: '#FFFFFF', padding: '20px', borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '14px' }}>
-            <div style={{ color: '#D4AF37' }}><DollarSign size={22} /></div>
-            <span style={{ fontSize: '11px', color: '#10B981', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(16, 185, 129, 0.12)', padding: '2px 8px', borderRadius: '4px' }}>
+            <div style={{ color: '#E52535' }}><DollarSign size={22} /></div>
+            <span style={{ fontSize: '11px', color: '#059669', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px', background: '#ECFDF5', padding: '2px 8px', borderRadius: '4px' }}>
               <TrendingUp size={12} /> REVENUE TELEMETRY
             </span>
           </div>
           <div>
-            <span style={{ fontSize: '11px', color: '#B5ADA4', display: 'block', fontWeight: 600, letterSpacing: '0.08em' }}>TOTAL REVENUE</span>
-            <span className="font-mono" style={{ fontSize: '22px', fontWeight: 700, color: '#D4AF37' }}>
+            <span style={{ fontSize: '11px', color: '#64748B', display: 'block', fontWeight: 700, letterSpacing: '0.08em' }}>TOTAL REVENUE</span>
+            <span className="font-mono" style={{ fontSize: '22px', fontWeight: 900, color: '#E52535' }}>
               PKR {stats.revenue.toLocaleString()}
             </span>
           </div>
         </div>
 
-        <div className="industrial-card" style={{ background: '#161B22', padding: '20px', borderRadius: '10px', border: '1px solid rgba(212, 175, 55, 0.25)', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
-          <div style={{ marginBottom: '14px', color: '#38BDF8' }}>
+        <div className="industrial-card" style={{ background: '#FFFFFF', padding: '20px', borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+          <div style={{ marginBottom: '14px', color: '#0284C7' }}>
             <Users size={22} />
           </div>
           <div>
-            <span style={{ fontSize: '11px', color: '#B5ADA4', display: 'block', fontWeight: 600, letterSpacing: '0.08em' }}>CLIENTELE ARCHIVE</span>
-            <span className="font-mono" style={{ fontSize: '22px', fontWeight: 700, color: '#F9F6F0' }}>
+            <span style={{ fontSize: '11px', color: '#64748B', display: 'block', fontWeight: 700, letterSpacing: '0.08em' }}>CLIENTELE ARCHIVE</span>
+            <span className="font-mono" style={{ fontSize: '22px', fontWeight: 900, color: '#0F172A' }}>
               {stats.customers} Verified
             </span>
           </div>
         </div>
 
-        <div className="industrial-card" style={{ background: '#161B22', padding: '20px', borderRadius: '10px', border: '1px solid rgba(212, 175, 55, 0.25)', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
-          <div style={{ marginBottom: '14px', color: '#A855F7' }}>
+        <div className="industrial-card" style={{ background: '#FFFFFF', padding: '20px', borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+          <div style={{ marginBottom: '14px', color: '#7C3AED' }}>
             <ShoppingBag size={22} />
           </div>
           <div>
-            <span style={{ fontSize: '11px', color: '#B5ADA4', display: 'block', fontWeight: 600, letterSpacing: '0.08em' }}>AVG. ORDER VALUE</span>
-            <span className="font-mono" style={{ fontSize: '22px', fontWeight: 700, color: '#F9F6F0' }}>
+            <span style={{ fontSize: '11px', color: '#64748B', display: 'block', fontWeight: 700, letterSpacing: '0.08em' }}>AVG. ORDER VALUE</span>
+            <span className="font-mono" style={{ fontSize: '22px', fontWeight: 900, color: '#0F172A' }}>
               PKR {Math.round(stats.avgOrderValue).toLocaleString()}
             </span>
           </div>
         </div>
 
-        <div className="industrial-card" style={{ background: '#161B22', padding: '20px', borderRadius: '10px', border: '1px solid rgba(212, 175, 55, 0.25)', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
-          <div style={{ marginBottom: '14px', color: '#F59E0B' }}>
+        <div className="industrial-card" style={{ background: '#FFFFFF', padding: '20px', borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+          <div style={{ marginBottom: '14px', color: '#D97706' }}>
             <Activity size={22} />
           </div>
           <div>
-            <span style={{ fontSize: '11px', color: '#B5ADA4', display: 'block', fontWeight: 600, letterSpacing: '0.08em' }}>ACTIVE ORDERS</span>
-            <span className="font-mono" style={{ fontSize: '22px', fontWeight: 700, color: '#F59E0B' }}>
+            <span style={{ fontSize: '11px', color: '#64748B', display: 'block', fontWeight: 700, letterSpacing: '0.08em' }}>ACTIVE ORDERS</span>
+            <span className="font-mono" style={{ fontSize: '22px', fontWeight: 900, color: '#D97706' }}>
               {stats.activeOrders} In-Flight
             </span>
           </div>
@@ -225,18 +225,18 @@ export default function AdminDashboard() {
       <div className="main-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '22px' }}>
 
         {/* CONVERSION PIPELINE */}
-        <div className="industrial-card" style={{ background: '#161B22', padding: '22px', borderRadius: '10px', border: '1px solid rgba(212, 175, 55, 0.25)', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+        <div className="industrial-card" style={{ background: '#FFFFFF', padding: '22px', borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: 700, margin: 0, color: '#F9F6F0', fontFamily: 'Cinzel, serif', letterSpacing: '0.05em' }}>COUTURE CONVERSION PIPELINE</h3>
-            <Activity size={18} style={{ color: '#D4AF37' }} />
+            <h3 style={{ fontSize: '14px', fontWeight: 800, margin: 0, color: '#0F172A', fontFamily: 'Cinzel, serif', letterSpacing: '0.05em' }}>COUTURE CONVERSION PIPELINE</h3>
+            <Activity size={18} style={{ color: '#E52535' }} />
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', height: '170px', alignItems: 'end', paddingTop: '20px' }}>
             {[
-              { label: 'Initiated', val: funnel.initiated, color: '#B5ADA4' },
+              { label: 'Initiated', val: funnel.initiated, color: '#94A3B8' },
               { label: 'Pending', val: funnel.pending, color: '#F59E0B' },
-              { label: 'Dispatched', val: funnel.processing, color: '#38BDF8' },
-              { label: 'Delivered', val: funnel.completed, color: '#10B981' },
+              { label: 'Dispatched', val: funnel.processing, color: '#0284C7' },
+              { label: 'Delivered', val: funnel.completed, color: '#059669' },
             ].map((step, i) => (
               <div key={i} style={{ textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center' }}>
                 <div
@@ -249,7 +249,7 @@ export default function AdminDashboard() {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#0A0908',
+                    color: '#FFFFFF',
                     fontSize: '11px',
                     fontWeight: 800,
                   }}
@@ -257,46 +257,45 @@ export default function AdminDashboard() {
                 >
                   {step.val}
                 </div>
-                <span className="font-mono" style={{ fontSize: '11px', color: '#B5ADA4', marginTop: '8px' }}>{step.label}</span>
+                <span className="font-mono" style={{ fontSize: '11px', color: '#475569', marginTop: '8px', fontWeight: 700 }}>{step.label}</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* ACQUISITION CHANNELS CARD — ELEGANT METALLIC FOIL DESIGN */}
-        <div className="industrial-card" style={{ background: '#161B22', padding: '22px', borderRadius: '10px', border: '1px solid rgba(212, 175, 55, 0.25)', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+        {/* ACQUISITION CHANNELS CARD — ELEGANT LIGHT METALLIC DESIGN */}
+        <div className="industrial-card" style={{ background: '#FFFFFF', padding: '22px', borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
             <div>
-              <h3 style={{ fontSize: '14px', fontWeight: 700, margin: 0, color: '#F9F6F0', fontFamily: 'Cinzel, serif', letterSpacing: '0.05em' }}>CLIENT ACQUISITION & TELEMETRY</h3>
-              <span style={{ fontSize: '11px', color: '#B5ADA4' }}>Owner: Ahmad Mahboob · Personal Channel Analytics</span>
+              <h3 style={{ fontSize: '14px', fontWeight: 800, margin: 0, color: '#0F172A', fontFamily: 'Cinzel, serif', letterSpacing: '0.05em' }}>CLIENT ACQUISITION & TELEMETRY</h3>
+              <span style={{ fontSize: '11px', color: '#64748B' }}>Owner: Ahmad Mahboob · Personal Channel Analytics</span>
             </div>
-            <Share2 size={18} style={{ color: '#D4AF37' }} />
+            <Share2 size={18} style={{ color: '#E52535' }} />
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {channels.map((ch, idx) => (
               <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                  <span style={{ fontWeight: 600, color: '#F9F6F0' }}>{ch.channel}</span>
-                  <span className="font-mono" style={{ fontSize: '12px', color: '#D4AF37', fontWeight: 700 }}>
+                  <span style={{ fontWeight: 700, color: '#0F172A' }}>{ch.channel}</span>
+                  <span className="font-mono" style={{ fontSize: '12px', color: '#E52535', fontWeight: 800 }}>
                     {ch.count} Client Signups ({ch.percentage}%)
                   </span>
                 </div>
-                <div style={{ width: '100%', height: '10px', background: 'rgba(255,255,255,0.06)', borderRadius: '6px', overflow: 'hidden', padding: '1px', border: '1px solid rgba(212, 175, 55, 0.15)' }}>
+                <div style={{ width: '100%', height: '10px', background: '#F1F5F9', borderRadius: '6px', overflow: 'hidden', padding: '1px', border: '1px solid #E2E8F0' }}>
                   <div
                     style={{
                       width: `${ch.percentage}%`,
                       height: '100%',
                       background: ch.channel.includes('Instagram')
-                        ? 'linear-gradient(90deg, #E1306C, #D4AF37)'
+                        ? 'linear-gradient(90deg, #E1306C, #E52535)'
                         : ch.channel.includes('Facebook')
-                        ? 'linear-gradient(90deg, #1877F2, #D4AF37)'
+                        ? 'linear-gradient(90deg, #1877F2, #2563EB)'
                         : ch.channel.includes('Google')
-                        ? 'linear-gradient(90deg, #38BDF8, #F3E5AB)'
-                        : 'linear-gradient(90deg, #10B981, #D4AF37)',
+                        ? 'linear-gradient(90deg, #0284C7, #38BDF8)'
+                        : 'linear-gradient(90deg, #059669, #10B981)',
                       borderRadius: '4px',
                       transition: 'width 0.4s ease',
-                      boxShadow: '0 0 10px rgba(212, 175, 55, 0.3)',
                     }}
                   />
                 </div>
@@ -306,16 +305,16 @@ export default function AdminDashboard() {
         </div>
 
         {/* RECENT ORDERS PANEL */}
-        <div className="industrial-card" style={{ background: '#161B22', padding: '22px', borderRadius: '10px', border: '1px solid rgba(212, 175, 55, 0.25)', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+        <div className="industrial-card" style={{ background: '#FFFFFF', padding: '22px', borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: 700, margin: 0, color: '#F9F6F0', fontFamily: 'Cinzel, serif', letterSpacing: '0.05em' }}>LIVE CLIENT TRANSMISSIONS</h3>
-            <ArrowUpRight size={18} style={{ color: '#D4AF37' }} />
+            <h3 style={{ fontSize: '14px', fontWeight: 800, margin: 0, color: '#0F172A', fontFamily: 'Cinzel, serif', letterSpacing: '0.05em' }}>LIVE CLIENT TRANSMISSIONS</h3>
+            <ArrowUpRight size={18} style={{ color: '#E52535' }} />
           </div>
 
           <div className="table-wrapper" style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '12px' }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid rgba(212, 175, 55, 0.2)', color: '#B5ADA4', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                <tr style={{ borderBottom: '1px solid #E2E8F0', color: '#475569', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', background: '#F8FAFC' }}>
                   <th style={{ padding: '8px 10px' }}>ORDER ID</th>
                   <th style={{ padding: '8px 10px' }}>CLIENT NAME</th>
                   <th style={{ padding: '8px 10px' }}>STATUS</th>
@@ -324,26 +323,26 @@ export default function AdminDashboard() {
               </thead>
               <tbody>
                 {recentOrders.map((order) => (
-                  <tr key={order.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                    <td className="font-mono" style={{ padding: '9px 10px', fontWeight: 700, color: '#D4AF37' }}>
+                  <tr key={order.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                    <td className="font-mono" style={{ padding: '9px 10px', fontWeight: 800, color: '#E52535' }}>
                       #{order.id?.slice(-6) || '----'}
                     </td>
-                    <td style={{ padding: '9px 10px', color: '#F9F6F0', fontWeight: 500 }}>
+                    <td style={{ padding: '9px 10px', color: '#0F172A', fontWeight: 600 }}>
                       {order.customer_name}
                     </td>
                     <td style={{ padding: '9px 10px' }}>
-                      <span style={{ fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', background: order.status === 'Delivered' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)', color: order.status === 'Delivered' ? '#10B981' : '#F59E0B', border: order.status === 'Delivered' ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(245, 158, 11, 0.3)' }}>
+                      <span style={{ fontSize: '10px', fontWeight: 800, padding: '3px 8px', borderRadius: '4px', background: order.status === 'Delivered' ? '#ECFDF5' : '#FEF3C7', color: order.status === 'Delivered' ? '#059669' : '#D97706', border: order.status === 'Delivered' ? '1px solid #A7F3D0' : '1px solid #FDE68A' }}>
                         {order.status}
                       </span>
                     </td>
-                    <td className="font-mono" style={{ padding: '9px 10px', textAlign: 'right', fontWeight: 700, color: '#D4AF37' }}>
+                    <td className="font-mono" style={{ padding: '9px 10px', textAlign: 'right', fontWeight: 800, color: '#0F172A' }}>
                       PKR {order.total_amount.toLocaleString()}
                     </td>
                   </tr>
                 ))}
                 {recentOrders.length === 0 && (
                   <tr>
-                    <td colSpan={4} style={{ textAlign: 'center', padding: '24px', color: '#B5ADA4' }}>
+                    <td colSpan={4} style={{ textAlign: 'center', padding: '24px', color: '#64748B' }}>
                       No live client transmissions recorded yet
                     </td>
                   </tr>
@@ -356,12 +355,12 @@ export default function AdminDashboard() {
       </div>
 
       {/* FOOTER */}
-      <footer className="dashboard-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '36px', paddingTop: '18px', borderTop: '1px solid rgba(212, 175, 55, 0.2)', fontSize: '12px', color: '#B5ADA4' }}>
+      <footer className="dashboard-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '36px', paddingTop: '18px', borderTop: '1px solid #E2E8F0', fontSize: '12px', color: '#64748B' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ width: '8px', height: '8px', background: '#10B981', borderRadius: '50%', display: 'inline-block', boxShadow: '0 0 8px #10B981' }}></span> SUPABASE ENCRYPTED ENGINE CONNECTED
+          <span style={{ width: '8px', height: '8px', background: '#059669', borderRadius: '50%', display: 'inline-block', boxShadow: '0 0 8px #059669' }}></span> SUPABASE ENCRYPTED ENGINE CONNECTED
         </div>
         <div>
-          PRIVATE ATELIER ENGINE · OPERATED EXCLUSIVELY BY <span style={{ color: '#D4AF37', fontWeight: 700, fontFamily: 'Cinzel, serif' }}>AHMAD MAHBOOB</span>
+          PRIVATE ATELIER ENGINE · OPERATED EXCLUSIVELY BY <span style={{ color: '#E52535', fontWeight: 800, fontFamily: 'Cinzel, serif' }}>AHMAD MAHBOOB</span>
         </div>
       </footer>
     </div>

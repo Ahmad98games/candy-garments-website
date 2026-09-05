@@ -7,17 +7,17 @@
     --admin-bg: #f8fafc;
     --sidebar-bg: #ffffff;
     --bg-card: #ffffff;
-    --bg-surface: #f8fafc;
+    --bg-surface: #ffffff;
     --border-color: #e2e8f0;
-    --border-subtle: #e2e8f0;
-    --border-muted: #cbd5e1;
+    --border-subtle: #cbd5e1;
+    --border-muted: #94a3b8;
     --accent-blue: #2563eb;
     --accent-sky: #0284c7;
     --accent-cyan: #0284c7;
     --accent-emerald: #059669;
     --accent-amber: #d97706;
     --accent-red: #dc2626;
-    --accent-rose: #dc2626;
+    --accent-rose: #e11d48;
     --text-primary: #0f172a;
     --text-secondary: #334155;
     --text-muted: #64748b;
@@ -350,4 +350,4 @@
 .pill-dot.amber {
     background: #F59E0B;
     box-shadow: 0 0 6px rgba(245, 158, 11, 0.8);
-}
+}

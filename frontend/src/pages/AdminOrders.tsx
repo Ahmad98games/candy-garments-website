@@ -173,6 +173,11 @@ export default function AdminOrders() {
                               <span className="font-mono" style={{ backgroundColor: '#374151', color: '#F9FAFB', fontSize: '11px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px', border: '1px solid #4B5563' }}>
                                 Article: {item.article_no || 'N/A'}
                               </span>
+                              {item.color && (
+                                <span style={{ backgroundColor: 'rgba(59, 130, 246, 0.15)', color: '#3B82F6', fontSize: '11px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+                                  Color: {item.color}
+                                </span>
+                              )}
                               {item.size && (
                                 <span style={{ backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#F59E0B', fontSize: '11px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
                                   Size: {item.size}

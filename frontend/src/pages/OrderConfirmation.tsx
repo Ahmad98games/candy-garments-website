@@ -51,7 +51,7 @@ export default function OrderConfirmation() {
     
     let itemsText = '';
     if (order?.items && order.items.length > 0) {
-      itemsText = '%0AItems:%0A' + order.items.map(i => `- ${i.title} (${i.article_no || 'N/A'}) x ${i.quantity}`).join('%0A');
+      itemsText = '%0AItems:%0A' + order.items.map(i => `- ${i.title} (${i.article_no || 'N/A'}) [Color: ${i.color || 'Standard'}, Size: ${i.size || 'N/A'}] x ${i.quantity}`).join('%0A');
     }
 
     const text = `Assalamu Alaikum Candy Kids! I have completed advance bank transfer for Order #${refId} (${name}). Total: ${amount}.${itemsText}%0AAttached is my payment transfer receipt/screenshot for TCS dispatch confirmation.`;

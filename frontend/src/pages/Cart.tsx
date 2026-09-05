@@ -7,19 +7,35 @@ import { useToast } from '../context/ToastContext'
 import { FALLBACK_IMAGE } from '../constants'
 import { calculateOrderTotal } from '../utils/currencyEngine'
 
-type CartItem = { id: string; name: string; price: number; image?: string; quantity: number }
+import { validateCartVariants } from '../lib/supabase'
+
+type CartItem = { id: string; name: string; price: number; image?: string; quantity: number; size?: string | number; color?: string; color_id?: string; variant_id?: string }
 
 export default function Cart() {
   const [items, setItems] = useState<CartItem[]>([])
+  const [invalidItemReasons, setInvalidItemReasons] = useState<string[]>([])
   const navigate = useNavigate()
   const { showToast } = useToast()
   const contentRef = useScrollReveal()
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    const data = JSON.parse(localStorage.getItem('cart') || '[]') as CartItem[]
-    setItems(data)
-  }, [])
+    async function checkCart() {
+      const data = JSON.parse(localStorage.getItem('cart') || '[]') as CartItem[]
+      setItems(data)
+      if (data.length > 0) {
+        const res = await validateCartVariants(data)
+        if (!res.valid) {
+          const warnings = res.invalidItems.map(inv => inv.reason)
+          setInvalidItemReasons(warnings)
+          warnings.forEach(msg => showToast(msg, 'warning'))
+        } else {
+          setInvalidItemReasons([])
+        }
+      }
+    }
+    checkCart()
+  }, [showToast])
 
   const syncCartToStorage = (newItems: CartItem[]) => {
     localStorage.setItem('cart', JSON.stringify(newItems))
@@ -121,58 +137,93 @@ export default function Cart() {
               <span style={{ textAlign: 'right' }}>Total</span>
             </div>
 
-            {items.map((item, index) => (
-              <div
-                key={item.id}
-                className="cart-item animate-slide-in-right"
-                style={{ animationDelay: `${index * 0.05}s` }}
-              >
-                <div className="item-info">
-                  <div className="item-image-placeholder">
-                    <img
-                      src={item.image || FALLBACK_IMAGE}
-                      alt={item.name}
-                      onError={handleImageError}
-                      loading="lazy"
-                    />
+            {items.map((item, index) => {
+              const itemReason = invalidItemReasons.find(r => r.includes(item.name) || (item.color && r.includes(item.color)));
+              const isItemInvalid = Boolean(itemReason);
+
+              return (
+                <div
+                  key={item.id}
+                  className="cart-item animate-slide-in-right"
+                  style={{
+                    animationDelay: `${index * 0.05}s`,
+                    border: isItemInvalid ? '2px solid #EF4444' : '1px solid #E5E7EB',
+                    backgroundColor: isItemInvalid ? '#FEF2F2' : '#FFFFFF',
+                    borderRadius: '12px',
+                    padding: '16px'
+                  }}
+                >
+                  <div className="item-info">
+                    <div className="item-image-placeholder">
+                      <img
+                        src={item.image || FALLBACK_IMAGE}
+                        alt={item.name}
+                        onError={handleImageError}
+                        loading="lazy"
+                      />
+                    </div>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>{item.name}</h3>
+                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', margin: '4px 0 6px 0', alignItems: 'center' }}>
+                        {item.color && (
+                          <span style={{ fontSize: '0.75rem', backgroundColor: '#F3F4F6', color: '#1F2937', padding: '2px 8px', borderRadius: '4px', fontWeight: 600 }}>
+                            Color: {item.color}
+                          </span>
+                        )}
+                        {item.size && (
+                          <span style={{ fontSize: '0.75rem', backgroundColor: '#FEF2F2', color: '#E52535', padding: '2px 8px', borderRadius: '4px', fontWeight: 700 }}>
+                            Size: {item.size}
+                          </span>
+                        )}
+                        {isItemInvalid && (
+                          <span style={{ fontSize: '0.72rem', backgroundColor: '#EF4444', color: '#FFFFFF', padding: '2px 8px', borderRadius: '4px', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            ⚠️ Sold Out / Unavailable
+                          </span>
+                        )}
+                      </div>
+                      {isItemInvalid && itemReason && (
+                        <p style={{ color: '#DC2626', fontSize: '0.78rem', fontWeight: 700, margin: '2px 0 6px 0' }}>
+                          {itemReason}
+                        </p>
+                      )}
+                      <p style={{ margin: '4px 0 0 0', fontWeight: 700 }}>PKR {item.price.toLocaleString()}</p>
+                      <button
+                        onClick={() => removeItem(item.id, item.name)}
+                        className="remove-btn"
+                        aria-label={`Remove ${item.name} from cart`}
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
-                  <div>
-                    <h3>{item.name}</h3>
-                    <p>PKR {item.price.toLocaleString()}</p>
+
+                  <div className="item-quantity">
                     <button
-                      onClick={() => removeItem(item.id, item.name)}
-                      className="remove-btn"
-                      aria-label={`Remove ${item.name} from cart`}
+                      onClick={() => updateQty(item.id, -1)}
+                      aria-label="Decrease quantity"
+                      disabled={item.quantity <= 1}
                     >
-                      Remove
+                      −
+                    </button>
+                    <span aria-label={`Quantity: ${item.quantity}`}>
+                      {item.quantity}
+                    </span>
+                    <button
+                      onClick={() => updateQty(item.id, 1)}
+                      aria-label="Increase quantity"
+                      disabled={isItemInvalid}
+                      style={{ cursor: isItemInvalid ? 'not-allowed' : 'pointer', opacity: isItemInvalid ? 0.5 : 1 }}
+                    >
+                      +
                     </button>
                   </div>
-                </div>
 
-                <div className="item-quantity">
-                  <button
-                    onClick={() => updateQty(item.id, -1)}
-                    aria-label="Decrease quantity"
-                    disabled={item.quantity <= 1}
-                  >
-                    −
-                  </button>
-                  <span aria-label={`Quantity: ${item.quantity}`}>
-                    {item.quantity}
-                  </span>
-                  <button
-                    onClick={() => updateQty(item.id, 1)}
-                    aria-label="Increase quantity"
-                  >
-                    +
-                  </button>
+                  <div className="item-total" style={{ fontWeight: 800, textAlign: 'right' }}>
+                    PKR {(item.price * item.quantity).toLocaleString()}
+                  </div>
                 </div>
-
-                <div className="item-total">
-                  PKR {(item.price * item.quantity).toLocaleString()}
-                </div>
-              </div>
-            ))}
+              );
+            })}
 
             <button
               onClick={clearCart}
