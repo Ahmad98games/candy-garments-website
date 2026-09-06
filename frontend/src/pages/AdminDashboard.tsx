@@ -336,7 +336,7 @@ export default function AdminDashboard() {
                       </span>
                     </td>
                     <td className="font-mono" style={{ padding: '9px 10px', textAlign: 'right', fontWeight: 800, color: '#0F172A' }}>
-                      PKR {order.total_amount.toLocaleString()}
+                      PKR {(order.total_amount || 0).toLocaleString()}
                     </td>
                   </tr>
                 ))}

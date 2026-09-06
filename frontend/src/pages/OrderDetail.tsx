@@ -121,17 +121,17 @@ export default function OrderDetail() {
                             <ArrowLeft size={16} /> Back
                         </Link>
                         <div className="order-id-group" onClick={copyOrderId} title="Click to Copy">
-                            <h1>#{order.orderNumber || order._id.slice(-6).toUpperCase()}</h1>
+                            <h1>#{order.orderNumber || (order._id ? order._id.slice(-6).toUpperCase() : (order as any).id || '----')}</h1>
                             <Copy size={16} className="copy-icon" />
                         </div>
                         <span className="order-date">
-                            {new Date(order.createdAt).toLocaleDateString(undefined, { 
+                            {new Date(order.createdAt || (order as any).created_at || Date.now()).toLocaleDateString(undefined, { 
                                 year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' 
                             })}
                         </span>
                     </div>
-                    <div className={`status-badge-lg ${order.status}`}>
-                        {order.status}
+                    <div className={`status-badge-lg ${order.status || 'pending'}`}>
+                        {order.status || 'Pending'}
                     </div>
                 </div>
 
@@ -147,7 +147,7 @@ export default function OrderDetail() {
                                     <div className="step-icon"><Clock size={18} /></div>
                                     <div className="step-info">
                                         <span className="step-label">Order Placed</span>
-                                        <span className="step-time">{new Date(order.createdAt).toLocaleTimeString()}</span>
+                                        <span className="step-time">{new Date(order.createdAt || (order as any).created_at || Date.now()).toLocaleTimeString()}</span>
                                     </div>
                                 </div>
                                 <div className={`track-step ${getStepStatus('processing')}`}>
@@ -178,17 +178,17 @@ export default function OrderDetail() {
                         <div className="panel items-panel">
                             <h3 className="panel-title">Manifest</h3>
                             <div className="items-list">
-                                {order.items.map((item, idx) => (
+                                {(order.items || []).map((item, idx) => (
                                     <div key={idx} className="manifest-item">
                                         <div className="item-thumb">
-                                            <img src={item.image || '/placeholder.png'} alt={item.name} />
+                                            <img src={item.image || (item as any).img || '/placeholder.png'} alt={item.name || (item as any).title || 'Product'} />
                                         </div>
                                         <div className="item-meta">
-                                            <h4>{item.name}</h4>
-                                            <span className="item-qty">Qty: {item.quantity}</span>
+                                            <h4>{item.name || (item as any).title || 'Product'}</h4>
+                                            <span className="item-qty">Qty: {item.quantity || 1}</span>
                                         </div>
                                         <div className="item-cost">
-                                            PKR {(item.price * item.quantity).toLocaleString()}
+                                            PKR {((item.price || 0) * (item.quantity || 1)).toLocaleString()}
                                         </div>
                                     </div>
                                 ))}
@@ -204,16 +204,16 @@ export default function OrderDetail() {
                             <h3 className="panel-title">Financials</h3>
                             <div className="summary-row">
                                 <span>Subtotal</span>
-                                <span>PKR {order.subtotal.toLocaleString()}</span>
+                                <span>PKR {(order.subtotal || (order as any).total_amount || order.total || 0).toLocaleString()}</span>
                             </div>
                             <div className="summary-row">
                                 <span>Shipping</span>
-                                <span>PKR {order.shippingCost.toLocaleString()}</span>
+                                <span>PKR {(order.shippingCost || 0).toLocaleString()}</span>
                             </div>
                             <div className="summary-divider"></div>
                             <div className="summary-row total">
                                 <span>Total</span>
-                                <span className="total-value">PKR {order.total.toLocaleString()}</span>
+                                <span className="total-value">PKR {(order.total || (order as any).total_amount || 0).toLocaleString()}</span>
                             </div>
                         </div>
 
@@ -221,19 +221,19 @@ export default function OrderDetail() {
                         <div className="panel details-panel">
                             <div className="detail-group">
                                 <h4 className="detail-header"><MapPin size={16} /> Shipping To</h4>
-                                <p>{order.shippingAddress.name}</p>
-                                <p className="text-muted">{order.shippingAddress.address}</p>
+                                <p>{order.shippingAddress?.name || (order as any).customer_name || 'Customer'}</p>
+                                <p className="text-muted">{order.shippingAddress?.address || (order as any).shipping_address || 'Address N/A'}</p>
                                 <p className="text-muted">
-                                    {order.shippingAddress.city}, {order.shippingAddress.postalCode}
+                                    {[order.shippingAddress?.city || (order as any).city, order.shippingAddress?.postalCode].filter(Boolean).join(', ') || 'Pakistan'}
                                 </p>
-                                <p className="text-muted">{order.shippingAddress.phone}</p>
+                                <p className="text-muted">{order.shippingAddress?.phone || (order as any).customer_phone || ''}</p>
                             </div>
                             
                             <div className="detail-divider"></div>
 
                             <div className="detail-group">
                                 <h4 className="detail-header"><CreditCard size={16} /> Payment</h4>
-                                <p className="payment-badge">{order.paymentMethod.replace(/_/g, ' ')}</p>
+                                <p className="payment-badge">{(order.paymentMethod || (order as any).payment_method || 'Online').replace(/_/g, ' ')}</p>
                             </div>
                         </div>
 

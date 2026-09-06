@@ -136,8 +136,8 @@ const AdminAnalytics: React.FC = () => {
                                         </span>
                                     </td>
                                     <td className="col-context">
-                                        <div className="session-id" title={ev.sessionId}>
-                                            ID: {ev.sessionId.substring(0, 8)}...
+                                        <div className="session-id" title={ev.sessionId || 'N/A'}>
+                                            ID: {ev.sessionId ? ev.sessionId.substring(0, 8) : 'N/A'}...
                                         </div>
                                         <div className="path-text">{ev.path}</div>
                                     </td>

@@ -65,11 +65,16 @@ export default function OrderConfirmation() {
   return (
     <div className="confirmation-page" style={{ backgroundColor: 'var(--bg-canvas)', color: 'var(--text-primary)', minHeight: '100vh', paddingBottom: '80px' }}>
       {/* HERO HEADER - Matches Cart & Checkout Pages */}
-      <header className="cart-hero">
+      <header className="cart-hero" style={{ background: '#14181F', color: '#FAF6F1', padding: '3.5rem 1rem', textAlign: 'center' }}>
         <div className="cart-hero-content animate-fade-in-up">
-          <h1 className="cart-title">Order Recorded Successfully</h1>
-          <p className="cart-subtitle">
-            Ref #{displayId} • Transfer Advance Bank Payment to Confirm TCS Dispatch
+          <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#B08D4F', fontFamily: 'monospace' }}>
+            THANK YOU FOR YOUR ORDER
+          </span>
+          <h1 className="cart-title" style={{ fontFamily: 'Fraunces, serif', fontSize: '2.5rem', fontWeight: 400, margin: '0.5rem 0' }}>
+            Order Recorded Successfully
+          </h1>
+          <p className="cart-subtitle" style={{ fontFamily: 'Fraunces, serif', fontSize: '1.25rem', color: '#B08D4F' }}>
+            Order Reference #{displayId}
           </p>
         </div>
       </header>

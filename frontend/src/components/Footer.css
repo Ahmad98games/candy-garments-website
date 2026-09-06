@@ -1,12 +1,12 @@
 /* ============================================================================
-   CANDY KIDS LUXURY EDITORIAL FOOTER
+   CANDY KIDS WARM LUXURY EDITORIAL FOOTER
    ============================================================================ */
 
 .footer-enhanced {
-    background-color: #111827;
-    color: #F9FAFB;
-    border-top: 1px solid #1F2937;
-    padding-top: 4rem;
+    background-color: #1F1B18;
+    color: #FAF6F1;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 5rem;
     font-family: 'Inter', sans-serif;
     position: relative;
     overflow: hidden;
@@ -43,8 +43,8 @@
 .footer-logo-badge {
     width: 36px;
     height: 36px;
-    background-color: #E52535;
-    color: #FFFFFF;
+    background-color: #A32638;
+    color: #FAF6F1;
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -54,30 +54,31 @@
 }
 
 .footer-logo-title {
+    font-family: 'Fraunces', 'Playfair Display', Georgia, serif;
     font-size: 1.35rem;
-    font-weight: 800;
-    color: #FFFFFF;
-    letter-spacing: 0.05em;
+    font-weight: 700;
+    color: #FAF6F1;
+    letter-spacing: 0.08em;
 }
 
 .footer-logo-sub {
     font-size: 0.6rem;
-    color: #E52535;
-    letter-spacing: 0.15em;
+    color: #B08D4F;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
     font-weight: 600;
 }
 
 .footer-slogan {
-    font-size: 0.92rem;
-    font-weight: 600;
-    color: #E52535;
-    letter-spacing: 0.02em;
+    font-family: 'Fraunces', Georgia, serif;
     font-style: italic;
+    font-size: 14px;
+    color: #A32638;
+    letter-spacing: 0.02em;
 }
 
 .footer-desc {
-    color: #9CA3AF;
+    color: #94A3B8;
     line-height: 1.6;
     font-size: 0.88rem;
     max-width: 340px;
@@ -91,7 +92,7 @@
 }
 
 .footer-contact-link {
-    color: #D1D5DB;
+    color: #CBD5E1;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
@@ -100,19 +101,19 @@
 }
 
 .footer-contact-link:hover {
-    color: #E52535;
+    color: #B08D4F;
 }
 
 /* --- LINKS COLUMNS --- */
 .footer-links-col h4,
 .footer-newsletter-col h4 {
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: #FFFFFF;
+    letter-spacing: 0.15em;
+    color: #FAF6F1;
     margin-bottom: 1.25rem;
     font-weight: 700;
-    border-bottom: 2px solid #E52535;
+    border-bottom: 2px solid #B08D4F;
     padding-bottom: 0.4rem;
     display: inline-block;
 }
@@ -124,7 +125,7 @@
 }
 
 .footer-link {
-    color: #9CA3AF;
+    color: #94A3B8;
     text-decoration: none;
     font-size: 0.88rem;
     transition: all 0.2s ease;
@@ -132,13 +133,13 @@
 }
 
 .footer-link:hover {
-    color: #FFFFFF;
+    color: #FAF6F1;
     transform: translateX(3px);
 }
 
 /* --- NEWSLETTER & PAYMENTS --- */
 .newsletter-text {
-    color: #9CA3AF;
+    color: #94A3B8;
     font-size: 0.88rem;
     margin-bottom: 1rem;
 }
@@ -152,60 +153,70 @@
 
 .input-group {
     display: flex;
-    border-bottom: 1px solid #374151;
-    transition: border-color 0.2s;
+    background-color: rgba(250, 246, 241, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 12px;
+    padding: 2px 6px 2px 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .input-group:focus-within {
-    border-color: #E52535;
+    border-color: #B08D4F;
+    box-shadow: 0 0 0 2px rgba(176, 141, 79, 0.2);
 }
 
 .input-group input {
     background: transparent;
     border: none;
     padding: 0.75rem 0;
-    color: #FFFFFF;
+    color: #FAF6F1;
     width: 100%;
     font-size: 0.85rem;
     outline: none;
+    font-family: 'Inter', sans-serif;
 }
 
 .input-group input::placeholder {
-    color: #6B7280;
+    color: #64748B;
 }
 
 .input-group button {
     background: transparent;
     border: none;
-    color: #E52535;
+    color: #B08D4F;
     cursor: pointer;
     padding: 0 0.5rem;
-    transition: transform 0.2s;
+    transition: transform 0.2s, color 0.2s;
 }
 
 .input-group button:hover {
     transform: translateX(3px);
+    color: #A32638;
 }
 
+/* Clean Horizontal Payment Row (Fixed min-width badges) */
 .payment-badges {
     display: flex;
-    gap: 0.75rem;
+    gap: 8px;
     align-items: center;
-    margin-top: 1rem;
+    margin-top: 0.75rem;
+    flex-wrap: wrap;
 }
 
 .payment-badge {
-    background-color: #1F2937;
-    border: 1px solid #374151;
-    color: #D1D5DB;
-    padding: 0.3rem 0.6rem;
-    border-radius: 4px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #FAF6F1;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    min-width: max-content;
+    white-space: nowrap;
 }
 
-/* --- SOCIAL LINKS --- */
+/* Circular --surface-on-dark Social Icon Badges */
 .social-links {
     display: flex;
     gap: 0.75rem;
@@ -218,24 +229,26 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid #374151;
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 50%;
-    color: #9CA3AF;
+    background-color: rgba(255, 255, 255, 0.08);
+    color: #CBD5E1;
     transition: all 0.2s ease;
     text-decoration: none;
 }
 
 .social-icon:hover {
-    border-color: #E52535;
-    background-color: #E52535;
-    color: #FFFFFF;
+    border-color: #A32638;
+    background-color: #A32638;
+    color: #FAF6F1;
+    transform: translateY(-2px);
 }
 
 /* --- BOTTOM BAR --- */
 .footer-bottom-bar {
-    border-top: 1px solid #1F2937;
-    padding: 1.25rem 0;
-    background-color: #0B0F17;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 1.5rem 0;
+    background-color: #14181F;
 }
 
 .bottom-flex {
@@ -243,11 +256,18 @@
     justify-content: space-between;
     align-items: center;
     font-size: 0.8rem;
-    color: #6B7280;
+    color: #7A7068;
 }
 
 .copyright {
-    color: #9CA3AF;
+    color: #94A3B8;
+    font-size: 12px;
+}
+
+.credit-line {
+    color: #7A7068;
+    font-size: 12px;
+    font-weight: 400;
 }
 
 @media (max-width: 968px) {

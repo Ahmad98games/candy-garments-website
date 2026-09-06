@@ -322,7 +322,8 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
             article_no: product.article_no || '',
             title: product.title || '',
             description: product.description || '',
-            retail_price: product.retail_price || 0,
+            retail_price: product.retail_price || product.price || 0,
+            sale_price: product.sale_price || undefined,
             wholesale_cost: product.wholesale_cost || 0,
             category: product.category || 'Ladies Wear',
             department: product.department || 'Ladies',
@@ -330,6 +331,8 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
             images: getSafeImagesArray(product.images),
             in_stock: product.in_stock,
             stock_quantity: product.stock_quantity !== undefined ? product.stock_quantity : 10,
+            is_new_arrival: product.is_new_arrival ?? true,
+            is_on_sale: product.is_on_sale ?? (!!product.sale_price && product.sale_price < (product.retail_price || product.price || 0)),
         });
         setIsModalOpen(true);
     };
@@ -430,6 +433,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
             title: '',
             description: '',
             retail_price: isKids ? 3500 : 6500,
+            sale_price: undefined,
             wholesale_cost: 0,
             category: isKids ? 'Girls' : 'Ladies Wear',
             department: selectedDepartment !== 'All' ? selectedDepartment : 'Ladies',
@@ -437,6 +441,8 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
             images: [],
             stock_quantity: 10,
             in_stock: true,
+            is_new_arrival: true,
+            is_on_sale: false,
         });
         setIsModalOpen(true);
     };
@@ -453,7 +459,11 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
 
         setSaving(true);
         try {
-            const margin = (Number(formData.retail_price) || 0) - (Number(formData.wholesale_cost) || 0);
+            const actualRetail = Number(formData.retail_price || formData.price) || 0;
+            const saleVal = formData.sale_price !== undefined && formData.sale_price !== null && !isNaN(Number(formData.sale_price)) && Number(formData.sale_price) > 0 ? Number(formData.sale_price) : null;
+            const isOnSaleVal = formData.is_on_sale ?? (saleVal !== null && saleVal < actualRetail);
+
+            const margin = actualRetail - (Number(formData.wholesale_cost) || 0);
             const stockQty = formData.stock_quantity !== undefined && !isNaN(Number(formData.stock_quantity)) 
                 ? Number(formData.stock_quantity) 
                 : 10;
@@ -470,7 +480,11 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                 article_no: formData.article_no?.trim() || `CB-${Math.floor(100 + Math.random() * 900)}`,
                 title: formData.title.trim(),
                 description: formData.description || '',
-                retail_price: Number(formData.retail_price),
+                retail_price: actualRetail,
+                price: actualRetail,
+                sale_price: saleVal,
+                is_on_sale: isOnSaleVal,
+                is_new_arrival: formData.is_new_arrival ?? true,
                 wholesale_cost: Number(formData.wholesale_cost || 0),
                 margin: margin > 0 ? margin : 0,
                 category: formData.category || (targetDepartment === 'Kids' ? 'Girls' : 'Ladies Wear'),
@@ -786,25 +800,29 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                     No products found in this category/stock filter.
                 </div>
             ) : (
-                <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)', overflow: 'hidden' }}>
+                <div className="inventory-table-container">
                     <div style={{ overflowX: 'auto' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
+                        <table>
                             <thead>
-                                <tr style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)' }}>
-                                    <th style={{ padding: '12px 16px', width: '40px' }}>Rank</th>
-                                    <th style={{ padding: '12px 16px' }}>Image (3:4 Aspect)</th>
-                                    <th style={{ padding: '12px 16px' }}>Article No</th>
-                                    <th style={{ padding: '12px 16px' }}>Title</th>
-                                    <th style={{ padding: '12px 16px' }}>Category / Blend</th>
-                                    <th style={{ padding: '12px 16px' }}>Retail Price</th>
-                                    <th style={{ padding: '12px 16px' }}>Wholesale Cost</th>
-                                    <th style={{ padding: '12px 16px' }}>Stock</th>
-                                    <th style={{ padding: '12px 16px', textAlign: 'right' }}>Actions</th>
+                                <tr>
+                                    <th style={{ padding: '14px 16px', width: '40px' }}>Rank</th>
+                                    <th style={{ padding: '14px 16px' }}>Image (3:4 Aspect)</th>
+                                    <th style={{ padding: '14px 16px' }}>Article No</th>
+                                    <th style={{ padding: '14px 16px' }}>Title</th>
+                                    <th style={{ padding: '14px 16px' }}>Category / Blend</th>
+                                    <th style={{ padding: '14px 16px' }}>Retail Price</th>
+                                    <th style={{ padding: '14px 16px' }}>Wholesale Cost</th>
+                                    <th style={{ padding: '14px 16px' }}>Stock</th>
+                                    <th style={{ padding: '14px 16px', textAlign: 'right' }}>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {paginatedProducts.map((p, index) => {
                                     const globalIndex = (currentPage - 1) * pageSize + index;
+                                    const qty = p.stock_quantity !== undefined ? p.stock_quantity : (p.in_stock ? 10 : 0);
+                                    const isOut = !p.in_stock || qty <= 0;
+                                    const isLow = !isOut && qty <= 3;
+
                                     return (
                                         <tr
                                             key={p.id}
@@ -812,129 +830,132 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
                                             onDragStart={(e) => handleDragStart(e, globalIndex)}
                                             onDragOver={handleDragOver}
                                             onDrop={(e) => handleDrop(e, globalIndex)}
-                                            style={{
-                                                borderBottom: '1px solid var(--border-subtle)',
-                                                transition: 'background 0.15s ease',
-                                                cursor: 'grab',
-                                            }}
+                                            style={{ cursor: 'grab' }}
                                         >
-                                            <td style={{ padding: '12px 16px', color: 'var(--text-muted)' }}>
+                                            <td style={{ padding: '14px 16px', color: '#94A3B8' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                    <GripVertical size={16} />
+                                                    <GripVertical size={16} style={{ color: '#64748B' }} />
                                                     <span className="font-mono">{globalIndex + 1}</span>
                                                 </div>
                                             </td>
 
-                                            <td style={{ padding: '12px 16px' }}>
-                                                <div style={{ width: '45px', height: '60px', borderRadius: 'var(--radius-sm)', overflow: 'hidden', border: '1px solid var(--border-subtle)' }}>
+                                            <td style={{ padding: '14px 16px' }}>
+                                                <div style={{ width: '45px', height: '60px', borderRadius: '6px', overflow: 'hidden', border: '1px solid #1E293B' }}>
                                                     <img src={p.images?.[0] || '/images/omnora.jpg'} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                                 </div>
                                             </td>
 
-                                            <td style={{ padding: '12px 16px' }}>
-                                                <span className="article-no-badge">
+                                            <td style={{ padding: '14px 16px' }}>
+                                                <span className="article-no-pill-dark">
                                                     {p.article_no || 'N/A'}
                                                 </span>
                                             </td>
 
-                                            <td style={{ padding: '12px 16px' }}>
-                                                <span className="product-title-text">{p.title}</span>
-                                            </td>
-
-                                            <td style={{ padding: '12px 16px', color: '#9CA3AF' }}>
-                                                {p.fabric_type || p.category}
-                                            </td>
-
-                                            <td style={{ padding: '12px 16px', fontWeight: 700, color: '#10B981' }} className="font-mono">
-                                                PKR {p.retail_price.toLocaleString()}
-                                            </td>
-
-                                            <td style={{ padding: '12px 16px', color: '#9CA3AF' }} className="font-mono">
-                                                PKR {(p.wholesale_cost || 0).toLocaleString()}
-                                            </td>
-
-                                            <td style={{ padding: '12px 16px' }}>
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                                    {/* STOCK STATUS TOGGLE BUTTON */}
-                                                    <button
-                                                        onClick={() => handleToggleStock(p)}
-                                                        style={{
-                                                            background: 'none',
-                                                            border: 'none',
-                                                            cursor: 'pointer',
-                                                            display: 'inline-flex',
-                                                            alignItems: 'center',
-                                                            gap: '4px',
-                                                            color: p.in_stock && (p.stock_quantity === undefined || p.stock_quantity > 0) ? '#10B981' : '#EF4444',
-                                                            fontWeight: 700,
-                                                            fontSize: '12px',
-                                                        }}
-                                                    >
-                                                        {p.in_stock && (p.stock_quantity === undefined || p.stock_quantity > 0) ? <CheckCircle size={15} /> : <XCircle size={15} />}
-                                                        {p.in_stock && (p.stock_quantity === undefined || p.stock_quantity > 0) ? 'In Stock' : 'Out of Stock'}
-                                                    </button>
-
-                                                    {/* INLINE QUICK STOCK QUANTITY ADJUSTER */}
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                        <div className="stock-quick-adjuster">
-                                                            <button
-                                                                type="button"
-                                                                className="stock-qty-btn"
-                                                                onClick={(e) => { e.stopPropagation(); handleQuickQtyChange(p, -1); }}
-                                                                title="Decrease Stock Quantity (-1)"
-                                                            >
-                                                                <Minus size={12} />
-                                                            </button>
-                                                            <span className="stock-qty-val font-mono">
-                                                                {p.stock_quantity !== undefined ? p.stock_quantity : (p.in_stock ? 10 : 0)}
-                                                            </span>
-                                                            <button
-                                                                type="button"
-                                                                className="stock-qty-btn"
-                                                                onClick={(e) => { e.stopPropagation(); handleQuickQtyChange(p, 1); }}
-                                                                title="Increase Stock Quantity (+1)"
-                                                            >
-                                                                <Plus size={12} />
-                                                            </button>
-                                                        </div>
-
-                                                        {/* STOCK STATUS PILL */}
-                                                        {(() => {
-                                                            const qty = p.stock_quantity !== undefined ? p.stock_quantity : (p.in_stock ? 10 : 0);
-                                                            const isOut = !p.in_stock || qty <= 0;
-                                                            const isLow = !isOut && qty <= 3;
-                                                            return (
-                                                                <span className={`stock-qty-pill ${isOut ? 'out-of-stock' : isLow ? 'low-stock' : ''}`}>
-                                                                    {isOut ? 'Out of Stock' : isLow ? 'Low Stock' : 'In Stock'}
-                                                                </span>
-                                                            );
-                                                        })()}
-                                                    </div>
+                                            <td style={{ padding: '14px 16px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <span className="product-title-white">{p.title}</span>
+                                                    {p.is_new_arrival && (
+                                                        <span style={{ fontSize: '10px', background: '#B08D4F', color: '#FFFFFF', fontWeight: 700, padding: '2px 6px', borderRadius: '4px' }}>
+                                                            NEW
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </td>
 
-                                            <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                                            <td style={{ padding: '14px 16px', color: '#CBD5E1', fontSize: '13px' }}>
+                                                {p.fabric_type || p.category}
+                                            </td>
+
+                                            <td style={{ padding: '14px 16px' }} className="font-mono">
+                                                {(() => {
+                                                    const actual = Number(p.retail_price || p.price || 0);
+                                                    const sale = p.sale_price && Number(p.sale_price) < actual ? Number(p.sale_price) : null;
+                                                    const pct = sale ? Math.round(((actual - sale) / actual) * 100) : null;
+
+                                                    return (
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                            {sale ? (
+                                                                <>
+                                                                    <span style={{ fontWeight: 700, color: '#34D399', fontSize: '14px' }}>
+                                                                        PKR {sale.toLocaleString()}
+                                                                    </span>
+                                                                    <span style={{ color: '#94A3B8', textDecoration: 'line-through', fontSize: '11px' }}>
+                                                                        PKR {actual.toLocaleString()}
+                                                                    </span>
+                                                                    <span style={{ fontSize: '10px', background: '#EF4444', color: '#FFF', padding: '1px 5px', borderRadius: '4px', width: 'max-content', fontWeight: 700 }}>
+                                                                        -{pct}% OFF
+                                                                    </span>
+                                                                </>
+                                                            ) : (
+                                                                <span style={{ fontWeight: 700, color: '#34D399', fontSize: '14px' }}>
+                                                                    PKR {actual.toLocaleString()}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })()}
+                                            </td>
+
+                                            <td style={{ padding: '14px 16px', color: '#94A3B8', fontSize: '13px' }} className="font-mono">
+                                                PKR {(p.wholesale_cost || 0).toLocaleString()}
+                                            </td>
+
+                                            <td style={{ padding: '14px 16px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    {/* UNIFIED NUMERIC STEPPER */}
+                                                    <div className="stock-stepper-dark">
+                                                        <button
+                                                            type="button"
+                                                            className="stepper-btn-dark"
+                                                            onClick={(e) => { e.stopPropagation(); handleQuickQtyChange(p, -1); }}
+                                                            title="Decrease Stock (-1)"
+                                                        >
+                                                            <Minus size={12} />
+                                                        </button>
+                                                        <span className="stepper-val-dark font-mono">
+                                                            {qty}
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            className="stepper-btn-dark"
+                                                            onClick={(e) => { e.stopPropagation(); handleQuickQtyChange(p, 1); }}
+                                                            title="Increase Stock (+1)"
+                                                        >
+                                                            <Plus size={12} />
+                                                        </button>
+                                                    </div>
+
+                                                    {/* SINGLE STATUS BADGE WITH SUBTLE GLOW */}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleToggleStock(p)}
+                                                        className={`stock-badge-dark ${isOut ? 'out' : isLow ? 'low' : 'in'}`}
+                                                        title="Click to toggle stock status"
+                                                    >
+                                                        <span className="badge-dot" /> {isOut ? 'Out of Stock' : isLow ? 'Low Stock' : 'In Stock'}
+                                                    </button>
+                                                </div>
+                                            </td>
+
+                                            <td style={{ padding: '14px 16px', textAlign: 'right' }}>
                                                 <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                                                     <button
-                                                        className="btn btn-outline"
+                                                        className="action-btn-matrix"
                                                         onClick={() => openStockMatrix(p)}
-                                                        style={{ height: '32px', fontSize: '12px', padding: '0 10px', backgroundColor: '#FEF2F2', color: '#E52535', borderColor: '#FECACA' }}
                                                         title="Manage Size x Color Stock Matrix"
                                                     >
                                                         <Grid size={14} /> Stock Matrix
                                                     </button>
                                                     <button
-                                                        className="btn btn-outline"
+                                                        className="action-btn-edit"
                                                         onClick={() => handleEdit(p)}
-                                                        style={{ height: '32px', fontSize: '12px', padding: '0 10px' }}
                                                         title="Edit Article"
                                                     >
                                                         <Edit3 size={14} /> Edit
                                                     </button>
                                                     <button
-                                                        className="btn btn-delete-danger"
+                                                        className="action-btn-delete"
                                                         onClick={() => handleDeleteClick(p)}
-                                                        style={{ height: '32px', fontSize: '12px', padding: '0 10px', background: 'transparent' }}
                                                         title="Delete Article"
                                                     >
                                                         <Trash2 size={14} /> Delete
@@ -950,25 +971,23 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
 
                     {/* PAGINATION CONTROLS FOOTER */}
                     {totalPages > 1 && (
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: 'var(--bg-surface)', borderTop: '1px solid var(--border-subtle)' }}>
-                            <span className="font-mono text-muted" style={{ fontSize: '12px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', background: '#0F172A', borderTop: '1px solid #1E293B' }}>
+                            <span className="font-mono" style={{ fontSize: '12px', color: '#94A3B8' }}>
                                 Showing Page {currentPage} of {totalPages}
                             </span>
 
                             <div style={{ display: 'flex', gap: '8px' }}>
                                 <button
-                                    className="btn btn-outline"
+                                    className="action-btn-matrix"
                                     onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                                     disabled={currentPage === 1}
-                                    style={{ height: '32px', fontSize: '12px' }}
                                 >
                                     <ChevronLeft size={16} /> Prev
                                 </button>
                                 <button
-                                    className="btn btn-outline"
+                                    className="action-btn-matrix"
                                     onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                                     disabled={currentPage === totalPages}
-                                    style={{ height: '32px', fontSize: '12px' }}
                                 >
                                     Next <ChevronRight size={16} />
                                 </button>
@@ -1009,12 +1028,46 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ defaultDepartment }) => {
 
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                                 <div>
-                                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>Retail Price (Rs) *</label>
-                                    <input type="number" value={formData.retail_price || ''} onChange={(e) => setFormData({ ...formData, retail_price: Number(e.target.value) })} style={lightInputStyle} />
+                                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>Actual Retail Price (Rs) *</label>
+                                    <input type="number" placeholder="e.g. 5000" value={formData.retail_price || ''} onChange={(e) => setFormData({ ...formData, retail_price: Number(e.target.value) })} style={lightInputStyle} />
                                 </div>
+                                <div>
+                                    <label style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>Discount Sale Price (Rs)</label>
+                                    <input type="number" placeholder="e.g. 2500 (Optional)" value={formData.sale_price || ''} onChange={(e) => setFormData({ ...formData, sale_price: e.target.value ? Number(e.target.value) : undefined })} style={lightInputStyle} />
+                                </div>
+                            </div>
+
+                            {/* LIVE AUTOMATED DISCOUNT PERCENTAGE CALCULATOR PREVIEW */}
+                            {(() => {
+                                const retail = Number(formData.retail_price) || 0;
+                                const sale = Number(formData.sale_price) || 0;
+                                if (retail > 0 && sale > 0 && sale < retail) {
+                                    const pct = Math.round(((retail - sale) / retail) * 100);
+                                    const saved = retail - sale;
+                                    return (
+                                        <div style={{ padding: '10px 14px', background: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: '8px', color: '#047857', fontSize: '13px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                            <span>🔥 AUTOMATED DISCOUNT: {pct}% OFF</span>
+                                            <span>Customer Saves Rs. {saved.toLocaleString()}</span>
+                                        </div>
+                                    );
+                                }
+                                return null;
+                            })()}
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                                 <div>
                                     <label style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>Wholesale Cost (Rs)</label>
                                     <input type="number" value={formData.wholesale_cost || ''} onChange={(e) => setFormData({ ...formData, wholesale_cost: Number(e.target.value) })} style={lightInputStyle} />
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '6px', paddingTop: '18px' }}>
+                                    <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>
+                                        <input type="checkbox" checked={formData.is_new_arrival ?? true} onChange={(e) => setFormData({ ...formData, is_new_arrival: e.target.checked })} />
+                                        <span>Mark as New Arrival</span>
+                                    </label>
+                                    <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>
+                                        <input type="checkbox" checked={formData.is_on_sale ?? (!!formData.sale_price && formData.sale_price < (formData.retail_price || 0))} onChange={(e) => setFormData({ ...formData, is_on_sale: e.target.checked })} />
+                                        <span>Active Sale Item</span>
+                                    </label>
                                 </div>
                             </div>
 

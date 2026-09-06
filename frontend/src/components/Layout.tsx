@@ -96,13 +96,15 @@ export default function Layout() {
 
     return (
         <div className="layout">
-            {/* === 1. TOP ANNOUNCEMENT BAR === */}
+            {/* === 1. WARM LUXURY EDITORIAL ANNOUNCEMENT BAR === */}
             <div className="top-announcement-bar">
-                <div className="announcement-text">
-                    <span>✨ Free Delivery on Orders Above Rs. 3,000 | Helpline: </span>
-                    <a href="tel:03311498773">0331-1498773</a>
+                <div className="announcement-text font-mono">
+                    <span className="announcement-highlight">COMPLIMENTARY NATIONWIDE SHIPPING ON ORDERS OVER RS. 3,000</span>
+                    <span className="announcement-divider">•</span>
+                    <span>HELPLINE: </span>
+                    <a href="tel:03311498773" className="helpline-link">0331-1498773</a>
                     <span> / </span>
-                    <a href="tel:03341495788">0334-1495788</a>
+                    <a href="tel:03341495788" className="helpline-link">0334-1495788</a>
                 </div>
 
                 <div className="top-social-links">
@@ -113,7 +115,7 @@ export default function Layout() {
                         className="top-social-link"
                         title="Facebook"
                     >
-                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+                        <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                         </svg>
                     </a>
@@ -124,23 +126,23 @@ export default function Layout() {
                         className="top-social-link"
                         title="Instagram"
                     >
-                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+                        <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
                         </svg>
                     </a>
                 </div>
             </div>
 
-            {/* === 2. GLASSMORPHISM MAIN HEADER === */}
+            {/* === 2. WARM LUXURY STICKY HEADER === */}
             <header className={`candy-header ${scrolled ? 'scrolled' : ''}`}>
                 <div className="header-container">
 
                     {/* BRAND IDENTITY LOGO */}
                     <Link to="/" className="logo" onClick={handleNavAction}>
-                        <img src="/images/candy.jpg" alt="Candy Kids Logo" style={{ height: '42px', width: 'auto', borderRadius: '6px', objectFit: 'cover', border: '1px solid #E5E7EB' }} />
+                        <img src="/images/candy.jpg" alt="Candy Kids Logo" className="logo-img" />
                         <div className="logo-text-wrapper">
                             <span className="logo-text">CANDY KIDS</span>
-                            <span className="logo-subtext">CANDY GARMENTS</span>
+                            <span className="logo-subtext">COUTURE & FESTIVE WEAR</span>
                         </div>
                     </Link>
 
@@ -148,9 +150,11 @@ export default function Layout() {
                     <nav className="nav-desktop">
                         <Link to="/" className={`nav-link ${isActive('/')}`}>New In</Link>
                         <Link to="/collection/ladies" className={`nav-link ${location.pathname.includes('/ladies') ? 'active' : ''}`}>Ladies Wear</Link>
-                        <Link to="/collection/kids" className={`nav-link ${location.pathname.includes('/kids') ? 'active' : ''}`}>Kids Wear</Link>
+                        <Link to="/collection/kids" className={`nav-link ${location.pathname.includes('/kids') ? 'active' : ''}`}>Girls & Kids</Link>
                         <Link to="/collection" className={`nav-link ${isActive('/collection') && !location.search.includes('sale=true') ? 'active' : ''}`}>All Collections</Link>
-                        <Link to="/collection?sale=true" className={`nav-link sale-link ${location.search.includes('sale=true') ? 'active' : ''}`}>Sale</Link>
+                        <Link to="/collection?sale=true" className={`nav-link sale-link ${location.search.includes('sale=true') ? 'active' : ''}`}>
+                            <span className="sale-badge">SALE</span>
+                        </Link>
                     </nav>
 
                     {/* ACTIONS TERMINAL */}
@@ -158,10 +162,10 @@ export default function Layout() {
 
                         {/* Search Bar */}
                         <div className="search-terminal">
-                            <Search size={15} className="search-icon" />
+                            <Search size={14} strokeWidth={1.5} className="search-icon" />
                             <input
                                 type="text"
-                                placeholder="Search products..."
+                                placeholder="Search collection..."
                                 className="search-input"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -171,8 +175,8 @@ export default function Layout() {
 
                         {/* Wishlist Icon */}
                         <Link to="/wishlist" className="action-btn" title="Wishlist">
-                            <Heart size={20} />
-                            {wishlistCount > 0 && <span className="cart-badge" style={{ backgroundColor: '#1A73E8' }}>{wishlistCount}</span>}
+                            <Heart size={18} strokeWidth={1.5} />
+                            {wishlistCount > 0 && <span className="cart-badge">{wishlistCount}</span>}
                         </Link>
 
                         {/* User Auth */}
@@ -180,31 +184,31 @@ export default function Layout() {
                             <>
                                 {isAdmin && (
                                     <Link to="/admin" className="action-btn" title="Admin Dashboard">
-                                        <LayoutDashboard size={20} />
+                                        <LayoutDashboard size={18} strokeWidth={1.5} />
                                     </Link>
                                 )}
                                 <Link to="/profile" className="action-btn" title="Profile">
-                                    <User size={20} />
+                                    <User size={18} strokeWidth={1.5} />
                                 </Link>
                                 <button onClick={handleLogout} className="action-btn" title="Logout">
-                                    <LogOut size={20} />
+                                    <LogOut size={18} strokeWidth={1.5} />
                                 </button>
                             </>
                         ) : !authLoading ? (
                             <Link to="/login" className="action-btn" title="Login">
-                                <User size={20} />
+                                <User size={18} strokeWidth={1.5} />
                             </Link>
                         ) : null}
 
                         {/* Cart */}
                         <Link to="/cart" className="action-btn cart-btn" title="Shopping Bag">
-                            <ShoppingCart size={20} />
+                            <ShoppingCart size={18} strokeWidth={1.5} />
                             {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
                         </Link>
 
                         {/* Mobile Menu Toggle */}
                         <button className="menu-toggle" onClick={() => setMenuOpen(!menuOpen)}>
-                            {menuOpen ? <X size={24} /> : <Menu size={24} />}
+                            {menuOpen ? <X size={22} strokeWidth={1.5} /> : <Menu size={22} strokeWidth={1.5} />}
                         </button>
                     </div>
                 </div>
@@ -217,7 +221,7 @@ export default function Layout() {
                     <Link to="/collection/ladies" className="mobile-link" onClick={handleNavAction}>Ladies Wear Collection</Link>
                     <Link to="/collection/kids" className="mobile-link" onClick={handleNavAction}>Girls & Kids Collection</Link>
                     <Link to="/collection" className="mobile-link" onClick={handleNavAction}>All Collections</Link>
-                    <Link to="/collection?sale=true" className="mobile-link" style={{ color: '#E52535', fontWeight: 700 }} onClick={handleNavAction}>🔥 Sale & Promotions</Link>
+                    <Link to="/collection?sale=true" className="mobile-link" style={{ color: '#D97706', fontWeight: 600 }} onClick={handleNavAction}>✦ Sale & Promotions</Link>
                     <Link to="/about" className="mobile-link" onClick={handleNavAction}>About Candy Kids</Link>
                     <Link to="/contact" className="mobile-link" onClick={handleNavAction}>Contact & Support</Link>
 

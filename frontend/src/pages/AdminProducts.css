@@ -749,3 +749,219 @@ th.sticky-size-col {
     }
 }
 
+/* ============================================================================
+   EXECUTIVE DEMO - INVENTORY TABLE DARK-MODE HIGH CONTRAST SPEC
+   ============================================================================ */
+
+.inventory-table-container {
+    background: #0B0F17 !important;
+    border: 1px solid #1E293B !important;
+    border-radius: 12px !important;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.inventory-table-container table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.inventory-table-container thead tr {
+    background: #0F172A !important;
+    border-bottom: 1px solid #1E293B !important;
+}
+
+.inventory-table-container th {
+    padding: 14px 16px;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: #94A3B8 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.08em !important;
+    white-space: nowrap;
+}
+
+.inventory-table-container tbody tr {
+    background: #0B0F17;
+    border-bottom: 1px solid rgba(51, 65, 85, 0.6) !important;
+    transition: background 0.15s ease;
+}
+
+.inventory-table-container tbody tr:hover {
+    background: rgba(255, 255, 255, 0.02) !important;
+}
+
+/* 2. Article No Pill */
+.article-no-pill-dark {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    color: #38BDF8 !important;
+    font-family: var(--font-mono);
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    letter-spacing: 0.08em !important;
+    padding: 4px 10px !important;
+    border-radius: 6px !important;
+    display: inline-block;
+}
+
+/* 1. Title Column */
+.product-title-white {
+    color: #FFFFFF !important;
+    font-weight: 500 !important;
+    font-size: 14px !important;
+    line-height: 1.3;
+    display: block;
+}
+
+/* 3. Stock Counter & Stepper */
+.stock-stepper-dark {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #1E293B;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    padding: 2px 4px;
+}
+
+.stepper-btn-dark {
+    width: 22px;
+    height: 22px;
+    border: none;
+    background: #334155;
+    color: #F8FAFC;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.stepper-btn-dark:hover {
+    background: #475569;
+    color: #FFFFFF;
+}
+
+.stepper-btn-dark:active {
+    transform: scale(0.92);
+}
+
+.stepper-val-dark {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    color: #FFFFFF !important;
+    min-width: 26px;
+    text-align: center;
+    font-family: var(--font-mono);
+}
+
+/* 3. Single Stock Badge */
+.stock-badge-dark {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    background: none;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.stock-badge-dark.in {
+    background: rgba(16, 185, 129, 0.1) !important;
+    color: #34D399 !important;
+    border: 1px solid rgba(16, 185, 129, 0.2) !important;
+}
+
+.stock-badge-dark.low {
+    background: rgba(245, 158, 11, 0.1) !important;
+    color: #FBBF24 !important;
+    border: 1px solid rgba(245, 158, 11, 0.2) !important;
+}
+
+.stock-badge-dark.out {
+    background: rgba(239, 68, 68, 0.1) !important;
+    color: #F87171 !important;
+    border: 1px solid rgba(239, 68, 68, 0.2) !important;
+}
+
+.badge-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    display: inline-block;
+    box-shadow: 0 0 6px currentColor;
+}
+
+/* 4. Action Buttons Polish */
+.action-btn-matrix {
+    height: 32px;
+    font-size: 12px;
+    padding: 0 10px;
+    background-color: #1E293B !important;
+    color: #E2E8F0 !important;
+    border: 1px solid #334155 !important;
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.action-btn-matrix:hover {
+    background-color: #334155 !important;
+    color: #FFFFFF !important;
+}
+
+.action-btn-edit {
+    height: 32px;
+    font-size: 12px;
+    padding: 0 10px;
+    background-color: rgba(56, 189, 248, 0.1) !important;
+    color: #38BDF8 !important;
+    border: 1px solid rgba(56, 189, 248, 0.2) !important;
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.action-btn-edit:hover {
+    background-color: rgba(56, 189, 248, 0.2) !important;
+    color: #7DD3FC !important;
+}
+
+.action-btn-delete {
+    height: 32px;
+    font-size: 12px;
+    padding: 0 10px;
+    background-color: rgba(244, 63, 94, 0.1) !important;
+    color: #FB7185 !important;
+    border: 1px solid rgba(244, 63, 94, 0.2) !important;
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.action-btn-delete:hover {
+    background-color: rgba(244, 63, 94, 0.2) !important;
+    color: #FDA4AF !important;
+}
+
+

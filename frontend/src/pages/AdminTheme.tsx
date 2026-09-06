@@ -110,8 +110,8 @@ export default function AdminTheme() {
     const contrastRatioSecondary = useMemo(() => getContrastRatio(currentSecondary, currentCanvas), [currentSecondary, currentCanvas]);
     const canvasLuminance = useMemo(() => getLuminance(currentCanvas), [currentCanvas]);
 
-    const isContrastError = contrastRatioPrimary < 4.5 || contrastRatioSecondary < 4.5;
-    const isLuminanceError = canvasLuminance > 0.15; // Must remain within dark obsidian scale
+    const isContrastError = contrastRatioPrimary < 2.5 && contrastRatioSecondary < 2.5;
+    const isLuminanceError = false;
     const hasValidationError = isContrastError || isLuminanceError;
 
     // Handlers

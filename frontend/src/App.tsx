@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Home from './pages/HomeWithAds'
 import Collection from './pages/OmnoraCollection'
+import { CollectionLayout } from './components/catalog/CollectionLayout'
 import Product from './pages/Product'
 import Cart from './pages/Cart'
 import Checkout from './pages/Checkout'
@@ -50,11 +51,15 @@ export default function App() {
               <Route element={<ErrorBoundary><Layout /></ErrorBoundary>}>
                 <Route index element={<Home />} />
                 <Route path="/" element={<Home />} />
-                <Route path="collection" element={<Collection />} />
-                <Route path="collection/ladies" element={<Collection defaultDepartment="Ladies" />} />
-                <Route path="collection/kids" element={<Collection defaultDepartment="Kids" />} />
-                <Route path="ladies" element={<Collection defaultDepartment="Ladies" />} />
-                <Route path="kids" element={<Collection defaultDepartment="Kids" />} />
+                <Route path="collection" element={<CollectionLayout presetType="all" />} />
+                <Route path="collection/ladies" element={<CollectionLayout presetType="ladies" />} />
+                <Route path="collection/kids" element={<CollectionLayout presetType="kids" />} />
+                <Route path="collection/new-in" element={<CollectionLayout presetType="new-in" />} />
+                <Route path="collection/sale" element={<CollectionLayout presetType="sale" />} />
+                <Route path="ladies" element={<CollectionLayout presetType="ladies" />} />
+                <Route path="kids" element={<CollectionLayout presetType="kids" />} />
+                <Route path="new-in" element={<CollectionLayout presetType="new-in" />} />
+                <Route path="sale" element={<CollectionLayout presetType="sale" />} />
                 <Route path="product/luxury-pret" element={<Product />} />
                 <Route path="product/:id" element={<Product />} />
                 <Route path="cart" element={<Cart />} />

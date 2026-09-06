@@ -52,6 +52,8 @@ export interface Product {
   title: string;
   description?: string;
   retail_price: number;
+  sale_price?: number | null;
+  price?: number;
   wholesale_cost?: number;
   margin?: number;
   category: string;
@@ -60,6 +62,8 @@ export interface Product {
   images: string[];
   in_stock: boolean;
   stock_quantity?: number;
+  is_new_arrival?: boolean;
+  is_on_sale?: boolean;
   display_order?: number;
   created_at?: string;
   updated_at?: string;
@@ -256,6 +260,20 @@ export async function fetchProducts(filters?: {
     allProducts = getLocalProducts();
   }
 
+  // Normalize price fields and ensure default values
+  allProducts = allProducts.map(p => {
+    const rPrice = Number(p.retail_price || p.price || 0);
+    const sPrice = p.sale_price && Number(p.sale_price) > 0 ? Number(p.sale_price) : null;
+    return {
+      ...p,
+      price: rPrice,
+      retail_price: rPrice,
+      sale_price: sPrice,
+      is_new_arrival: p.is_new_arrival ?? true,
+      is_on_sale: p.is_on_sale ?? (sPrice !== null && sPrice < rPrice),
+    };
+  });
+
   let filtered = [...allProducts];
 
   if (filters?.department) {
@@ -380,11 +398,19 @@ export async function upsertProduct(product: Partial<Product>): Promise<Product 
     ? product.images 
     : (typeof product.images === 'string' ? [product.images] : ['https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=800&q=80']);
 
+  const actualRetail = Number(product.retail_price || product.price) || 0;
+  const salePriceVal = product.sale_price !== undefined && product.sale_price !== null && !isNaN(Number(product.sale_price)) && Number(product.sale_price) > 0 ? Number(product.sale_price) : null;
+  const isOnSaleVal = product.is_on_sale ?? (salePriceVal !== null && salePriceVal < actualRetail);
+
   const payload: any = {
     article_no: product.article_no?.trim() || `CB-${Math.floor(100 + Math.random() * 900)}`,
     title: product.title?.trim() || 'Untitled Article',
     description: product.description || '',
-    retail_price: Number(product.retail_price) || 0,
+    retail_price: actualRetail,
+    price: actualRetail,
+    sale_price: salePriceVal,
+    is_on_sale: isOnSaleVal,
+    is_new_arrival: product.is_new_arrival ?? true,
     wholesale_cost: Number(product.wholesale_cost) || 0,
     margin: margin > 0 ? margin : 0,
     category: product.category || 'Ladies Wear',

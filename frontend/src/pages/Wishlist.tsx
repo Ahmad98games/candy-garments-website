@@ -146,7 +146,7 @@ export default function Wishlist() {
                                         <Link to={`/product/${productId}`} className="product-link">
                                             <h3 className="product-title">{product.name}</h3>
                                         </Link>
-                                        <p className="product-price">PKR {product.price.toLocaleString()}</p>
+                                        <p className="product-price">PKR {(product.price || 0).toLocaleString()}</p>
                                         
                                         <div className="card-actions">
                                             {!isSoldOut ? (

@@ -9,7 +9,7 @@ interface BeforeInstallPromptEvent extends Event {
 
 export const PWAInstallPrompt: React.FC = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [showPrompt, setShowPrompt] = useState<boolean>(true);
+  const [showPrompt, setShowPrompt] = useState<boolean>(false);
   const [installed, setInstalled] = useState<boolean>(false);
   const [isIOS, setIsIOS] = useState<boolean>(false);
   const [showModal, setShowModal] = useState<boolean>(false);

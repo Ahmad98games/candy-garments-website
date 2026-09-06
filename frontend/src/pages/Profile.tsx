@@ -53,9 +53,11 @@ export default function Profile() {
         try {
             setLoading(true);
             const res = await client.get('/orders');
-            setOrders(res.data);
+            const list = Array.isArray(res.data) ? res.data : res.data?.orders || [];
+            setOrders(list);
         } catch (error) {
             console.error('Failed to fetch orders');
+            setOrders([]);
         } finally {
             setLoading(false);
         }
@@ -206,21 +208,21 @@ export default function Profile() {
                                         {orders.map((order) => (
                                             <div key={order._id} className="order-ticket">
                                                 <div className="ticket-header">
-                                                    <span className="order-id">#{order.orderNumber || order._id.slice(-6)}</span>
-                                                    <span className={`status-badge ${order.status.toLowerCase()}`}>
-                                                        {order.status}
+                                                    <span className="order-id">#{order.orderNumber || (order._id ? order._id.slice(-6) : (order as any).id || '----')}</span>
+                                                    <span className={`status-badge ${(order.status || 'pending').toLowerCase()}`}>
+                                                        {order.status || 'Pending'}
                                                     </span>
                                                 </div>
                                                 <div className="ticket-body">
                                                     <div className="ticket-row">
                                                         <Clock size={14} />
-                                                        {new Date(order.createdAt).toLocaleDateString()}
+                                                        {new Date(order.createdAt || (order as any).created_at || Date.now()).toLocaleDateString()}
                                                     </div>
                                                     <div className="ticket-row highlight">
-                                                        PKR {order.total.toLocaleString()}
+                                                        PKR {(order.total || (order as any).total_amount || 0).toLocaleString()}
                                                     </div>
                                                 </div>
-                                                <Link to={`/orders/${order._id}`} className="ticket-action">
+                                                <Link to={`/orders/${order._id || (order as any).id}`} className="ticket-action">
                                                     Order Details <ChevronRight size={16} />
                                                 </Link>
                                             </div>

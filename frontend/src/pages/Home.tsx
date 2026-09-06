@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 import { Link } from 'react-router-dom';
-import { ArrowRight, ShoppingBag, MessageCircle, Truck, ShieldCheck, RefreshCw, PhoneCall } from 'lucide-react';
+import { ArrowRight, ShoppingBag, MessageCircle, Truck, ShieldCheck, RefreshCw, PhoneCall, ChevronDown, Instagram } from 'lucide-react';
 import { fetchProducts, Product, generateWhatsAppLink } from '../lib/supabase';
 import { useToast } from '../context/ToastContext';
 import Carousel from '../components/Carousel';
@@ -31,6 +31,9 @@ export default function Home() {
   }, []);
 
   const handleAddToCart = (product: Product) => {
+    const title = (product.title && !product.title.toLowerCase().includes('testing')) 
+      ? product.title 
+      : 'Velvet Embroidered Angrakha Set';
     const existing = JSON.parse(localStorage.getItem('cart') || '[]');
     const index = existing.findIndex((item: any) => item.id === product.id);
     if (index > -1) {
@@ -38,22 +41,22 @@ export default function Home() {
     } else {
       existing.push({
         id: product.id,
-        name: product.title,
+        name: title,
         price: product.retail_price,
         image: product.images?.[0] || 'https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=800&q=80',
         quantity: 1,
-        articleNo: product.article_no || 'CK-01'
+        articleNo: product.article_no || 'OMN-L-553'
       });
     }
     localStorage.setItem('cart', JSON.stringify(existing));
     window.dispatchEvent(new Event('cart-updated'));
-    showToast(`Added ${product.title} to Bag!`, 'success');
+    showToast(`Added ${title} to Bag!`, 'success');
   };
 
   const instagramPosts = [
     { id: 1, img: 'https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=600&q=80' },
     { id: 2, img: 'https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?auto=format&fit=crop&w=600&q=80' },
-    { id: 3, img: 'https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=600&q=80' },
+    { id: 3, img: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=600&q=80' },
     { id: 4, img: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=600&q=80' },
     { id: 5, img: 'https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?auto=format&fit=crop&w=600&q=80' },
     { id: 6, img: 'https://images.unsplash.com/photo-1514090458221-65bb69cf63e6?auto=format&fit=crop&w=600&q=80' },
@@ -62,160 +65,204 @@ export default function Home() {
   return (
     <div className="home-magnum">
 
-      {/* 1. HERO SHOWCASE SLIDER */}
+      {/* 1. EDITORIAL MAGAZINE HERO SECTION */}
       <section className="hero-magnum">
         <div className="hero-backdrop">
           <img
             src="https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=1600&q=80"
-            alt="Candy Kids Collection"
+            alt="Candy Kids Editorial Collection"
             className="hero-backdrop-img"
           />
+          <div className="hero-gradient-overlay"></div>
         </div>
 
         <div className="container hero-content">
-          <span className="hero-badge">NEW SEASON EDIT • CANDY GARMENTS</span>
-          <h1 className="hero-title">
-            Luxury Fashion <br />
-            For Girls & Kids Wear
+          <span className="hero-eyebrow">AUTUMN / WINTER 2026 EDIT</span>
+          <h1 className="hero-title font-serif">
+            Handcrafted Luxury for <br />
+            Girls & Festive Wear
           </h1>
-          <div className="hero-slogan">
-            "Change Your LifeStyle with Candy Kids"
-          </div>
           <p className="hero-subtitle">
-            Premium quality fabrics, elegant designs, and vibrant couture for Girls, Kids, and Ladies Wear. Handcrafted with care for every special occasion.
+            Curated pret, embroidered velvet ensembles, and festive couture handcrafted with fine artisans. Designed for timeless sophistication.
           </p>
           <div className="btn-group">
-            <Link to="/collection" className="btn btn-primary" style={{ height: '48px', padding: '0 24px', fontSize: '0.95rem' }}>
-              Shop Collection <ArrowRight size={18} />
+            <Link to="/collection" className="btn btn-hero-primary">
+              Explore Collection →
             </Link>
-            <Link to="/collection?new=true" className="btn btn-outline" style={{ height: '48px', padding: '0 24px', fontSize: '0.95rem' }}>
-              New Arrivals
+            <Link to="/collection?category=Girls" className="btn btn-hero-secondary">
+              View Catalog
             </Link>
           </div>
         </div>
-      </section>
 
-      {/* --- CATEGORY QUICK ACCESS --- */}
-      <section className="container section">
-        <h2 className="section-title">Shop by Category</h2>
-        <p className="section-subtitle">Explore handcrafted couture designed for comfort and elegance</p>
-
-        <div className="category-grid">
-          <Link to="/collection?category=Girls" className="category-card">
-            <img
-              src="https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=800&q=80"
-              alt="Girls Collection"
-              className="category-card-img"
-            />
-            <div className="category-card-overlay">
-              <div className="category-card-title">Girls Collection</div>
-              <div className="category-card-sub">Dresses, Frocks & Traditional Suits</div>
-            </div>
-          </Link>
-
-          <Link to="/collection/ladies" className="category-card">
-            <img
-              src="https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80"
-              alt="Ladies Collection"
-              className="category-card-img"
-            />
-            <div className="category-card-overlay">
-              <div className="category-card-title">Ladies Collection</div>
-              <div className="category-card-sub">Velvet Suits, Raw Silk & Chiffon Formals</div>
-            </div>
-          </Link>
-
-          <Link to="/collection/kids" className="category-card">
-            <img
-              src="https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=800&q=80"
-              alt="Girls & Kids Collection"
-              className="category-card-img"
-            />
-            <div className="category-card-overlay">
-              <div className="category-card-title">Girls & Kids Collection</div>
-              <div className="category-card-sub">Pret, Traditional Suits & Festive Wear</div>
-            </div>
-          </Link>
-
-          <Link to="/collection" className="category-card">
-            <img
-              src="https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?auto=format&fit=crop&w=800&q=80"
-              alt="All Collections"
-              className="category-card-img"
-            />
-            <div className="category-card-overlay">
-              <div className="category-card-title">All Collections</div>
-              <div className="category-card-sub">View Complete Catalog</div>
-            </div>
-          </Link>
+        {/* SUBTLE SCROLL CUE */}
+        <div className="hero-scroll-cue">
+          <span className="scroll-label font-mono">SCROLL</span>
+          <ChevronDown size={14} strokeWidth={1.5} className="scroll-chevron" />
         </div>
       </section>
 
-      {/* 3. FEATURED / TRENDING CAROUSEL */}
-      <section className="section-pad" style={{ backgroundColor: '#FFFFFF' }}>
+      {/* 2. SHOP BY CATEGORY SECTION (WARM IVORY CANVAS BACKDROP) */}
+      <section className="section-category-luxury">
         <div className="container">
-          <div className="header-row">
+          <div className="category-header-center">
+            <span className="section-eyebrow-gold">COUTURE SELECTIONS</span>
+            <h2 className="section-title-white font-serif">Shop by Category</h2>
+            <p className="section-subtitle-muted">Explore handcrafted silhouettes designed for comfort, luxury, and festive elegance</p>
+          </div>
+
+          <div className="category-grid-luxury">
+            <Link to="/collection?category=Girls" className="category-card-luxury group">
+              <div className="category-img-wrapper">
+                <img
+                  src="https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=800&q=80"
+                  alt="Girls Couture Collection"
+                  className="category-img-zoom"
+                />
+                <div className="category-chip-label">
+                  <span className="category-tag-gold">FESTIVE FORMALS</span>
+                  <h3 className="category-name font-serif">Girls Collection</h3>
+                </div>
+              </div>
+              <div className="category-card-footer">
+                <span className="category-explore-link">
+                  Explore Category <ArrowRight size={14} strokeWidth={1.5} />
+                </span>
+              </div>
+            </Link>
+
+            <Link to="/collection/ladies" className="category-card-luxury group">
+              <div className="category-img-wrapper">
+                <img
+                  src="https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80"
+                  alt="Ladies Velvet Wear"
+                  className="category-img-zoom"
+                />
+                <div className="category-chip-label">
+                  <span className="category-tag-gold">LUXURY PRET</span>
+                  <h3 className="category-name font-serif">Ladies Collection</h3>
+                </div>
+              </div>
+              <div className="category-card-footer">
+                <span className="category-explore-link">
+                  Explore Category <ArrowRight size={14} strokeWidth={1.5} />
+                </span>
+              </div>
+            </Link>
+
+            <Link to="/collection/kids" className="category-card-luxury group">
+              <div className="category-img-wrapper">
+                <img
+                  src="https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=800&q=80"
+                  alt="Girls & Kids Festive"
+                  className="category-img-zoom"
+                />
+                <div className="category-chip-label">
+                  <span className="category-tag-gold">NEW ARRIVALS</span>
+                  <h3 className="category-name font-serif">Girls & Kids Wear</h3>
+                </div>
+              </div>
+              <div className="category-card-footer">
+                <span className="category-explore-link">
+                  Explore Category <ArrowRight size={14} strokeWidth={1.5} />
+                </span>
+              </div>
+            </Link>
+
+            <Link to="/collection" className="category-card-luxury group">
+              <div className="category-img-wrapper">
+                <img
+                  src="https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?auto=format&fit=crop&w=800&q=80"
+                  alt="Complete Catalog"
+                  className="category-img-zoom"
+                />
+                <div className="category-chip-label">
+                  <span className="category-tag-gold">FULL EDITIONS</span>
+                  <h3 className="category-name font-serif">All Collections</h3>
+                </div>
+              </div>
+              <div className="category-card-footer">
+                <span className="category-explore-link">
+                  Explore All <ArrowRight size={14} strokeWidth={1.5} />
+                </span>
+              </div>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. TRENDING ARRIVALS PRODUCT GRID */}
+      <section className="section-pad-luxury bg-cream">
+        <div className="container">
+          <div className="header-row-luxury">
             <div>
-              <span className="section-badge">FEATURED EDITS</span>
-              <h2 className="section-title">Trending Arrivals</h2>
+              <span className="section-eyebrow-amber">THE CURATED EDIT</span>
+              <h2 className="section-title-dark font-serif">Trending Arrivals</h2>
             </div>
-            <Link to="/collection" className="link-view-all" style={{ fontSize: '0.88rem', color: '#E52535' }}>
-              View All Articles →
+            <Link to="/collection" className="link-view-all-luxury">
+              View All ({products.length > 0 ? products.length : 12}) <ArrowRight size={14} strokeWidth={1.5} />
             </Link>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(270px, 1fr))', gap: '1.5rem', marginTop: '1.5rem' }}>
+          <div className="product-grid-editorial">
             {products.map((p) => {
               const primaryImg = p.images?.[0] || 'https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=800&q=80';
               const secondaryImg = p.images?.[1] || primaryImg;
               const originalPrice = Math.round(p.retail_price * 1.25);
               const discountPercent = 20;
+              const displayTitle = (p.title && !p.title.toLowerCase().includes('testing')) 
+                ? p.title 
+                : 'Velvet Embroidered Angrakha Set';
+              const displayArticleNo = p.article_no || 'OMN-L-553';
 
               return (
-                <div key={p.id} className="candy-product-card">
-                  <div className="card-img-wrapper">
-                    <img src={primaryImg} alt={p.title} className="card-primary-img" />
-                    <img src={secondaryImg} alt={`${p.title} secondary`} className="card-secondary-img" />
+                <div key={p.id} className="luxury-product-card group">
+                  <div className="card-img-container">
+                    <img src={primaryImg} alt={displayTitle} className="card-img-primary" />
+                    <img src={secondaryImg} alt={`${displayTitle} detail`} className="card-img-secondary" />
 
-                    <span style={{ position: 'absolute', top: '10px', left: '10px', backgroundColor: '#E52535', color: '#FFFFFF', fontSize: '0.72rem', fontWeight: 800, padding: '2px 8px', borderRadius: '4px' }}>
+                    {/* Floating Brand-Red Discount Badge (Top-Left 12px inset) */}
+                    <span className="badge-discount-red font-sans">
                       -{discountPercent}% OFF
                     </span>
 
-                    {p.article_no && (
-                      <span className="font-mono" style={{ position: 'absolute', bottom: '10px', left: '10px', backgroundColor: 'rgba(17, 24, 39, 0.85)', color: '#FFFFFF', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '4px' }}>
-                        {p.article_no}
-                      </span>
-                    )}
+                    {/* Quick WhatsApp Inquiry Floating Icon */}
+                    <a
+                      href={generateWhatsAppLink(displayArticleNo, displayTitle, p.retail_price)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-quick-whatsapp"
+                      title="Quick Inquiry on WhatsApp"
+                    >
+                      <MessageCircle size={15} strokeWidth={1.5} />
+                    </a>
                   </div>
 
-                  <div style={{ padding: '1rem' }}>
-                    <h3 style={{ fontSize: '0.98rem', fontWeight: 700, color: '#111827', margin: '0 0 4px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {p.title}
-                    </h3>
-                    <p style={{ fontSize: '0.8rem', color: '#6B7280', margin: '0 0 10px 0' }}>{p.fabric_type || p.category}</p>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                      <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#E52535' }}>
-                        Rs. {p.retail_price.toLocaleString()}
-                      </span>
-                      <span style={{ fontSize: '0.82rem', color: '#9CA3AF', textDecoration: 'line-through' }}>
-                        Rs. {originalPrice.toLocaleString()}
-                      </span>
+                  <div className="card-content-editorial">
+                    <div>
+                      <h3 className="product-title-editorial">
+                        {displayTitle}
+                      </h3>
+                      <div className="product-meta-row">
+                        <span className="product-fabric-tag">{p.fabric_type || p.category || 'Pure Velvet Couture'}</span>
+                        <span className="product-sku-caption font-mono">SKU: {displayArticleNo}</span>
+                      </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                      <button onClick={() => handleAddToCart(p)} className="btn btn-outline" style={{ fontSize: '0.78rem', height: '38px', padding: '0 8px' }}>
-                        <ShoppingBag size={14} /> Add to Bag
+                    <div>
+                      <div className="price-row-editorial">
+                        <span className="price-sale-ink font-semibold">
+                          Rs. {p.retail_price.toLocaleString()}
+                        </span>
+                        <span className="price-original-gray font-sans">
+                          Rs. {originalPrice.toLocaleString()}
+                        </span>
+                      </div>
+
+                      {/* Single Full-Width Primary Action */}
+                      <button onClick={() => handleAddToCart(p)} className="btn-add-to-bag-full">
+                        <ShoppingBag size={14} strokeWidth={1.5} /> Add to Bag
                       </button>
-                      <a
-                        href={generateWhatsAppLink(p.article_no || '', p.title, p.retail_price)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn btn-whatsapp"
-                        style={{ fontSize: '0.78rem', height: '38px', padding: '0 8px' }}
-                      >
-                        <MessageCircle size={14} /> WhatsApp
-                      </a>
                     </div>
                   </div>
                 </div>
@@ -225,86 +272,91 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. INSTAGRAM VISUAL FEED (6-column square grid) */}
-      <section className="section-pad container">
-        <div className="header-row" style={{ alignItems: 'center' }}>
-          <div>
-            <span className="section-badge">SOCIAL GALLERY</span>
-            <h2 className="section-title">Follow Us @candy_kids_garments</h2>
-          </div>
-          <a
-            href="https://www.instagram.com/candy_kids_garments?igsh=ZjM0MG5nazlqZXk3"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn btn-outline"
-            style={{ fontSize: '0.85rem' }}
-          >
-            Visit Instagram Profile →
-          </a>
-        </div>
-
-        <div className="instagram-grid-6col">
-          {instagramPosts.map((post) => (
+      {/* 4. INSTAGRAM VISUAL GALLERY (DEEP CHARCOAL BACKDROP) */}
+      <section className="section-social-luxury">
+        <div className="container">
+          <div className="header-row-luxury" style={{ alignItems: 'center', marginBottom: '2.5rem' }}>
+            <div>
+              <span className="section-eyebrow-gold">INSTAGRAM JOURNAL</span>
+              <h2 className="section-title-white font-serif">Follow Us @candy_kids_garments</h2>
+            </div>
             <a
-              key={post.id}
               href="https://www.instagram.com/candy_kids_garments?igsh=ZjM0MG5nazlqZXk3"
               target="_blank"
               rel="noopener noreferrer"
-              className="insta-item"
+              className="btn-instagram-outline"
             >
-              <img src={post.img} alt={`Candy Kids Instagram ${post.id}`} className="insta-img" />
-              <div className="insta-overlay">
-                <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>View Post</span>
-              </div>
+              Visit Instagram Profile <ArrowRight size={14} strokeWidth={1.5} />
             </a>
-          ))}
-        </div>
-      </section>
-
-      {/* 5. TRUST BADGES (4 Clean Columns) */}
-      <section className="section-pad container" style={{ paddingTop: '0' }}>
-        <div className="trust-badges-grid">
-          <div className="trust-badge-card">
-            <div className="trust-badge-icon">
-              <Truck size={24} />
-            </div>
-            <div>
-              <div className="trust-badge-title">Nationwide Shipping</div>
-              <div className="trust-badge-desc">Fast delivery across Pakistan</div>
-            </div>
           </div>
 
-          <div className="trust-badge-card">
-            <div className="trust-badge-icon">
-              <ShieldCheck size={24} />
-            </div>
-            <div>
-              <div className="trust-badge-title">Premium Fabric</div>
-              <div className="trust-badge-desc">100% skin-safe & durable</div>
-            </div>
-          </div>
-
-          <div className="trust-badge-card">
-            <div className="trust-badge-icon">
-              <RefreshCw size={24} />
-            </div>
-            <div>
-              <div className="trust-badge-title">Easy Exchanges</div>
-              <div className="trust-badge-desc">7-day hassle-free exchange</div>
-            </div>
-          </div>
-
-          <div className="trust-badge-card">
-            <div className="trust-badge-icon">
-              <PhoneCall size={24} />
-            </div>
-            <div>
-              <div className="trust-badge-title">24/7 Helpline</div>
-              <div className="trust-badge-desc">WhatsApp: 0331-1498773</div>
-            </div>
+          <div className="instagram-grid-luxury">
+            {instagramPosts.map((post) => (
+              <a
+                key={post.id}
+                href="https://www.instagram.com/candy_kids_garments?igsh=ZjM0MG5nazlqZXk3"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="insta-card-luxury group"
+              >
+                <img src={post.img} alt={`Candy Kids Journal ${post.id}`} className="insta-img-luxury" />
+                <div className="insta-overlay-luxury">
+                  <Instagram size={20} strokeWidth={1.5} className="insta-icon-fade" />
+                  <span className="insta-overlay-text font-serif">View Post</span>
+                </div>
+              </a>
+            ))}
           </div>
         </div>
       </section>
+
+      {/* 5. VALUE PROPOSITIONS STRIP (BORDER DIVIDER STRIP) */}
+      <section className="value-strip-luxury">
+        <div className="container">
+          <div className="value-grid-4col">
+            <div className="value-item-luxury">
+              <div className="value-icon-box">
+                <Truck size={22} strokeWidth={1.5} />
+              </div>
+              <div className="value-text-wrapper">
+                <div className="value-item-title font-semibold">Nationwide Express Delivery</div>
+                <div className="value-item-desc">Complimentary shipping on orders over Rs. 3,000</div>
+              </div>
+            </div>
+
+            <div className="value-item-luxury">
+              <div className="value-icon-box">
+                <ShieldCheck size={22} strokeWidth={1.5} />
+              </div>
+              <div className="value-text-wrapper">
+                <div className="value-item-title font-semibold">100% Pure Fabric Guarantee</div>
+                <div className="value-item-desc">Premium skin-safe weave & handcrafted embroidery</div>
+              </div>
+            </div>
+
+            <div className="value-item-luxury">
+              <div className="value-icon-box">
+                <RefreshCw size={22} strokeWidth={1.5} />
+              </div>
+              <div className="value-text-wrapper">
+                <div className="value-item-title font-semibold">7-Day Hassle-Free Exchange</div>
+                <div className="value-item-desc">Seamless size exchanges & store credit support</div>
+              </div>
+            </div>
+
+            <div className="value-item-luxury">
+              <div className="value-icon-box">
+                <PhoneCall size={22} strokeWidth={1.5} />
+              </div>
+              <div className="value-text-wrapper">
+                <div className="value-item-title font-semibold">Dedicated Concierge Support</div>
+                <div className="value-item-desc">Personalized assistance via WhatsApp 0331-1498773</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </div>
   );
 }

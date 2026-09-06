@@ -10,6 +10,16 @@
   animation: slideUpPwa 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+@media (max-width: 768px) {
+  .pwa-install-banner {
+    bottom: 72px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+    max-width: none;
+  }
+}
+
 @keyframes slideUpPwa {
   from {
     opacity: 0;

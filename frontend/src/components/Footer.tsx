@@ -35,8 +35,8 @@ export default function Footer() {
                         </div>
                     </Link>
 
-                    <div className="footer-slogan">
-                        "Change Your LifeStyle with Candy Kids"
+                    <div className="footer-slogan font-serif italic">
+                        "Change Your Lifestyle with Candy Kids"
                     </div>
 
                     <p className="footer-desc">
@@ -45,13 +45,13 @@ export default function Footer() {
 
                     <div className="footer-contacts">
                         <a href="tel:03311498773" className="footer-contact-link">
-                            <Phone size={14} /> Helpline 1: 0331-1498773
+                            <Phone size={14} strokeWidth={1.5} /> Helpline 1: 0331-1498773
                         </a>
                         <a href="tel:03341495788" className="footer-contact-link">
-                            <Phone size={14} /> Helpline 2: 0334-1495788
+                            <Phone size={14} strokeWidth={1.5} /> Helpline 2: 0334-1495788
                         </a>
                         <a href="mailto:support@candykids.pk" className="footer-contact-link">
-                            <Mail size={14} /> Email: support@candykids.pk
+                            <Mail size={14} strokeWidth={1.5} /> Email: support@candykids.pk
                         </a>
                     </div>
                 </div>
@@ -82,7 +82,7 @@ export default function Footer() {
                                 window.location.reload();
                             }} 
                             className="footer-link"
-                            style={{ background: 'none', border: 'none', padding: 0, color: '#EC4899', fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}
+                            style={{ background: 'none', border: 'none', padding: 0, color: '#B08D4F', fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}
                         >
                             📱 Install Candy Kids App
                         </button>
@@ -104,16 +104,16 @@ export default function Footer() {
                                 disabled={status !== 'idle'}
                             />
                             <button type="submit" disabled={status !== 'idle'}>
-                                {status === 'loading' ? <Loader2 className="animate-spin" size={16} /> :
-                                    status === 'success' ? <span style={{ color: '#0F9D58' }}>✓</span> :
-                                        <ArrowRight size={16} />}
+                                {status === 'loading' ? <Loader2 className="animate-spin" size={16} strokeWidth={1.5} /> :
+                                    status === 'success' ? <span style={{ color: '#059669' }}>✓</span> :
+                                        <ArrowRight size={16} strokeWidth={1.5} />}
                             </button>
                         </div>
-                        {status === 'success' && <span style={{ fontSize: '0.78rem', color: '#0F9D58', marginTop: '4px' }}>Thank you for subscribing!</span>}
+                        {status === 'success' && <span style={{ fontSize: '0.78rem', color: '#059669', marginTop: '4px' }}>Thank you for subscribing!</span>}
                     </form>
 
                     <div style={{ marginTop: '1rem' }}>
-                        <span style={{ fontSize: '0.78rem', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Follow Our Socials</span>
+                        <span style={{ fontSize: '0.78rem', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>Follow Our Socials</span>
                         <div className="social-links">
                             <a
                                 href="https://www.facebook.com/share/1DJSvC3piZ/"
@@ -143,11 +143,11 @@ export default function Footer() {
                     </div>
 
                     <div style={{ marginTop: '1.25rem' }}>
-                        <span style={{ fontSize: '0.72rem', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Accepted Payment Methods</span>
+                        <span style={{ fontSize: '0.72rem', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 600 }}>Accepted Payment Methods</span>
                         <div className="payment-badges">
-                            <span className="payment-badge">100% Advance Bank Transfer (Strict No COD)</span>
-                            <span className="payment-badge">Faysal Bank Transfer</span>
-                            <span className="payment-badge">TCS Express Courier Dispatch</span>
+                            <span className="payment-badge">Bank Transfer (No COD)</span>
+                            <span className="payment-badge">Faysal Bank</span>
+                            <span className="payment-badge">TCS Express Dispatch</span>
                         </div>
                     </div>
                 </div>
@@ -156,11 +156,11 @@ export default function Footer() {
             {/* BOTTOM COPYRIGHT BAR */}
             <div className="footer-bottom-bar">
                 <div className="footer-container bottom-flex">
-                    <div className="copyright">
-                        © 2026 Omnora | Omnora-Ahmad Mahboob. All rights reserved.
+                    <div className="copyright font-sans">
+                        © 2026 Candy Kids Garments. All rights reserved.
                     </div>
-                    <div style={{ color: '#E5E7EB', fontSize: '0.82rem', fontWeight: 600 }}>
-                        Candy — Engineered by Omnora-Ahmad Mahboob
+                    <div className="credit-line font-sans">
+                        Candy — Engineered by Omnora
                     </div>
                 </div>
             </div>

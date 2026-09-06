@@ -5,9 +5,9 @@
 
 .checkout-page {
   min-height: 100vh;
-  background-color: #FAFAFA;
-  color: #111827;
-  font-family: 'Inter', 'Outfit', sans-serif;
+  background-color: #FAF6F1;
+  color: #1F1B18;
+  font-family: var(--font-main, sans-serif);
   padding-top: 30px;
   padding-bottom: 80px;
 }
@@ -33,52 +33,51 @@
 
 /* Policy Warning Banner */
 .checkout-policy-banner {
-  background: #FFFBEB;
-  border: 1px solid #FCD34D;
+  background: #F3ECE3;
+  border: 1px solid rgba(176, 141, 79, 0.3);
   border-radius: 12px;
   padding: 1.25rem 1.5rem;
   margin-bottom: 2rem;
   display: flex;
   align-items: flex-start;
   gap: 1rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
 }
 
 .checkout-policy-banner-icon {
-  color: #D97706;
+  color: #B08D4F;
   flex-shrink: 0;
   margin-top: 2px;
 }
 
 .checkout-policy-banner-content {
   font-size: 0.9rem;
-  color: #92400E;
+  color: #7A7068;
   line-height: 1.6;
 }
 
 .checkout-policy-banner-title {
-  font-weight: 800;
+  font-weight: 700;
   display: block;
   margin-bottom: 4px;
-  color: #78350F;
+  color: #1F1B18;
   font-size: 0.95rem;
 }
 
 /* Card Containers */
 .checkout-card {
   background: #FFFFFF;
-  border: 1px solid #E5E7EB;
-  border-radius: 16px;
+  border: 1px solid rgba(122, 112, 104, 0.18);
+  border-radius: 12px;
   padding: 1.75rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 4px 20px -8px rgba(31, 27, 24, 0.05);
 }
 
 .checkout-summary-card {
-  background: #FFFFFF;
-  border: 1px solid #E5E7EB;
-  border-radius: 16px;
+  background: #F3ECE3;
+  border: 1px solid rgba(122, 112, 104, 0.18);
+  border-radius: 12px;
   padding: 1.75rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 4px 20px -8px rgba(31, 27, 24, 0.05);
   position: sticky;
   top: 90px;
 }
