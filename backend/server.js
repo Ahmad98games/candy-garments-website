@@ -82,6 +82,12 @@ const phase1Routes = require('./routes/phase1Routes');
 const phase2Routes = require('./routes/phase2Routes');
 const phase3Routes = require('./routes/phase3Routes');
 const healthRoutes = require('./routes/healthRoutes');
+const trustRoutes = require('./routes/trustRoutes');
+const discountRuleRoutes = require('./routes/discountRuleRoutes');
+const refundRoutes = require('./routes/refundRoutes');
+const fulfillmentRoutes = require('./routes/fulfillmentRoutes');
+const trustController = require('./controllers/trustController');
+const fulfillmentController = require('./controllers/fulfillmentController');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
@@ -89,6 +95,14 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/webhook', require('./routes/webhookRoutes'));
+app.use('/api/trust', trustRoutes);
+app.use('/api/discount-rules', discountRuleRoutes);
+app.use('/api/refunds', refundRoutes);
+app.use('/api/admin/fulfillment', fulfillmentRoutes);
+app.post('/api/admin/trust/override', trustController.overrideTrustTier);
+app.get('/api/orders/verified-ticker', trustController.getVerifiedTicker);
+app.post('/api/orders/:id/video-viewed', fulfillmentController.markVideoViewed);
+app.post('/api/orders/:id/dispute-reshoot', fulfillmentController.requestReshoot);
 app.use('/api/admin', gatekeeper(CAPABILITIES.STATE_MUTATING), require('./routes/adminRoutes'));
 // Add Health Route Explicitly if not covered
 app.use('/api/health', healthRoutes);

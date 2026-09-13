@@ -11,9 +11,14 @@ import {
     ArrowLeft, 
     MapPin, 
     CreditCard, 
-    Copy 
+    Copy,
+    Video,
+    ShieldAlert,
+    ShieldCheck
 } from 'lucide-react';
 import './OrderDetail.css';
+import { VideoVerificationModal } from '../components/order/VideoVerificationModal';
+import { RefundVaultModal } from '../components/order/RefundVaultModal';
 
 type OrderItem = {
     productId: string;
@@ -111,28 +116,126 @@ export default function OrderDetail() {
 
     return (
         <div className="order-detail-page">
-            <div className="noise-layer" />
-            
-            <div className="container">
-                {/* Header */}
-                <div className="order-header-magnum">
-                    <div className="header-left">
-                        <Link to="/profile" className="back-link">
-                            <ArrowLeft size={16} /> Back
-                        </Link>
-                        <div className="order-id-group" onClick={copyOrderId} title="Click to Copy">
-                            <h1>#{order.orderNumber || (order._id ? order._id.slice(-6).toUpperCase() : (order as any).id || '----')}</h1>
-                            <Copy size={16} className="copy-icon" />
+            <div className="order-detail-container">
+                {/* BACK LINK */}
+                <Link to="/profile" className="back-link">
+                    <ArrowLeft size={16} /> Return to Account Records
+                </Link>
+
+                {/* HEADER */}
+                <div className="order-header-panel">
+                    <div className="order-title-group">
+                        <div className="title-with-copy">
+                            <h1>Order #{orderNumberDisplay}</h1>
+                            <button className="btn-copy-id" onClick={copyOrderId} title="Copy Identifier">
+                                <Copy size={14} />
+                            </button>
                         </div>
-                        <span className="order-date">
-                            {new Date(order.createdAt || (order as any).created_at || Date.now()).toLocaleDateString(undefined, { 
-                                year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+                        <span className="order-timestamp">
+                            Authenticated on {new Date(order.createdAt || (order as any).created_at || Date.now()).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
                             })}
                         </span>
                     </div>
                     <div className={`status-badge-lg ${order.status || 'pending'}`}>
                         {order.status || 'Pending'}
                     </div>
+                </div>
+
+                {/* PRE-DISPATCH VIDEO INSPECTION BANNER */}
+                <div style={{
+                    background: '#F0FDF4',
+                    border: '1.5px solid #86EFAC',
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: '12px',
+                    marginBottom: '20px'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ background: '#DCFCE7', padding: '10px', borderRadius: '50%', color: '#166534' }}>
+                            <Video size={24} />
+                        </div>
+                        <div>
+                            <strong style={{ color: '#166534', fontSize: '0.95rem' }}>Pre-Dispatch 360° Video Inspection</strong>
+                            <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: '#15803D' }}>
+                                Watch our warehouse quality scan showing your exact items before courier handover.
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => setVideoModalOpen(true)}
+                        style={{
+                            background: '#059669',
+                            color: '#FFFFFF',
+                            border: 'none',
+                            padding: '8px 18px',
+                            borderRadius: '8px',
+                            fontWeight: 700,
+                            fontSize: '0.8rem',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                        }}
+                    >
+                        <Video size={15} />
+                        <span>Watch Inspection Video</span>
+                    </button>
+                </div>
+
+                {/* 100% REFUND VAULT 24H SLA BANNER */}
+                <div style={{
+                    background: '#FEF3C7',
+                    border: '1.5px solid #FCD34D',
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: '12px',
+                    marginBottom: '24px'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ background: '#FDE68A', padding: '10px', borderRadius: '50%', color: '#92400E' }}>
+                            <ShieldAlert size={24} />
+                        </div>
+                        <div>
+                            <strong style={{ color: '#92400E', fontSize: '0.95rem' }}>100% Refund Vault Guarantee (24-Hour SLA)</strong>
+                            <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: '#B45309' }}>
+                                Any flaw or discrepancy? File a claim with photos; audited against dispatch video within 24h.
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => setRefundModalOpen(true)}
+                        style={{
+                            background: '#B45309',
+                            color: '#FFFFFF',
+                            border: 'none',
+                            padding: '8px 18px',
+                            borderRadius: '8px',
+                            fontWeight: 700,
+                            fontSize: '0.8rem',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                        }}
+                    >
+                        <ShieldAlert size={15} />
+                        <span>File 24h SLA Discrepancy Claim</span>
+                    </button>
                 </div>
 
                 <div className="order-grid">
@@ -246,6 +349,37 @@ export default function OrderDetail() {
                     </div>
                 </div>
             </div>
+
+            {/* VIDEO VERIFICATION MODAL */}
+            {videoModalOpen && (
+                <VideoVerificationModal
+                    orderId={order._id || (order as any).id}
+                    orderNumber={orderNumberDisplay}
+                    videoUrl={(order as any).dispatch_video_url || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'}
+                    videoUploadedAt={(order as any).video_uploaded_at}
+                    videoViewedByCustomer={videoViewed || (order as any).video_viewed_by_customer}
+                    status={order.status}
+                    onClose={() => setVideoModalOpen(false)}
+                    onConfirmViewed={handleConfirmVideoViewed}
+                    onDisputeReshoot={handleDisputeReshoot}
+                />
+            )}
+
+            {/* 100% REFUND VAULT MODAL */}
+            {refundModalOpen && (
+                <RefundVaultModal
+                    orderId={order._id || (order as any).id}
+                    orderNumber={orderNumberDisplay}
+                    totalAmount={order.total || (order as any).total_amount || 0}
+                    deliveredAt={order.deliveredAt}
+                    onClose={() => setRefundModalOpen(false)}
+                    onSubmitSuccess={() => {
+                        setRefundModalOpen(false);
+                        showToast('Refund claim registered with 24-hour SLA timer.', 'success');
+                        fetchOrder();
+                    }}
+                />
+            )}
         </div>
     );
 }

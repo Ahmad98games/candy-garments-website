@@ -34,6 +34,11 @@ import AdminOrders from './pages/AdminOrders'
 import AdminUsers from './pages/AdminUsers'
 import AdminTheme from './pages/AdminTheme'
 import AdminSocial from './pages/AdminSocial'
+import AdminFulfillment from './pages/AdminFulfillment'
+import AdminRefunds from './pages/AdminRefunds'
+import AdminDiscountRules from './pages/AdminDiscountRules'
+import AdminAnalytics from './pages/AdminAnalytics'
+import { VerifiedPurchaseTicker } from './components/VerifiedPurchaseTicker'
 
 import Terms from './pages/Terms'
 import Privacy from './pages/Privacy'
@@ -96,6 +101,10 @@ export default function App() {
                 <Route path="ladies-collection" element={<AdminProducts defaultDepartment="Ladies" />} />
                 <Route path="kids-collection" element={<AdminProducts defaultDepartment="Kids" />} />
                 <Route path="orders" element={<AdminOrders />} />
+                <Route path="fulfillment" element={<AdminFulfillment />} />
+                <Route path="refunds" element={<AdminRefunds />} />
+                <Route path="discount-rules" element={<AdminDiscountRules />} />
+                <Route path="analytics" element={<AdminAnalytics />} />
                 <Route path="users" element={<AdminUsers />} />
                 {/* Legacy/Specific Admin Routes can be mapped here if needed */}
                 <Route path="approve-order/:id" element={<AdminApprove />} />
@@ -105,6 +114,7 @@ export default function App() {
               <Route path="/register" element={<ErrorBoundary><Register /></ErrorBoundary>} />
               <Route path="/payment-success" element={<ErrorBoundary><PaymentSuccess /></ErrorBoundary>} />
             </Routes>
+            <VerifiedPurchaseTicker />
             <PWAInstallPrompt />
           </ToastProvider>
         </ThemeProvider>

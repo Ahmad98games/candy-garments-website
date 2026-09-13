@@ -3,10 +3,12 @@ import { useNavigate, Link } from 'react-router-dom';
 import { createOrder, Order, validateCartVariants } from '../lib/supabase';
 import { useToast } from '../context/ToastContext';
 import { useScrollReveal } from '../hooks/useScrollReveal';
-import { ShoppingBag, Copy, Check, AlertTriangle, Building2, Send, Truck, ArrowLeft } from 'lucide-react';
+import { ShoppingBag, Copy, Check, AlertTriangle, Building2, Send, Truck, ArrowLeft, ShieldCheck, MapPin } from 'lucide-react';
 import './Checkout.css';
 import { calculateOrderTotal } from '../utils/currencyEngine';
 import { FALLBACK_IMAGE } from '../constants';
+import { OrderVerificationGate } from '../components/checkout/OrderVerificationGate';
+import { PaymentMethodSelector } from '../components/checkout/PaymentMethodSelector';
 
 type CartItem = { id: string; name: string; price: number; image?: string; quantity: number; articleNo?: string; size?: string | number; color?: string; color_id?: string; variant_id?: string };
 
@@ -57,6 +59,36 @@ export default function Checkout() {
     initCheckout();
   }, [navigate, showToast]);
 
+  const [checkoutStep, setCheckoutStep] = useState<'address' | 'verify' | 'payment'>('address');
+  const [verificationData, setVerificationData] = useState<{
+    otpVerified: boolean;
+    pinLat: number;
+    pinLng: number;
+    trustTier: 'UNVERIFIED' | 'STANDARD' | 'TRUSTED' | 'RESTRICTED';
+    customerId: string;
+  }>({
+    otpVerified: false,
+    pinLat: 31.5204,
+    pinLng: 74.3587,
+    trustTier: 'STANDARD',
+    customerId: '',
+  });
+
+  const [paymentSelection, setPaymentSelection] = useState<{
+    paymentType: 'PREPAID_RAAST' | 'PREPAID_WALLET' | 'PREPAID_CARD' | 'COD_WITH_DEPOSIT';
+    discountRuleId?: string;
+    discountApplied: number;
+    shippingFee: number;
+    depositPaid: number;
+    finalTotal: number;
+  }>({
+    paymentType: 'PREPAID_RAAST',
+    discountApplied: 0,
+    shippingFee: 0,
+    depositPaid: 0,
+    finalTotal: 0,
+  });
+
   const orderCalculations = useMemo(() => {
     return calculateOrderTotal({
       items: items.map(i => ({ price: i.price, quantity: i.quantity })),
@@ -65,8 +97,8 @@ export default function Checkout() {
   }, [items]);
 
   const subtotal = orderCalculations.subtotal;
-  const shippingCost = orderCalculations.deliveryFee;
-  const totalAmount = orderCalculations.grandTotal;
+  const shippingCost = paymentSelection.shippingFee;
+  const totalAmount = paymentSelection.finalTotal || orderCalculations.grandTotal;
   const totalItems = useMemo(() => items.reduce((sum, i) => sum + i.quantity, 0), [items]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -94,13 +126,41 @@ export default function Checkout() {
     return null;
   };
 
-  const handlePlaceOrder = async (e: React.FormEvent) => {
+  const handleProceedToVerification = (e: React.FormEvent) => {
     e.preventDefault();
+    const error = validateForm();
+    if (error) {
+      showToast(error, 'error');
+      return;
+    }
+    setCheckoutStep('verify');
+  };
+
+  const handleVerificationComplete = (data: {
+    otpVerified: boolean;
+    pinLat: number;
+    pinLng: number;
+    trustTier: 'UNVERIFIED' | 'STANDARD' | 'TRUSTED' | 'RESTRICTED';
+    customerId: string;
+  }) => {
+    setVerificationData(data);
+    setCheckoutStep('payment');
+    showToast('Phone & Address Pin verified! Payment methods unlocked.', 'success');
+  };
+
+  const handlePlaceOrder = async () => {
     if (submitting) return;
 
     const error = validateForm();
     if (error) {
       showToast(error, 'error');
+      setCheckoutStep('address');
+      return;
+    }
+
+    if (!verificationData.otpVerified) {
+      showToast('Please complete WhatsApp OTP verification first.', 'warning');
+      setCheckoutStep('verify');
       return;
     }
 
@@ -118,11 +178,20 @@ export default function Checkout() {
         return;
       }
 
-      const orderPayload: Omit<Order, 'id' | 'created_at'> = {
+      const orderPayload: any = {
         customer_name: form.customerName,
         customer_phone: form.customerPhone,
         shipping_address: form.shippingAddress,
         city: form.city,
+        address_pin_lat: verificationData.pinLat,
+        address_pin_lng: verificationData.pinLng,
+        otp_verified: true,
+        otp_verified_at: new Date().toISOString(),
+        payment_type: paymentSelection.paymentType,
+        discount_rule_id: paymentSelection.discountRuleId,
+        discount_applied: paymentSelection.discountApplied,
+        shipping_fee: paymentSelection.shippingFee,
+        deposit_paid: paymentSelection.depositPaid,
         items: items.map((i) => ({
           id: i.id,
           title: i.name,
@@ -136,15 +205,19 @@ export default function Checkout() {
           variant_id: i.variant_id,
         })),
         total_amount: totalAmount,
-        payment_method: 'WhatsApp (Advance Bank Transfer)',
-        status: 'Pending',
+        payment_method: paymentSelection.paymentType.includes('PREPAID') 
+          ? 'Instant Advance Transfer (Raast/Card)' 
+          : 'Cash on Delivery with Advance Deposit',
+        status: paymentSelection.paymentType.includes('PREPAID') 
+          ? 'CONFIRMED_PREPAID' 
+          : 'DEPOSIT_PAID_COD',
       };
 
       const result = await createOrder(orderPayload);
 
       localStorage.removeItem('cart');
       window.dispatchEvent(new Event('cart-updated'));
-      showToast('Order recorded! Transfer payment & send screenshot on WhatsApp...', 'success');
+      showToast('Order verified & confirmed! TCS dispatch scheduled.', 'success');
 
       navigate(`/order-confirmation/${result?.id || 'SUCCESS'}`, {
         state: { order: result },
@@ -189,151 +262,131 @@ export default function Checkout() {
 
         <div className="checkout-content">
           {/* CHECKOUT FORM CARD */}
+          {/* CHECKOUT FLOW CARDS */}
           <div className="checkout-card animate-fade-in-up">
-            <h2 className="section-heading">
-              1. Customer & Delivery Address
-            </h2>
+            {/* STEP 1: ADDRESS DETAILS */}
+            {checkoutStep === 'address' && (
+              <form onSubmit={handleProceedToVerification}>
+                <h2 className="section-heading">
+                  1. Customer & Delivery Address
+                </h2>
 
-            <form onSubmit={handlePlaceOrder}>
-              <div className="form-field">
-                <label className="form-label">Full Name *</label>
-                <input
-                  type="text"
-                  name="customerName"
-                  value={form.customerName}
-                  onChange={handleInputChange}
-                  placeholder="e.g. Ahmad Mahboob"
-                  required
-                  className="form-input-text"
-                />
-              </div>
-
-              <div className="form-field">
-                <label className="form-label">Phone / WhatsApp Number (Required) *</label>
-                <input
-                  type="tel"
-                  name="customerPhone"
-                  value={form.customerPhone}
-                  onChange={handleInputChange}
-                  placeholder="e.g. 0300 1234567"
-                  required
-                  className="form-input-text font-mono"
-                />
-              </div>
-
-              <div className="form-field">
-                <label className="form-label">City *</label>
-                <input
-                  type="text"
-                  name="city"
-                  value={form.city}
-                  onChange={handleInputChange}
-                  placeholder="e.g. Lahore, Karachi, Islamabad"
-                  required
-                  className="form-input-text"
-                />
-              </div>
-
-              <div className="form-field" style={{ marginBottom: '24px' }}>
-                <label className="form-label">Full Delivery Address (TCS Parcel Courier) *</label>
-                <textarea
-                  name="shippingAddress"
-                  value={form.shippingAddress}
-                  onChange={handleInputChange}
-                  placeholder="House/Plot No, Street, Sector/Area..."
-                  rows={3}
-                  required
-                  className="form-input-text"
-                />
-              </div>
-
-              {/* TCS DELIVERY NOTICE */}
-              <div className="tcs-delivery-box">
-                <Truck className="tcs-delivery-box-icon" size={22} />
-                <div className="tcs-delivery-box-text">
-                  <span className="tcs-delivery-box-title">🚚 Nationwide Dispatch via TCS Express Courier</span>
-                  Your parcel will be dispatched via <strong>TCS Express Courier</strong> immediately after 100% advance bank payment verification. Delivery takes 2–3 working days across Pakistan.
+                <div className="form-field">
+                  <label className="form-label">Full Name *</label>
+                  <input
+                    type="text"
+                    name="customerName"
+                    value={form.customerName}
+                    onChange={handleInputChange}
+                    placeholder="e.g. Fatima Tariq"
+                    required
+                    className="form-input-text"
+                  />
                 </div>
-              </div>
 
-              <h2 className="section-heading" style={{ paddingTop: '16px', borderTop: '1px solid var(--border-subtle)' }}>
-                <Building2 size={20} style={{ color: 'var(--accent-emerald)' }} />
-                2. Official Faysal Bank Accounts (Advance Payment Only)
-              </h2>
+                <div className="form-field">
+                  <label className="form-label">Phone / WhatsApp Number (Required) *</label>
+                  <input
+                    type="tel"
+                    name="customerPhone"
+                    value={form.customerPhone}
+                    onChange={handleInputChange}
+                    placeholder="e.g. 0300 1234567"
+                    required
+                    className="form-input-text font-mono"
+                  />
+                </div>
 
-              {/* DUAL VERIFIED FAYSAL BANK ACCOUNTS */}
-              <div className="bank-accounts-container">
-                {/* ACCOUNT 1 CARD */}
-                <div className="bank-account-card">
-                  <div className="bank-card-header">
-                    <span className="bank-name-badge">Faysal Bank • Account 1</span>
-                    <span className="account-title-label">Official Business</span>
-                  </div>
-                  <div className="account-title-value">{BANK_ACCOUNT_1.accountTitle}</div>
-                  <div className="account-number-row">
-                    <span className="account-number-text">{BANK_ACCOUNT_1.accountNumber}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleCopyAcc(BANK_ACCOUNT_1.accountNumber, 1)}
-                      className={`copy-btn ${copiedAcc1 ? 'copied' : ''}`}
-                    >
-                      {copiedAcc1 ? (
-                        <>
-                          <Check size={14} /> Account Number Copied!
-                        </>
-                      ) : (
-                        <>
-                          <Copy size={14} /> Copy Number
-                        </>
-                      )}
-                    </button>
+                <div className="form-field">
+                  <label className="form-label">City *</label>
+                  <input
+                    type="text"
+                    name="city"
+                    value={form.city}
+                    onChange={handleInputChange}
+                    placeholder="e.g. Lahore, Karachi, Islamabad"
+                    required
+                    className="form-input-text"
+                  />
+                </div>
+
+                <div className="form-field" style={{ marginBottom: '24px' }}>
+                  <label className="form-label">Full Delivery Address (TCS Parcel Courier) *</label>
+                  <textarea
+                    name="shippingAddress"
+                    value={form.shippingAddress}
+                    onChange={handleInputChange}
+                    placeholder="House/Plot No, Street, Sector/Area..."
+                    rows={3}
+                    required
+                    className="form-input-text"
+                  />
+                </div>
+
+                {/* TCS DELIVERY NOTICE */}
+                <div className="tcs-delivery-box" style={{ marginBottom: '20px' }}>
+                  <Truck className="tcs-delivery-box-icon" size={22} />
+                  <div className="tcs-delivery-box-text">
+                    <span className="tcs-delivery-box-title">🚚 Nationwide Dispatch via TCS Express Courier</span>
+                    Priority delivery in 2–3 business days with pre-dispatch video verification sent via WhatsApp before courier handover.
                   </div>
                 </div>
 
-                {/* ACCOUNT 2 CARD */}
-                <div className="bank-account-card">
-                  <div className="bank-card-header">
-                    <span className="bank-name-badge">Faysal Bank • Account 2</span>
-                    <span className="account-title-label">Verified Personal</span>
-                  </div>
-                  <div className="account-title-value">{BANK_ACCOUNT_2.accountTitle}</div>
-                  <div className="account-number-row">
-                    <span className="account-number-text">{BANK_ACCOUNT_2.accountNumber}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleCopyAcc(BANK_ACCOUNT_2.accountNumber, 2)}
-                      className={`copy-btn ${copiedAcc2 ? 'copied' : ''}`}
-                    >
-                      {copiedAcc2 ? (
-                        <>
-                          <Check size={14} /> Account Number Copied!
-                        </>
-                      ) : (
-                        <>
-                          <Copy size={14} /> Copy Number
-                        </>
-                      )}
-                    </button>
-                  </div>
+                <button
+                  type="submit"
+                  className="btn btn-primary submit-order-btn"
+                >
+                  <ShieldCheck size={18} />
+                  <span>Proceed to WhatsApp & Doorstep Pin Verification</span>
+                </button>
+              </form>
+            )}
+
+            {/* STEP 2: ORDER VERIFICATION GATE (WHATSAPP OTP + PIN DROP) */}
+            {checkoutStep === 'verify' && (
+              <OrderVerificationGate
+                phone={form.customerPhone}
+                customerName={form.customerName}
+                shippingCity={form.city}
+                shippingAddress={form.shippingAddress}
+                onVerificationComplete={handleVerificationComplete}
+                onBack={() => setCheckoutStep('address')}
+              />
+            )}
+
+            {/* STEP 3: DYNAMIC PAYMENT METHOD SELECTOR */}
+            {checkoutStep === 'payment' && (
+              <div>
+                <PaymentMethodSelector
+                  subtotal={subtotal}
+                  baseShippingFee={250}
+                  trustTier={verificationData.trustTier}
+                  onPaymentMethodChange={(payData) => setPaymentSelection(payData)}
+                />
+
+                <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setCheckoutStep('verify')}
+                    className="btn btn-secondary"
+                    style={{ padding: '12px 20px', borderRadius: '8px', border: '1px solid #D1D5DB' }}
+                  >
+                    Back to Verification
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handlePlaceOrder}
+                    disabled={submitting}
+                    className="btn btn-primary submit-order-btn"
+                    style={{ flex: 1 }}
+                  >
+                    <Send size={18} />
+                    <span>{submitting ? 'Confirming Order & Scheduling Video Inspection...' : 'Confirm Order & Lock 10% Discount'}</span>
+                  </button>
                 </div>
               </div>
-
-              {/* INSTRUCTIONS */}
-              <div className="transfer-instructions-box">
-                <p>
-                  📌 <strong>Instructions:</strong> Kindly transfer the total order amount (<strong>PKR {totalAmount.toLocaleString()}</strong>) to either of the official accounts above and share the payment receipt / screenshot via WhatsApp to confirm your TCS dispatch.
-                </p>
-              </div>
-
-              <button
-                type="submit"
-                disabled={submitting}
-                className="btn btn-primary submit-order-btn"
-              >
-                <Send size={18} />
-                {submitting ? 'Recording Order...' : 'Confirm Order & Send Payment Receipt on WhatsApp'}
-              </button>
-            </form>
+            )}
           </div>
 
           {/* ORDER SUMMARY STICKY SIDEBAR CARD - Matches Cart Order Summary */}

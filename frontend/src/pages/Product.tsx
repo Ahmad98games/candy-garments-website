@@ -13,6 +13,7 @@ import {
   CheckCircle, XCircle, ChevronDown, ChevronUp, Ruler, ZoomIn, X
 } from 'lucide-react';
 import './Product.css';
+import { ProductMediaViewer } from '../components/product/ProductMediaViewer';
 
 export default function Product() {
   const { id } = useParams();
@@ -182,27 +183,13 @@ export default function Product() {
         {/* Product Grid */}
         <div className="pdp-grid-container">
           {/* Left Column: Vertical Thumbnails + Main Image with Soft Click Zoom */}
+          {/* Left Column: ProductMediaViewer with 4x Macro Lens & Zero-Color-Correction Daylight Toggle */}
           <div className="pdp-gallery-wrap">
-            {product.images && product.images.length > 1 && (
-              <div className="pdp-vertical-thumbnails">
-                {product.images.map((img, idx) => (
-                  <div
-                    key={idx}
-                    onClick={() => setSelectedImageIndex(idx)}
-                    className={`pdp-thumb-card ${selectedImageIndex === idx ? 'active' : ''}`}
-                  >
-                    <img src={img} alt={`Thumbnail ${idx}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="pdp-main-image-card" onClick={() => setZoomModalOpen(true)}>
-              <SmartImage src={mainImage} alt={product.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              <div className="pdp-zoom-badge">
-                <ZoomIn size={14} /> Click to Inspect Details
-              </div>
-            </div>
+            <ProductMediaViewer
+              studioImages={product.images && product.images.length > 0 ? product.images : [mainImage]}
+              productName={product.title}
+              articleNo={product.article_no}
+            />
           </div>
 
           {/* Right Column: Specifications & Variant Swatches */}

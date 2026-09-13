@@ -3,7 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import {
     LayoutDashboard, Package, ShoppingBag, Users,
-    LogOut, ExternalLink, Menu, X, ShieldCheck, Palette, Share2
+    LogOut, ExternalLink, Menu, X, ShieldCheck, Palette, Share2,
+    Truck, ShieldAlert, Percent, BarChart3
 } from 'lucide-react';
 import { useState } from 'react';
 import './AdminLayout.css';
@@ -81,9 +82,28 @@ export default function AdminLayout() {
                         <ShoppingBag size={18} />
                         <span>Orders</span>
                     </Link>
+
+                    <div className="nav-group-label">TRUST & FULFILLMENT</div>
+
+                    <Link to="/admin/fulfillment" className={`nav-item ${isActive('fulfillment')}`} onClick={closeSidebar}>
+                        <Truck size={18} />
+                        <span>Fulfillment & Video</span>
+                    </Link>
+                    <Link to="/admin/refunds" className={`nav-item ${isActive('refunds')}`} onClick={closeSidebar}>
+                        <ShieldAlert size={18} />
+                        <span>24h Refund Vault</span>
+                    </Link>
+                    <Link to="/admin/discount-rules" className={`nav-item ${isActive('discount-rules')}`} onClick={closeSidebar}>
+                        <Percent size={18} />
+                        <span>Prepaid Rules</span>
+                    </Link>
+                    <Link to="/admin/analytics" className={`nav-item ${isActive('analytics')}`} onClick={closeSidebar}>
+                        <BarChart3 size={18} />
+                        <span>Conversion & RTO</span>
+                    </Link>
                     <Link to="/admin/users" className={`nav-item ${isActive('users')}`} onClick={closeSidebar}>
                         <Users size={18} />
-                        <span>Customers</span>
+                        <span>Customer Trust</span>
                     </Link>
                 </nav>
 

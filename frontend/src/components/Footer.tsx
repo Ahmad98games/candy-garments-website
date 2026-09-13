@@ -157,10 +157,10 @@ export default function Footer() {
             <div className="footer-bottom-bar">
                 <div className="footer-container bottom-flex">
                     <div className="copyright font-sans">
-                        © 2026 Candy Kids Garments. All rights reserved.
+                        © 2026 Candy Kids Garments. All rights reserved By Omnora Labs.
                     </div>
                     <div className="credit-line font-sans">
-                        Candy — Engineered by Omnora
+                        Candy — Engineered by Omnora labs
                     </div>
                 </div>
             </div>
