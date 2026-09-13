@@ -386,6 +386,151 @@ export async function updateOrderStatus(orderId: string, status: Order['status']
   }
 }
 
+export interface CustomerTrustRecord {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string;
+  city: string;
+  shippingAddress: string;
+  isAdmin: boolean;
+  trustTier: 'UNVERIFIED' | 'STANDARD' | 'TRUSTED' | 'RESTRICTED';
+  codRefusalCount: number;
+  completedOrders: number;
+  totalOrders: number;
+  totalSpent: number;
+  lastOrderDate: string;
+  latestStatus: string;
+  isOverridden?: boolean;
+  overrideReason?: string;
+  orders: Order[];
+}
+
+export async function fetchCustomerTrustProfiles(): Promise<CustomerTrustRecord[]> {
+  const orders = await fetchOrders();
+
+  let overrides: Record<string, { newTrustTier?: string; trustTier?: string; reason?: string }> = {};
+  try {
+    const raw = localStorage.getItem('omnora_trust_overrides');
+    if (raw) overrides = JSON.parse(raw);
+  } catch (e) {}
+
+  try {
+    const res = await fetch('/api/admin/trust/overrides');
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.overrides) {
+        overrides = { ...overrides, ...data.overrides };
+      }
+    }
+  } catch (e) {}
+
+  const customerMap = new Map<string, CustomerTrustRecord>();
+
+  for (const order of orders) {
+    const rawPhone = (order.customer_phone || '').trim();
+    const cleanPhone = rawPhone.replace(/[^\d+]/g, '') || rawPhone || 'no-phone';
+    const key = cleanPhone.toLowerCase();
+
+    if (!customerMap.has(key)) {
+      customerMap.set(key, {
+        id: 'cust-' + cleanPhone,
+        name: (order.customer_name || 'Valued Customer').trim(),
+        phone: rawPhone || 'No Phone Provided',
+        email: `${cleanPhone}@customer.candygarments.com`,
+        city: order.city || 'Pakistan',
+        shippingAddress: order.shipping_address || '',
+        isAdmin: false,
+        trustTier: 'STANDARD',
+        codRefusalCount: 0,
+        completedOrders: 0,
+        totalOrders: 0,
+        totalSpent: 0,
+        lastOrderDate: order.created_at,
+        latestStatus: order.status || 'Pending',
+        orders: [],
+      });
+    }
+
+    const c = customerMap.get(key)!;
+    c.totalOrders += 1;
+    c.totalSpent += Number(order.total_amount) || 0;
+    c.orders.push(order);
+
+    const st = (order.status || '').toLowerCase();
+    if (st === 'delivered' || st === 'confirmed_prepaid') {
+      c.completedOrders += 1;
+    } else if (st === 'cancelled' || st === 'delivery_refused_rto') {
+      c.codRefusalCount += 1;
+    }
+  }
+
+  return Array.from(customerMap.values()).map(c => {
+    const norm = (c.phone || '').replace(/[^\d+]/g, '').toLowerCase();
+    const override = overrides[norm] || overrides[c.id];
+
+    let computedTier: 'UNVERIFIED' | 'STANDARD' | 'TRUSTED' | 'RESTRICTED' = 'STANDARD';
+    if (c.codRefusalCount >= 2) {
+      computedTier = 'RESTRICTED';
+    } else if (c.completedOrders >= 3) {
+      computedTier = 'TRUSTED';
+    } else if (c.completedOrders > 0) {
+      computedTier = 'STANDARD';
+    } else {
+      computedTier = 'UNVERIFIED';
+    }
+
+    if (override && (override.newTrustTier || override.trustTier)) {
+      c.trustTier = (override.newTrustTier || override.trustTier) as any;
+      c.isOverridden = true;
+      c.overrideReason = override.reason;
+    } else {
+      c.trustTier = computedTier;
+    }
+
+    return c;
+  });
+}
+
+export async function saveCustomerTrustOverride(
+  phoneOrId: string,
+  newTrustTier: 'UNVERIFIED' | 'STANDARD' | 'TRUSTED' | 'RESTRICTED',
+  reason: string
+): Promise<boolean> {
+  const normKey = phoneOrId.replace(/[^\d+]/g, '').toLowerCase() || phoneOrId;
+
+  try {
+    const raw = localStorage.getItem('omnora_trust_overrides');
+    const existing = raw ? JSON.parse(raw) : {};
+    existing[normKey] = {
+      phone: phoneOrId,
+      newTrustTier,
+      reason,
+      updatedAt: new Date().toISOString(),
+    };
+    localStorage.setItem('omnora_trust_overrides', JSON.stringify(existing));
+  } catch (e) {
+    console.error('Failed to write to localStorage:', e);
+  }
+
+  try {
+    await fetch('/api/admin/trust/override', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phone: phoneOrId,
+        customerId: phoneOrId,
+        newTrustTier,
+        reason,
+      }),
+    });
+  } catch (e) {
+    console.warn('Backend server override sync notice:', e);
+  }
+
+  return true;
+}
+
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function upsertProduct(product: Partial<Product>): Promise<Product | null> {

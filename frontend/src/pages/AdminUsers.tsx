@@ -1,408 +1,687 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import client from '../api/client';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { 
+  fetchCustomerTrustProfiles, 
+  saveCustomerTrustOverride, 
+  CustomerTrustRecord,
+  Order 
+} from '../lib/supabase';
 import { useToast } from '../context/ToastContext';
-import { Users, Search, Shield, ShieldAlert, Trash2, Mail, Calendar, UserCheck, ShieldCheck } from 'lucide-react';
+import { 
+  Users, 
+  Search, 
+  Shield, 
+  ShieldAlert, 
+  ShieldCheck, 
+  AlertTriangle,
+  RefreshCw, 
+  Phone, 
+  MessageCircle, 
+  ShoppingBag, 
+  ChevronDown, 
+  ChevronUp, 
+  CheckCircle2, 
+  XCircle, 
+  Clock, 
+  MapPin, 
+  Sparkles,
+  Award,
+  Filter
+} from 'lucide-react';
 import './AdminUsers.css';
 
-interface User {
-    _id: string;
-    name: string;
-    email: string;
-    phone?: string;
-    isAdmin: boolean;
-    trustTier?: 'UNVERIFIED' | 'STANDARD' | 'TRUSTED' | 'RESTRICTED';
-    codRefusalCount?: number;
-    completedOrders?: number;
-    createdAt: string;
-}
-
-const FALLBACK_CUSTOMERS: User[] = [
-    { _id: 'u-101', name: 'Ahmad Mahboob', email: 'ahmad@candygarments.com', phone: '0300 8472910', isAdmin: true, trustTier: 'TRUSTED', codRefusalCount: 0, completedOrders: 8, createdAt: '2026-01-15T10:00:00.000Z' },
-    { _id: 'u-102', name: 'Fatima Zafar', email: 'fatima.z@gmail.com', phone: '0321 9923847', isAdmin: false, trustTier: 'STANDARD', codRefusalCount: 0, completedOrders: 2, createdAt: '2026-02-10T14:30:00.000Z' },
-    { _id: 'u-103', name: 'Zainab Bibi', email: 'zainab.b@yahoo.com', phone: '0333 4567890', isAdmin: false, trustTier: 'RESTRICTED', codRefusalCount: 2, completedOrders: 1, createdAt: '2026-03-01T09:15:00.000Z' },
-    { _id: 'u-104', name: 'Sara Tariq', email: 'sara.t@gmail.com', phone: '0312 8877665', isAdmin: false, trustTier: 'UNVERIFIED', codRefusalCount: 0, completedOrders: 0, createdAt: '2026-03-10T11:00:00.000Z' },
-];
-
 const AdminUsers: React.FC = () => {
-    const [users, setUsers] = useState<User[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [activeTab, setActiveTab] = useState<'all' | 'trust'>('trust');
-    const [overrideUser, setOverrideUser] = useState<User | null>(null);
-    const [overrideTier, setOverrideTier] = useState<'STANDARD' | 'TRUSTED' | 'RESTRICTED'>('STANDARD');
-    const [overrideNote, setOverrideNote] = useState('');
-    const [isSavingOverride, setIsSavingOverride] = useState(false);
-    const { showToast } = useToast();
+  const [customers, setCustomers] = useState<CustomerTrustRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedTier, setSelectedTier] = useState<string>('ALL');
+  const [expandedCustomerId, setExpandedCustomerId] = useState<string | null>(null);
 
-    const fetchUsers = useCallback(async () => {
-        setLoading(true);
-        try {
-            const { data } = await client.get('/users');
-            const rawList = Array.isArray(data) ? data : data?.users || [];
+  // Manual Override State
+  const [overrideCustomer, setOverrideCustomer] = useState<CustomerTrustRecord | null>(null);
+  const [overrideTier, setOverrideTier] = useState<'STANDARD' | 'TRUSTED' | 'RESTRICTED' | 'UNVERIFIED'>('STANDARD');
+  const [overrideReason, setOverrideReason] = useState('');
+  const [isSavingOverride, setIsSavingOverride] = useState(false);
 
-            if (rawList.length > 0) {
-                const sanitizedUsers: User[] = rawList.map((u: any) => ({
-                    _id: u._id || u.id,
-                    name: u.name || `${u.firstName || ''} ${u.lastName || ''}`.trim() || 'Valued Customer',
-                    email: u.email || 'No Email Provided',
-                    phone: u.phone || u.customerPhone || '0300 0000000',
-                    isAdmin: u.isAdmin === true || u.role === 'admin',
-                    trustTier: u.trustTier || (u.codRefusalCount >= 2 ? 'RESTRICTED' : u.completedOrders >= 3 ? 'TRUSTED' : 'STANDARD'),
-                    codRefusalCount: u.codRefusalCount ?? 0,
-                    completedOrders: u.completedOrders ?? 0,
-                    createdAt: u.createdAt || u.created_at || new Date().toISOString()
-                })).filter((u: User) => u._id);
+  const { showToast } = useToast();
 
-                setUsers(sanitizedUsers);
-                setLoading(false);
-                return;
-            }
-        } catch (error) {
-            console.warn('Backend API connection notice (using fallback customer records):', error);
-        }
+  const loadCustomerData = useCallback(async (showLoadingSpinner = true) => {
+    if (showLoadingSpinner) setLoading(true);
+    setIsRefreshing(true);
+    try {
+      const data = await fetchCustomerTrustProfiles();
+      setCustomers(data);
+    } catch (error) {
+      console.error('Failed to load customers from database:', error);
+      showToast('Error loading live customer database', 'error');
+    } finally {
+      setLoading(false);
+      setIsRefreshing(false);
+    }
+  }, [showToast]);
 
-        setUsers(FALLBACK_CUSTOMERS);
-        setLoading(false);
-    }, []);
+  useEffect(() => {
+    loadCustomerData(true);
+  }, [loadCustomerData]);
 
-    const handleTrustOverride = async () => {
-        if (!overrideUser) return;
-        if (!overrideNote.trim()) {
-            showToast('Audit note is required for manual trust override', 'error');
-            return;
-        }
+  // Filtered customers based on search and tier selector
+  const filteredCustomers = useMemo(() => {
+    return customers.filter((c) => {
+      const query = searchTerm.toLowerCase().trim();
+      const matchesSearch =
+        !query ||
+        c.name.toLowerCase().includes(query) ||
+        c.phone.toLowerCase().includes(query) ||
+        c.city.toLowerCase().includes(query) ||
+        c.orders.some((o) => o.id?.toLowerCase().includes(query));
 
-        setIsSavingOverride(true);
-        try {
-            await fetch('/api/admin/trust/override', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    customerId: overrideUser._id,
-                    newTrustTier: overrideTier,
-                    reason: overrideNote,
-                }),
-            });
-            showToast(`Trust Tier overridden to ${overrideTier}`, 'success');
-            setUsers(prev => prev.map(u => u._id === overrideUser._id ? {
-                ...u,
-                trustTier: overrideTier,
-                codRefusalCount: overrideTier === 'STANDARD' || overrideTier === 'TRUSTED' ? 0 : u.codRefusalCount
-            } : u));
-            setOverrideUser(null);
-            setOverrideNote('');
-        } catch (e) {
-            // Local fallback
-            setUsers(prev => prev.map(u => u._id === overrideUser._id ? { ...u, trustTier: overrideTier } : u));
-            showToast(`Trust Tier overridden to ${overrideTier}`, 'success');
-            setOverrideUser(null);
-            setOverrideNote('');
-        } finally {
-            setIsSavingOverride(false);
-        }
-    };
+      const matchesTier =
+        selectedTier === 'ALL' ||
+        c.trustTier.toUpperCase() === selectedTier.toUpperCase();
 
-    if (loading) {
-        return (
-            <div style={{ textAlign: 'center', padding: '60px', color: '#9CA3AF' }}>
-                <Users size={24} style={{ color: '#F59E0B' }} />
-                <p style={{ fontSize: '13px', marginTop: '12px', fontWeight: 600 }}>Loading Customer Database...</p>
-            </div>
-        );
+      return matchesSearch && matchesTier;
+    });
+  }, [customers, searchTerm, selectedTier]);
+
+  // Overall Statistics calculated directly from real database records
+  const stats = useMemo(() => {
+    const total = customers.length;
+    const trusted = customers.filter((c) => c.trustTier === 'TRUSTED').length;
+    const standard = customers.filter((c) => c.trustTier === 'STANDARD').length;
+    const restricted = customers.filter((c) => c.trustTier === 'RESTRICTED').length;
+    const unverified = customers.filter((c) => c.trustTier === 'UNVERIFIED').length;
+    const totalRevenue = customers.reduce((sum, c) => sum + (c.totalSpent || 0), 0);
+    const totalOrders = customers.reduce((sum, c) => sum + (c.totalOrders || 0), 0);
+    return { total, trusted, standard, restricted, unverified, totalRevenue, totalOrders };
+  }, [customers]);
+
+  const getInitials = (name: string) => {
+    if (!name) return 'CU';
+    const parts = name.trim().split(' ').filter(Boolean);
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
+
+  const formatPKR = (amount: number) => {
+    return `Rs ${Number(amount || 0).toLocaleString('en-PK')}`;
+  };
+
+  const handleOpenOverride = (customer: CustomerTrustRecord) => {
+    setOverrideCustomer(customer);
+    setOverrideTier(customer.trustTier === 'RESTRICTED' ? 'STANDARD' : 'RESTRICTED');
+    setOverrideReason(customer.overrideReason || '');
+  };
+
+  const handleConfirmOverride = async () => {
+    if (!overrideCustomer) return;
+    if (!overrideReason.trim()) {
+      showToast('Audit justification note is required for manual trust tier override', 'error');
+      return;
     }
 
+    setIsSavingOverride(true);
+    try {
+      await saveCustomerTrustOverride(
+        overrideCustomer.phone || overrideCustomer.id,
+        overrideTier,
+        overrideReason.trim()
+      );
+
+      showToast(`Trust tier updated to ${overrideTier} for ${overrideCustomer.name}`, 'success');
+
+      // Update state locally
+      setCustomers((prev) =>
+        prev.map((c) =>
+          c.id === overrideCustomer.id
+            ? {
+                ...c,
+                trustTier: overrideTier,
+                isOverridden: true,
+                overrideReason: overrideReason.trim(),
+                codRefusalCount: overrideTier === 'STANDARD' || overrideTier === 'TRUSTED' ? 0 : c.codRefusalCount,
+              }
+            : c
+        )
+      );
+
+      setOverrideCustomer(null);
+      setOverrideReason('');
+    } catch (err) {
+      console.error('Failed to save override:', err);
+      showToast('Failed to save trust override', 'error');
+    } finally {
+      setIsSavingOverride(false);
+    }
+  };
+
+  const toggleAccordion = (customerId: string) => {
+    setExpandedCustomerId((prev) => (prev === customerId ? null : customerId));
+  };
+
+  const getCleanWhatsAppLink = (phone: string, name: string) => {
+    const cleanDigits = phone.replace(/[^\d]/g, '');
+    let fullNumber = cleanDigits;
+    if (cleanDigits.startsWith('03')) {
+      fullNumber = '92' + cleanDigits.substring(1);
+    } else if (cleanDigits.startsWith('3')) {
+      fullNumber = '92' + cleanDigits;
+    }
+    const message = encodeURIComponent(`Assalam-o-Alaikum ${name}, this is Candy Garments / Omnora customer support regarding your order.`);
+    return `https://wa.me/${fullNumber}?text=${message}`;
+  };
+
+  const presetReasons = [
+    'Courier logistics/rider delivery failure; customer is genuine',
+    'Customer provided advance bank transfer/Raast deposit',
+    'Multiple bogus/cancelled COD orders flagged by operations',
+    'Customer cancelled prior to dispatch; polite buyer',
+  ];
+
+  if (loading) {
     return (
-        <div className="admin-users animate-fade-in">
-            <div className="page-header">
-                <div>
-                    <h2>CUSTOMER TRUST & FRAUD MANAGEMENT</h2>
-                    <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: '#6B7280' }}>
-                        Monitor customer risk profiles, COD refusal counters, and perform manual trust tier overrides.
-                    </p>
-                </div>
-                <div className="user-count-badge">
-                    <UserCheck size={14} />
-                    {users.length} CUSTOMERS RECORDED
-                </div>
-            </div>
-
-            {/* TAB SELECTOR */}
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-                <button
-                    type="button"
-                    onClick={() => setActiveTab('trust')}
-                    style={{
-                        padding: '8px 16px',
-                        borderRadius: '8px',
-                        fontWeight: 700,
-                        fontSize: '0.8rem',
-                        border: 'none',
-                        cursor: 'pointer',
-                        background: activeTab === 'trust' ? '#111827' : '#F3F4F6',
-                        color: activeTab === 'trust' ? '#FFFFFF' : '#4B5563',
-                    }}
-                >
-                    Customer Trust & COD Gating
-                </button>
-                <button
-                    type="button"
-                    onClick={() => setActiveTab('all')}
-                    style={{
-                        padding: '8px 16px',
-                        borderRadius: '8px',
-                        fontWeight: 700,
-                        fontSize: '0.8rem',
-                        border: 'none',
-                        cursor: 'pointer',
-                        background: activeTab === 'all' ? '#111827' : '#F3F4F6',
-                        color: activeTab === 'all' ? '#FFFFFF' : '#4B5563',
-                    }}
-                >
-                    Standard User Profiles
-                </button>
-            </div>
-
-            <div className="controls-bar">
-                <div className="search-wrapper">
-                    <Search size={18} className="search-icon" />
-                    <input
-                        type="text"
-                        placeholder="Search by customer name, phone, or email..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="glass-input"
-                    />
-                </div>
-            </div>
-
-            {activeTab === 'trust' ? (
-                /* TRUST MANAGEMENT TABLE */
-                <div className="users-table-container">
-                    <table className="users-table">
-                        <thead>
-                            <tr>
-                                <th>CUSTOMER & PHONE</th>
-                                <th>TRUST TIER</th>
-                                <th>COD REFUSALS</th>
-                                <th>COMPLETED ORDERS</th>
-                                <th className="text-right">TRUST OVERRIDE</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredUsers.map(user => {
-                                const tier = user.trustTier || 'STANDARD';
-                                return (
-                                    <tr key={user._id} className={tier === 'RESTRICTED' ? 'row-restricted' : ''}>
-                                        <td>
-                                            <div className="user-profile-cell">
-                                                <div className={`avatar-circle ${tier === 'RESTRICTED' ? 'restricted-glow' : ''}`}>
-                                                    {getInitials(user.name)}
-                                                </div>
-                                                <div className="user-info">
-                                                    <span className="user-name">{user.name}</span>
-                                                    <span className="user-email">
-                                                        📞 {user.phone || '0300 1234567'}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span style={{
-                                                display: 'inline-block',
-                                                padding: '3px 10px',
-                                                borderRadius: '6px',
-                                                fontSize: '0.725rem',
-                                                fontWeight: 800,
-                                                textTransform: 'uppercase',
-                                                backgroundColor:
-                                                    tier === 'RESTRICTED' ? '#FEE2E2' :
-                                                    tier === 'TRUSTED' ? '#DCFCE7' :
-                                                    tier === 'STANDARD' ? '#DBEAFE' : '#F3F4F6',
-                                                color:
-                                                    tier === 'RESTRICTED' ? '#991B1B' :
-                                                    tier === 'TRUSTED' ? '#166534' :
-                                                    tier === 'STANDARD' ? '#1E40AF' : '#374151',
-                                            }}>
-                                                {tier}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <strong style={{ color: (user.codRefusalCount || 0) >= 2 ? '#DC2626' : '#4B5563' }}>
-                                                {user.codRefusalCount || 0} Refusals
-                                            </strong>
-                                        </td>
-                                        <td>
-                                            <strong style={{ color: '#059669' }}>
-                                                {user.completedOrders || 0} Orders
-                                            </strong>
-                                        </td>
-                                        <td className="text-right">
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    setOverrideUser(user);
-                                                    setOverrideTier(tier === 'RESTRICTED' ? 'STANDARD' : 'RESTRICTED');
-                                                }}
-                                                style={{
-                                                    background: '#111827',
-                                                    color: '#FFFFFF',
-                                                    border: 'none',
-                                                    padding: '6px 14px',
-                                                    borderRadius: '6px',
-                                                    fontSize: '0.75rem',
-                                                    fontWeight: 700,
-                                                    cursor: 'pointer',
-                                                }}
-                                            >
-                                                Manual Override
-                                            </button>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
-            ) : (
-                /* STANDARD PROFILES TABLE */
-                <div className="users-table-container">
-                    <table className="users-table">
-                        <thead>
-                            <tr>
-                                <th>CUSTOMER PROFILE</th>
-                                <th>ROLE / PERMISSIONS</th>
-                                <th>REGISTERED DATE</th>
-                                <th className="text-right">ACTIONS</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredUsers.map(user => (
-                                <tr key={user._id} className={user.isAdmin ? 'row-admin' : ''}>
-                                    <td>
-                                        <div className="user-profile-cell">
-                                            <div className={`avatar-circle ${user.isAdmin ? 'admin-glow' : ''}`}>
-                                                {getInitials(user.name)}
-                                            </div>
-                                            <div className="user-info">
-                                                <span className="user-name">{user.name || 'Unknown User'}</span>
-                                                <span className="user-email">
-                                                    <Mail size={10} /> {user.email}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <button
-                                            className={`role-badge ${user.isAdmin ? 'role-admin' : 'role-user'}`}
-                                            onClick={() => toggleAdminStatus(user)}
-                                            title="Modify Role"
-                                        >
-                                            {user.isAdmin ? <ShieldCheck size={12} /> : <Shield size={12} />}
-                                            {user.isAdmin ? 'ADMIN' : 'CUSTOMER'}
-                                        </button>
-                                    </td>
-                                    <td>
-                                        <div className="date-cell">
-                                            <Calendar size={12} />
-                                            {new Date(user.createdAt).toLocaleDateString()}
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div className="action-buttons">
-                                            <button
-                                                className="icon-btn delete-btn"
-                                                onClick={() => handleDelete(user._id)}
-                                                title="Delete Customer Record"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            )}
-
-            {/* MANUAL TRUST OVERRIDE MODAL */}
-            {overrideUser && (
-                <div style={{
-                    position: 'fixed',
-                    inset: 0,
-                    background: 'rgba(0,0,0,0.7)',
-                    backdropFilter: 'blur(6px)',
-                    zIndex: 1000,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '16px',
-                }}>
-                    <div style={{
-                        background: '#FFFFFF',
-                        borderRadius: '16px',
-                        padding: '24px',
-                        maxWidth: '480px',
-                        width: '100%',
-                        boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
-                    }}>
-                        <h3 style={{ margin: '0 0 6px 0', fontSize: '1.2rem', fontWeight: 800, color: '#111827' }}>
-                            Override Trust Tier for {overrideUser.name}
-                        </h3>
-                        <p style={{ margin: '0 0 16px 0', fontSize: '0.8rem', color: '#6B7280' }}>
-                            Current Tier: <strong>{overrideUser.trustTier}</strong> • Refusals: <strong>{overrideUser.codRefusalCount || 0}</strong>
-                        </p>
-
-                        <div style={{ marginBottom: '14px' }}>
-                            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '4px' }}>
-                                New Trust Tier:
-                            </label>
-                            <select
-                                value={overrideTier}
-                                onChange={(e: any) => setOverrideTier(e.target.value)}
-                                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #D1D5DB' }}
-                            >
-                                <option value="STANDARD">STANDARD (Restore COD checkout option)</option>
-                                <option value="TRUSTED">TRUSTED (VIP Courier Clearance)</option>
-                                <option value="RESTRICTED">RESTRICTED (Disable COD Checkout)</option>
-                            </select>
-                        </div>
-
-                        <div style={{ marginBottom: '18px' }}>
-                            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '4px' }}>
-                                Audit Reason / Justification (Required) *:
-                            </label>
-                            <textarea
-                                value={overrideNote}
-                                onChange={(e) => setOverrideNote(e.target.value)}
-                                placeholder="e.g. Courier rider failed to reach customer due to roadblock; buyer is legitimate."
-                                rows={3}
-                                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #D1D5DB', fontSize: '0.85rem' }}
-                            />
-                        </div>
-
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                            <button
-                                type="button"
-                                onClick={() => setOverrideUser(null)}
-                                style={{ background: 'transparent', border: '1px solid #D1D5DB', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer' }}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleTrustOverride}
-                                disabled={isSavingOverride}
-                                style={{ background: '#059669', color: '#FFFFFF', border: 'none', padding: '8px 18px', borderRadius: '6px', fontWeight: 700, cursor: 'pointer' }}
-                            >
-                                {isSavingOverride ? 'Saving...' : 'Confirm Trust Override'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+      <div className="admin-users-loading">
+        <div className="loading-spinner-box">
+          <RefreshCw size={32} className="spin-icon" style={{ color: '#E52535' }} />
+          <h3>Connecting to Live Supabase Database...</h3>
+          <p>Analyzing customer order histories and calculating authentic trust tiers</p>
         </div>
+      </div>
     );
+  }
+
+  return (
+    <div className="admin-users animate-fade-in">
+      {/* PAGE HEADER */}
+      <div className="page-header">
+        <div className="header-titles">
+          <div className="title-row">
+            <h2>CUSTOMER TRUST & FRAUD MANAGEMENT</h2>
+            <span className="live-db-pill">
+              <span className="live-dot" />
+              LIVE SUPABASE DATABASE
+            </span>
+          </div>
+          <p className="header-subtitle">
+            Authentic customer risk profiles, order histories, and COD gating derived directly from live database orders.
+          </p>
+        </div>
+
+        <div className="header-actions">
+          <button
+            type="button"
+            className="refresh-db-btn"
+            onClick={() => loadCustomerData(false)}
+            disabled={isRefreshing}
+            title="Refresh database records"
+          >
+            <RefreshCw size={15} className={isRefreshing ? 'spin-icon' : ''} />
+            {isRefreshing ? 'Syncing...' : 'Sync Database'}
+          </button>
+        </div>
+      </div>
+
+      {/* KPI METRICS OVERVIEW */}
+      <div className="trust-kpi-grid">
+        <div className="kpi-card kpi-total">
+          <div className="kpi-icon-wrapper">
+            <Users size={20} />
+          </div>
+          <div className="kpi-info">
+            <span className="kpi-label">TOTAL CUSTOMERS</span>
+            <strong className="kpi-value">{stats.total}</strong>
+            <span className="kpi-sub">{stats.totalOrders} total orders placed</span>
+          </div>
+        </div>
+
+        <div className="kpi-card kpi-trusted">
+          <div className="kpi-icon-wrapper">
+            <ShieldCheck size={20} />
+          </div>
+          <div className="kpi-info">
+            <span className="kpi-label">TRUSTED (VIP)</span>
+            <strong className="kpi-value">{stats.trusted}</strong>
+            <span className="kpi-sub">Priority courier dispatch</span>
+          </div>
+        </div>
+
+        <div className="kpi-card kpi-standard">
+          <div className="kpi-icon-wrapper">
+            <Shield size={20} />
+          </div>
+          <div className="kpi-info">
+            <span className="kpi-label">STANDARD BUYERS</span>
+            <strong className="kpi-value">{stats.standard}</strong>
+            <span className="kpi-sub">Eligible for COD & Prepaid</span>
+          </div>
+        </div>
+
+        <div className="kpi-card kpi-restricted">
+          <div className="kpi-icon-wrapper">
+            <ShieldAlert size={20} />
+          </div>
+          <div className="kpi-info">
+            <span className="kpi-label">RESTRICTED (COD GATED)</span>
+            <strong className="kpi-value">{stats.restricted}</strong>
+            <span className="kpi-sub">High RTO risk · Prepaid only</span>
+          </div>
+        </div>
+
+        <div className="kpi-card kpi-revenue">
+          <div className="kpi-icon-wrapper">
+            <Sparkles size={20} />
+          </div>
+          <div className="kpi-info">
+            <span className="kpi-label">TOTAL RECORDED SPEND</span>
+            <strong className="kpi-value">{formatPKR(stats.totalRevenue)}</strong>
+            <span className="kpi-sub">Lifetime customer volume</span>
+          </div>
+        </div>
+      </div>
+
+      {/* FILTER & SEARCH BAR */}
+      <div className="controls-container">
+        <div className="search-wrapper">
+          <Search size={18} className="search-icon" />
+          <input
+            type="text"
+            placeholder="Search by customer name, phone number, city, or order ID..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="search-input"
+          />
+          {searchTerm && (
+            <button 
+              type="button" 
+              className="clear-search-btn"
+              onClick={() => setSearchTerm('')}
+            >
+              ×
+            </button>
+          )}
+        </div>
+
+        <div className="tier-filter-pills">
+          <button
+            type="button"
+            className={`filter-pill ${selectedTier === 'ALL' ? 'active' : ''}`}
+            onClick={() => setSelectedTier('ALL')}
+          >
+            All Customers ({customers.length})
+          </button>
+          <button
+            type="button"
+            className={`filter-pill pill-trusted ${selectedTier === 'TRUSTED' ? 'active' : ''}`}
+            onClick={() => setSelectedTier('TRUSTED')}
+          >
+            <ShieldCheck size={13} /> Trusted ({stats.trusted})
+          </button>
+          <button
+            type="button"
+            className={`filter-pill pill-standard ${selectedTier === 'STANDARD' ? 'active' : ''}`}
+            onClick={() => setSelectedTier('STANDARD')}
+          >
+            <Shield size={13} /> Standard ({stats.standard})
+          </button>
+          <button
+            type="button"
+            className={`filter-pill pill-restricted ${selectedTier === 'RESTRICTED' ? 'active' : ''}`}
+            onClick={() => setSelectedTier('RESTRICTED')}
+          >
+            <ShieldAlert size={13} /> Restricted ({stats.restricted})
+          </button>
+          <button
+            type="button"
+            className={`filter-pill pill-unverified ${selectedTier === 'UNVERIFIED' ? 'active' : ''}`}
+            onClick={() => setSelectedTier('UNVERIFIED')}
+          >
+            Unverified ({stats.unverified})
+          </button>
+        </div>
+      </div>
+
+      {/* TABLE OR AUTHENTIC EMPTY STATE */}
+      {filteredCustomers.length === 0 ? (
+        <div className="authentic-empty-state">
+          <div className="empty-icon-box">
+            <Users size={48} style={{ color: '#94A3B8' }} />
+          </div>
+          <h3>
+            {customers.length === 0
+              ? 'No Customer Orders Recorded in Database Yet'
+              : 'No Customers Matched Your Search'}
+          </h3>
+          <p>
+            {customers.length === 0
+              ? 'Real customer profiles and their trust metrics will appear here automatically as soon as orders are placed in the database.'
+              : `No customer records matched "${searchTerm}". Try searching by phone number, name, or city.`}
+          </p>
+          {searchTerm && (
+            <button
+              type="button"
+              className="reset-search-btn"
+              onClick={() => {
+                setSearchTerm('');
+                setSelectedTier('ALL');
+              }}
+            >
+              Clear Filters
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="users-table-container">
+          <table className="users-table">
+            <thead>
+              <tr>
+                <th>CUSTOMER & CONTACT</th>
+                <th>CITY & ADDRESS</th>
+                <th>TRUST TIER</th>
+                <th>COD REFUSALS</th>
+                <th>COMPLETED ORDERS</th>
+                <th>TOTAL SPEND</th>
+                <th className="text-right">ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredCustomers.map((customer) => {
+                const tier = customer.trustTier;
+                const isExpanded = expandedCustomerId === customer.id;
+                const hasHighRefusals = (customer.codRefusalCount || 0) >= 2;
+
+                return (
+                  <React.Fragment key={customer.id}>
+                    <tr className={`customer-row ${tier === 'RESTRICTED' ? 'row-restricted' : ''} ${isExpanded ? 'row-expanded' : ''}`}>
+                      {/* Customer & Contact */}
+                      <td>
+                        <div className="user-profile-cell">
+                          <div className={`avatar-circle tier-border-${tier.toLowerCase()}`}>
+                            {getInitials(customer.name)}
+                          </div>
+                          <div className="user-info">
+                            <span className="user-name">{customer.name}</span>
+                            <div className="contact-links">
+                              <a
+                                href={`tel:${customer.phone}`}
+                                className="phone-link"
+                                title="Click to call customer"
+                              >
+                                <Phone size={11} />
+                                {customer.phone}
+                              </a>
+                              <a
+                                href={getCleanWhatsAppLink(customer.phone, customer.name)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="whatsapp-link"
+                                title="Chat on WhatsApp"
+                              >
+                                <MessageCircle size={11} />
+                                WhatsApp
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* City & Address */}
+                      <td>
+                        <div className="address-cell">
+                          <span className="city-name">
+                            <MapPin size={12} style={{ color: '#E52535' }} />
+                            {customer.city || 'Pakistan'}
+                          </span>
+                          <span className="shipping-sub" title={customer.shippingAddress}>
+                            {customer.shippingAddress || 'No address stored'}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Trust Tier */}
+                      <td>
+                        <div className="tier-badge-container">
+                          <span className={`tier-badge tier-${tier.toLowerCase()}`}>
+                            {tier === 'TRUSTED' && <Award size={12} />}
+                            {tier === 'RESTRICTED' && <ShieldAlert size={12} />}
+                            {tier === 'STANDARD' && <ShieldCheck size={12} />}
+                            {tier === 'UNVERIFIED' && <Shield size={12} />}
+                            {tier}
+                          </span>
+                          {customer.isOverridden && (
+                            <span className="override-indicator" title={`Admin Override: ${customer.overrideReason || 'Manual'}`}>
+                              MANUAL OVERRIDE
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Refusals */}
+                      <td>
+                        <div className="metric-cell">
+                          <strong className={hasHighRefusals ? 'text-danger' : 'text-neutral'}>
+                            {customer.codRefusalCount || 0} Refusals
+                          </strong>
+                          {hasHighRefusals && (
+                            <span className="warning-pill">
+                              <AlertTriangle size={10} /> COD Disabled
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Completed */}
+                      <td>
+                        <div className="metric-cell">
+                          <strong className="text-success">
+                            {customer.completedOrders || 0} Delivered
+                          </strong>
+                          <span className="order-ratio">
+                            of {customer.totalOrders} placed
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Total Spend */}
+                      <td>
+                        <strong className="total-spent-val">
+                          {formatPKR(customer.totalSpent)}
+                        </strong>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="text-right">
+                        <div className="action-buttons-group">
+                          <button
+                            type="button"
+                            onClick={() => toggleAccordion(customer.id)}
+                            className="btn-inspect-orders"
+                            title="View order history"
+                          >
+                            <ShoppingBag size={13} />
+                            {customer.orders.length} {customer.orders.length === 1 ? 'Order' : 'Orders'}
+                            {isExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleOpenOverride(customer)}
+                            className="btn-trust-override"
+                            title="Manually override trust tier"
+                          >
+                            Override
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+
+                    {/* EXPANDABLE ORDER HISTORY ACCORDION ROW */}
+                    {isExpanded && (
+                      <tr className="accordion-row">
+                        <td colSpan={7} className="accordion-cell">
+                          <div className="orders-drawer-content">
+                            <div className="drawer-header">
+                              <h4>
+                                <ShoppingBag size={16} /> Authentic Order History for {customer.name}
+                              </h4>
+                              <span className="drawer-sub">
+                                Phone: {customer.phone} · Shipping City: {customer.city}
+                              </span>
+                            </div>
+
+                            {customer.orders.length === 0 ? (
+                              <p className="no-orders-note">No individual orders found for this customer profile.</p>
+                            ) : (
+                              <div className="drawer-orders-grid">
+                                {customer.orders.map((ord: Order, idx: number) => {
+                                  const status = ord.status || 'Pending';
+                                  const items = Array.isArray(ord.items) ? ord.items : [];
+
+                                  return (
+                                    <div key={ord.id || idx} className="drawer-order-card">
+                                      <div className="order-card-top">
+                                        <div>
+                                          <span className="order-card-id">ORDER #{ord.id?.substring(0, 8)}...</span>
+                                          <div className="order-card-date">
+                                            <Clock size={11} />
+                                            {ord.created_at ? new Date(ord.created_at).toLocaleString() : 'Recent'}
+                                          </div>
+                                        </div>
+                                        <span className={`order-status-pill status-${status.toLowerCase()}`}>
+                                          {status === 'Delivered' && <CheckCircle2 size={11} />}
+                                          {status === 'Cancelled' && <XCircle size={11} />}
+                                          {status}
+                                        </span>
+                                      </div>
+
+                                      <div className="order-card-amount">
+                                        <span>Total:</span>
+                                        <strong>{formatPKR(Number(ord.total_amount) || 0)}</strong>
+                                      </div>
+
+                                      <div className="order-card-method">
+                                        💳 {ord.payment_method || 'WhatsApp / Bank Transfer'}
+                                      </div>
+
+                                      {items.length > 0 && (
+                                        <div className="order-items-list">
+                                          <span className="items-title">Articles ({items.length}):</span>
+                                          {items.map((it: any, itemIdx: number) => (
+                                            <div key={itemIdx} className="item-row">
+                                              <span className="item-name">• {it.title || it.name || 'Candy Garments Article'}</span>
+                                              <span className="item-qty">x{it.quantity || 1}</span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* MANUAL TRUST OVERRIDE MODAL */}
+      {overrideCustomer && (
+        <div className="override-modal-backdrop" onClick={() => setOverrideCustomer(null)}>
+          <div className="override-modal-window" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-top">
+              <div>
+                <h3 className="modal-title">
+                  <Shield size={20} style={{ color: '#E52535' }} />
+                  Override Trust Tier: {overrideCustomer.name}
+                </h3>
+                <p className="modal-subtitle">
+                  Phone: <strong>{overrideCustomer.phone}</strong> · Refusals: <strong>{overrideCustomer.codRefusalCount || 0}</strong> · Completed: <strong>{overrideCustomer.completedOrders || 0}</strong>
+                </p>
+              </div>
+              <button
+                type="button"
+                className="close-modal-btn"
+                onClick={() => setOverrideCustomer(null)}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="modal-body">
+              <div className="form-group">
+                <label className="form-label">
+                  Select New Trust Tier:
+                </label>
+                <select
+                  value={overrideTier}
+                  onChange={(e: any) => setOverrideTier(e.target.value)}
+                  className="tier-select-dropdown"
+                >
+                  <option value="STANDARD">STANDARD — Allow Cash on Delivery (COD) and Prepaid</option>
+                  <option value="TRUSTED">TRUSTED (VIP) — VIP status & priority courier clearance</option>
+                  <option value="RESTRICTED">RESTRICTED — High RTO risk; Hide/Disable COD option (Prepaid only)</option>
+                  <option value="UNVERIFIED">UNVERIFIED — Require phone verification on next order</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">
+                  Audit Justification / Note (Required) *:
+                </label>
+                <textarea
+                  value={overrideReason}
+                  onChange={(e) => setOverrideReason(e.target.value)}
+                  placeholder="e.g. Courier rider failed to deliver due to city roadblock; buyer is legitimate and paid advance."
+                  rows={3}
+                  className="reason-textarea"
+                />
+              </div>
+
+              {/* QUICK SUGGESTION PRESETS */}
+              <div className="presets-wrapper">
+                <span className="presets-label">Quick Suggestions:</span>
+                <div className="presets-chips">
+                  {presetReasons.map((preset, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      className="preset-chip"
+                      onClick={() => setOverrideReason(preset)}
+                    >
+                      {preset}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button
+                type="button"
+                onClick={() => setOverrideCustomer(null)}
+                className="btn-modal-cancel"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmOverride}
+                disabled={isSavingOverride}
+                className="btn-modal-confirm"
+              >
+                {isSavingOverride ? 'Saving Override...' : 'Confirm & Save Override'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default AdminUsers;

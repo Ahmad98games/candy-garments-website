@@ -100,6 +100,7 @@ app.use('/api/discount-rules', discountRuleRoutes);
 app.use('/api/refunds', refundRoutes);
 app.use('/api/admin/fulfillment', fulfillmentRoutes);
 app.post('/api/admin/trust/override', trustController.overrideTrustTier);
+app.get('/api/admin/trust/overrides', trustController.getTrustOverrides);
 app.get('/api/orders/verified-ticker', trustController.getVerifiedTicker);
 app.post('/api/orders/:id/video-viewed', fulfillmentController.markVideoViewed);
 app.post('/api/orders/:id/dispute-reshoot', fulfillmentController.requestReshoot);
